@@ -1,0 +1,260 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Kreait\Firebase\Factory;
+use Google\Cloud\Core\Timestamp;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
+
+class articlecontroller extends Controller
+{
+    protected $firestore;
+    protected $storage;
+
+    public function __construct()
+    {
+        // Jika belum login, redirect ke login
+        if (!Session::has('admin')) {
+            redirect()->route('admin.login')->send(); 
+        }
+        $factory = (new Factory)
+            ->withServiceAccount(config('firebase.credentials'))
+            ->withDefaultStorageBucket(config('firebase.storage_bucket')); // ambil dari config
+
+        $this->firestore = $factory->createFirestore()->database();
+        $this->storage = $factory->createStorage();
+        $bucket = $this->storage->getBucket();
+    }
+
+    // fungsi untuk menampilkan semua artikel
+    // dengan urutan terbaru
+    public function index()
+    {
+        $documents = $this->firestore->collection('articles')->orderBy('releasedDate', 'DESC')->documents();
+        $articles = [];
+    
+        foreach ($documents as $doc) {
+            if ($doc->exists()) {
+                $data = $doc->data();
+                $data['id'] = $doc->id();
+                $articles[] = $data;
+            }
+        }
+    
+        return view('admin.articel', compact('articles'));
+    }
+
+    // fungsi untuk menampilkan artikel berdasarkan id
+    public function edit($id)
+    {
+        // Ambil data artikel berdasarkan ID
+        $article = $this->firestore->collection('articles')->document($id)->snapshot();
+        
+        if (!$article->exists()) {
+            return redirect()->route('admin.articel.index')->with('error', 'Artikel tidak ditemukan!');
+        }
+        
+        $articleData = $article->data();
+        $articleData['id'] = $id; // Tambahkan ID untuk form update
+        
+        // Konversi URL gs:// ke URL publik yang dapat diakses browser
+        if (isset($articleData['photoUrl']) && strpos($articleData['photoUrl'], 'gs://') === 0) {
+            $bucket = $this->storage->getBucket();
+            $gsPath = parse_url($articleData['photoUrl'], PHP_URL_PATH);
+            $gsPath = ltrim($gsPath, '/');
+            
+            try {
+                $object = $bucket->object($gsPath);
+                if ($object->exists()) {
+                    // Buat URL dengan waktu kadaluarsa (1 jam)
+                    $expiresAt = new \DateTime('now + 1 hour');
+                    $articleData['gambar_url'] = $object->signedUrl($expiresAt);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error getting image URL: ' . $e->getMessage());
+            }
+        }
+        
+        return view('admin.edit', compact('articleData'));
+    }
+
+    // fungsi untuk mengupdate artikel
+    // dengan validasi input
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'title' => 'required|string',
+            'articleType' => 'required|in:stunting,bullying,pernikahan dini,kekerasan pada anak',
+            'description' => 'required|string',
+            'photoUrl' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        $articleRef = $this->firestore->collection('articles')->document($id);
+        $snapshot = $articleRef->snapshot();
+
+        if (!$snapshot->exists()) {
+            return redirect()->route('admin.articel.index')->with('error', 'Artikel tidak ditemukan!');
+        }
+
+        $oldData = $snapshot->data();
+        $updateData = [
+            'title' => $request->title,
+            'articleType' => $request->articleType,
+            'description' => $request->description,
+            'updateDate' => now()->toDateTimeString(),
+        ];
+
+        $bucket = $this->storage->getBucket();
+
+        // Jika ada gambar baru diupload
+        if ($request->hasFile('photoUrl')) {
+            try {
+                // Hapus gambar lama kalau ada
+                if (isset($oldData['photoUrl']) && strpos($oldData['photoUrl'], 'gs://') === 0) {
+                    $oldPath = parse_url($oldData['photoUrl'], PHP_URL_PATH);
+                    $oldPath = ltrim($oldPath, '/');
+                    $oldObject = $bucket->object($oldPath);
+                    if ($oldObject->exists()) {
+                        $oldObject->delete();
+                    }
+                }
+
+                // Upload gambar baru
+                $image = $request->file('photoUrl');
+                $folder = 'images/articles/' . $request->articleType . '/' . now()->format('Ymd'); // perbaiki: $request->kategori jadi $request->articleType
+                $filename = $folder . '/' . Str::random(20) . '.' . $image->getClientOriginalExtension();
+
+                $bucket->upload(
+                    fopen($image->getRealPath(), 'r'),
+                    ['name' => $filename]
+                );
+
+                $gsUrl = 'gs://' . $bucket->name() . '/' . $filename;
+                $updateData['photoUrl'] = $gsUrl;
+
+            } catch (\Exception $e) {
+                \Log::error('Upload error: ' . $e->getMessage());
+                return redirect()->back()->with('error', 'Gagal upload gambar: ' . $e->getMessage());
+            }
+        } 
+        else if ($request->articleType !== $oldData['articleType']) {
+            // Kalau kategori berubah tapi gambar tidak diupload
+            if (isset($oldData['photoUrl']) && strpos($oldData['photoUrl'], 'gs://') === 0) {
+                $oldPath = ltrim(parse_url($oldData['photoUrl'], PHP_URL_PATH), '/');
+                $newFolder = 'images/articles/' . $request->articleType . '/' . now()->format('Ymd');
+                $filename = basename($oldPath);
+                $newPath = $newFolder . '/' . $filename;
+
+                $object = $bucket->object($oldPath);
+                if ($object->exists()) {
+                    $object->copy($bucket, ['name' => $newPath]);
+                    $object->delete();
+
+                    $updateData['photoUrl'] = 'gs://' . $bucket->name() . '/' . $newPath;
+                }
+            }
+        } 
+        else {
+            // Kalau tidak upload gambar baru DAN kategori tidak berubah
+            // tetap gunakan photoUrl lama
+            if (isset($oldData['photoUrl'])) {
+                $updateData['photoUrl'] = $oldData['photoUrl'];
+            }
+        }
+
+        $articleRef->set($updateData, ['merge' => true]);
+
+        return redirect()->route('admin.articel.index')->with('success', 'Artikel berhasil diperbarui!');
+    }
+
+
+    
+
+    // fungsi untuk menghapus artikel
+    // dengan validasi input
+    public function destroy($id)
+    {
+        try {
+            $articleRef = $this->firestore->collection('articles')->document($id);
+            $articleSnapshot = $articleRef->snapshot();
+    
+            if ($articleSnapshot->exists()) {
+                $articleData = $articleSnapshot->data();
+    
+                // Hapus gambar dari Firebase Storage jika ada
+                if (isset($articleData['photoUrl']) && strpos($articleData['photoUrl'], 'gs://') === 0) {
+                    $gsUrl = $articleData['photoUrl'];
+                    $path = parse_url($gsUrl, PHP_URL_PATH); // hasil: /images/articles/...
+                    $path = ltrim($path, '/'); // buang slash di awal
+    
+                    $bucket = $this->storage->getBucket();
+                    $object = $bucket->object($path);
+    
+                    if ($object->exists()) {
+                        $object->delete();
+                    }
+                }
+    
+                // Hapus dokumen Firestore
+                $articleRef->delete();
+            }
+    
+            return redirect()->route('admin.articel.index')->with('success', 'Artikel dan gambar berhasil dihapus!');
+        } catch (\Exception $e) {
+            \Log::error('Delete error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menghapus artikel: ' . $e->getMessage());
+        }
+    }
+    
+
+    // fungsi untuk menampilkan form tambah artikel
+    public function create()
+    {
+        return view('admin.create_article');
+    }
+
+    // fungsi untuk menyimpan artikel
+    // dengan validasi input
+    public function store(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string',
+            'articleType' => 'required|in:stunting,bullying,pernikahan dini,kekerasan pada anak',
+            'description' => 'required|string',
+            'photoUrl' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        $image = $request->file('photoUrl');
+        $folder = 'images/articles/' . $request->kategori . '/' . now()->format('Ymd');
+        $filename = $folder . '/' . Str::random(20) . '.' . $image->getClientOriginalExtension();
+
+        try {
+            // Upload ke Firebase Storage
+            $bucket = $this->storage->getBucket();
+            $bucket->upload(
+                fopen($image->getRealPath(), 'r'),
+                ['name' => $filename]
+            );
+
+                // Simpan format gs://
+            $gsUrl = 'gs://' . $bucket->name() . '/' . $filename;
+
+            // Simpan ke Firestore
+            $this->firestore->collection('articles')->add([
+                'title' => $request->title,
+                'articleType' => $request->articleType,
+                'description' => $request->description,
+                'photoUrl' => $gsUrl,
+                'releasedDate' => now()->toDateTimeString(),
+            ]);
+
+            return redirect()->route('admin.articel.index')->with('success', 'Artikel berhasil disimpan!');
+        } catch (\Exception $e) {
+            \Log::error('Upload error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal upload gambar: ' . $e->getMessage());
+        }
+    }
+
+}
