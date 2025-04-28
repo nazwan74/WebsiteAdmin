@@ -187,8 +187,92 @@
         </div>
     </div>
 
+     <!-- Bagian Chart Visualisasi -->
+     <div class="row">
+        <div class="col-md-6 mb-4">
+                <div class="bg-white shadow-sm rounded p-3">
+                    <h6 class="fw-bold mb-3">Top 4 Kategori Kasus</h6>
+                    <canvas id="kategoriChart" style="height: 300px;"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="bg-white shadow-sm rounded p-3">
+                    <h6 class="fw-bold mb-3">Top 4 Daerah Pelaporan</h6>
+                    <canvas id="daerahChart" style="height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const kategoriChart = new Chart(document.getElementById('kategoriChart'), {
+            type: 'bar',
+            data: {
+                labels: {!! json_encode(array_keys($topKategori)) !!},
+                datasets: [{
+                    label: 'Jumlah Laporan per Kategori',
+                    data: {!! json_encode(array_values($topKategori)) !!},
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(255, 99, 132, 0.7)'
+                    ],
+                    borderRadius: 5,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision:0
+                        }
+                    }
+                }
+            }
+        });
+
+        const daerahChart = new Chart(document.getElementById('daerahChart'), {
+            type: 'bar',
+            data: {
+                labels: {!! json_encode(array_keys($topDaerah)) !!},
+                datasets: [{
+                    label: 'Jumlah Laporan per Daerah',
+                    data: {!! json_encode(array_values($topDaerah)) !!},
+                    backgroundColor: [
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)'
+                    ],
+                    borderRadius: 5,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision:0
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
 </body>
 </html>
