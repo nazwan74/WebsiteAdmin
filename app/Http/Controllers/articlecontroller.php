@@ -227,7 +227,7 @@ class articlecontroller extends Controller
         ]);
 
         $image = $request->file('photoUrl');
-        $folder = 'images/articles/' . $request->kategori . '/' . now()->format('Ymd');
+        $folder = 'images/articles/' . $request->articleType . '/' . now()->format('Ymd');
         $filename = $folder . '/' . Str::random(20) . '.' . $image->getClientOriginalExtension();
 
         try {
