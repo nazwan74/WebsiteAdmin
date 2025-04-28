@@ -60,9 +60,9 @@ class articlecontroller extends Controller
         $articleData['id'] = $id; // Tambahkan ID untuk form update
         
         // Konversi URL gs:// ke URL publik yang dapat diakses browser
-        if (isset($articleData['photoUrl']) && strpos($articleData['photoUrl'], 'gs://') === 0) {
+        if (isset($articleData['gsUrl']) && strpos($articleData['gsUrl'], 'gs://') === 0) {
             $bucket = $this->storage->getBucket();
-            $gsPath = parse_url($articleData['photoUrl'], PHP_URL_PATH);
+            $gsPath = parse_url($articleData['gsUrl'], PHP_URL_PATH);
             $gsPath = ltrim($gsPath, '/');
             
             try {
@@ -112,8 +112,8 @@ class articlecontroller extends Controller
         if ($request->hasFile('photoUrl')) {
             try {
                 // Hapus gambar lama kalau ada
-                if (isset($oldData['photoUrl']) && strpos($oldData['photoUrl'], 'gs://') === 0) {
-                    $oldPath = parse_url($oldData['photoUrl'], PHP_URL_PATH);
+                if (isset($oldData['gsUrl']) && strpos($oldData['gsUrl'], 'gs://') === 0) {
+                    $oldPath = parse_url($oldData['gsUrl'], PHP_URL_PATH);
                     $oldPath = ltrim($oldPath, '/');
                     $oldObject = $bucket->object($oldPath);
                     if ($oldObject->exists()) {
@@ -123,7 +123,7 @@ class articlecontroller extends Controller
 
                 // Upload gambar baru
                 $image = $request->file('photoUrl');
-                $folder = 'images/articles/' . $request->articleType . '/' . now()->format('Ymd'); // perbaiki: $request->kategori jadi $request->articleType
+                $folder = 'images/articles/' . $request->articleType . '/' . now()->format('Ymd');
                 $filename = $folder . '/' . Str::random(20) . '.' . $image->getClientOriginalExtension();
 
                 $bucket->upload(
@@ -131,8 +131,12 @@ class articlecontroller extends Controller
                     ['name' => $filename]
                 );
 
+                // Buat URL publik langsung (tanpa tanda tangan)
+                $publicUrl = 'https://firebasestorage.googleapis.com/' . $bucket->name() . '/o' . $filename;$publicUrl = 'https://firebasestorage.googleapis.com/v0/b/' . $bucket->name() . '/o/' . urlencode($filename) . '?alt=media';
                 $gsUrl = 'gs://' . $bucket->name() . '/' . $filename;
-                $updateData['photoUrl'] = $gsUrl;
+                
+                $updateData['photoUrl'] = $publicUrl; // URL publik untuk aplikasi
+                $updateData['gsUrl'] = $gsUrl; // URL gs:// untuk keperluan internal
 
             } catch (\Exception $e) {
                 \Log::error('Upload error: ' . $e->getMessage());
@@ -141,8 +145,8 @@ class articlecontroller extends Controller
         } 
         else if ($request->articleType !== $oldData['articleType']) {
             // Kalau kategori berubah tapi gambar tidak diupload
-            if (isset($oldData['photoUrl']) && strpos($oldData['photoUrl'], 'gs://') === 0) {
-                $oldPath = ltrim(parse_url($oldData['photoUrl'], PHP_URL_PATH), '/');
+            if (isset($oldData['gsUrl']) && strpos($oldData['gsUrl'], 'gs://') === 0) {
+                $oldPath = ltrim(parse_url($oldData['gsUrl'], PHP_URL_PATH), '/');
                 $newFolder = 'images/articles/' . $request->articleType . '/' . now()->format('Ymd');
                 $filename = basename($oldPath);
                 $newPath = $newFolder . '/' . $filename;
@@ -152,15 +156,21 @@ class articlecontroller extends Controller
                     $object->copy($bucket, ['name' => $newPath]);
                     $object->delete();
 
-                    $updateData['photoUrl'] = 'gs://' . $bucket->name() . '/' . $newPath;
+                    // Buat URL publik baru sesuai path baru
+                    $publicUrl = 'https://firebasestorage.googleapis.com/v0/b/' . $bucket->name() . '/o/' . urlencode($filename) . '?alt=media';
+                    $updateData['gsUrl'] = 'gs://' . $bucket->name() . '/' . $newPath;
+                    $updateData['photoUrl'] = $publicUrl;
                 }
             }
         } 
         else {
             // Kalau tidak upload gambar baru DAN kategori tidak berubah
-            // tetap gunakan photoUrl lama
+            // tetap gunakan URL lama
             if (isset($oldData['photoUrl'])) {
                 $updateData['photoUrl'] = $oldData['photoUrl'];
+            }
+            if (isset($oldData['gsUrl'])) {
+                $updateData['gsUrl'] = $oldData['gsUrl'];
             }
         }
 
@@ -168,9 +178,6 @@ class articlecontroller extends Controller
 
         return redirect()->route('admin.articel.index')->with('success', 'Artikel berhasil diperbarui!');
     }
-
-
-    
 
     // fungsi untuk menghapus artikel
     // dengan validasi input
@@ -184,10 +191,10 @@ class articlecontroller extends Controller
                 $articleData = $articleSnapshot->data();
     
                 // Hapus gambar dari Firebase Storage jika ada
-                if (isset($articleData['photoUrl']) && strpos($articleData['photoUrl'], 'gs://') === 0) {
-                    $gsUrl = $articleData['photoUrl'];
-                    $path = parse_url($gsUrl, PHP_URL_PATH); // hasil: /images/articles/...
-                    $path = ltrim($path, '/'); // buang slash di awal
+                if (isset($articleData['gsUrl']) && strpos($articleData['gsUrl'], 'gs://') === 0) {
+                    $gsUrl = $articleData['gsUrl'];
+                    $path = parse_url($gsUrl, PHP_URL_PATH);
+                    $path = ltrim($path, '/');
     
                     $bucket = $this->storage->getBucket();
                     $object = $bucket->object($path);
@@ -208,7 +215,6 @@ class articlecontroller extends Controller
         }
     }
     
-
     // fungsi untuk menampilkan form tambah artikel
     public function create()
     {
@@ -238,7 +244,9 @@ class articlecontroller extends Controller
                 ['name' => $filename]
             );
 
-                // Simpan format gs://
+            // Buat URL publik langsung (tanpa tanda tangan)
+            $publicUrl = 'https://firebasestorage.googleapis.com/v0/b/' . $bucket->name() . '/o/' . urlencode($filename) . '?alt=media';
+            // Simpan format gs:// untuk operasi internal
             $gsUrl = 'gs://' . $bucket->name() . '/' . $filename;
 
             // Simpan ke Firestore
@@ -246,7 +254,8 @@ class articlecontroller extends Controller
                 'title' => $request->title,
                 'articleType' => $request->articleType,
                 'description' => $request->description,
-                'photoUrl' => $gsUrl,
+                'photoUrl' => $publicUrl, // URL publik langsung
+                'gsUrl' => $gsUrl, // URL gs:// untuk operasi internal
                 'releasedDate' => now()->toDateTimeString(),
             ]);
 
@@ -256,5 +265,4 @@ class articlecontroller extends Controller
             return redirect()->back()->with('error', 'Gagal upload gambar: ' . $e->getMessage());
         }
     }
-
 }
