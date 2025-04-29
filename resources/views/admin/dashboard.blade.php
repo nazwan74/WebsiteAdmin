@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -187,86 +189,95 @@
         </div>
     </div>
 
-     <!-- Bagian Chart Visualisasi -->
-     <div class="row">
-        <div class="col-md-6 mb-4">
-                <div class="bg-white shadow-sm rounded p-3">
-                    <h6 class="fw-bold mb-3">Top 4 Kategori Kasus</h6>
-                    <canvas id="kategoriChart" style="height: 300px;"></canvas>
-                </div>
-            </div>
+        <!-- Bagian Chart Visualisasi -->
+        <div class="row">
             <div class="col-md-6 mb-4">
                 <div class="bg-white shadow-sm rounded p-3">
-                    <h6 class="fw-bold mb-3">Top 4 Daerah Pelaporan</h6>
-                    <canvas id="daerahChart" style="height: 300px;"></canvas>
+                    <h6 class="fw-bold mb-3">Top 4 Kategori Kasus</h6>
+                    <canvas id="kategoriChart" height="300"></canvas>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="bg-white shadow-sm rounded p-3">
+                    <h6 class="fw-bold mb-3">Top Daerah & Kategori Terbanyak</h6>
+                    <canvas id="daerahKategoriChart" height="300"></canvas>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+    <!-- Script Chart -->
     <script>
-        const kategoriChart = new Chart(document.getElementById('kategoriChart'), {
-            type: 'bar',
+        // === Kategori Chart ===
+        new Chart(document.getElementById('kategoriChart'), {
+            type: 'pie',
             data: {
                 labels: {!! json_encode(array_keys($topKategori)) !!},
                 datasets: [{
-                    label: 'Jumlah Laporan per Kategori',
                     data: {!! json_encode(array_values($topKategori)) !!},
-                    backgroundColor: [
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(255, 99, 132, 0.7)'
-                    ],
-                    borderRadius: 5,
+                    backgroundColor: ['#4e79a7', '#f28e2c', '#e15759', '#76b7b2'],
+                    hoverOffset: 8
                 }]
             },
             options: {
                 responsive: true,
                 plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision:0
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.label}: ${context.parsed} laporan`;
+                            }
                         }
                     }
                 }
             }
         });
 
-        const daerahChart = new Chart(document.getElementById('daerahChart'), {
+        // === Daerah & Kategori Chart ===
+        const daerahData = @json($topDaerahKategori);
+        const daerahLabels = Object.keys(daerahData);
+        const laporanData = daerahLabels.map(d => daerahData[d].total);
+        const kategoriData = daerahLabels.map(d => daerahData[d].kategori_terbanyak);
+
+        new Chart(document.getElementById('daerahKategoriChart'), {
             type: 'bar',
             data: {
-                labels: {!! json_encode(array_keys($topDaerah)) !!},
+                labels: daerahLabels,
                 datasets: [{
-                    label: 'Jumlah Laporan per Daerah',
-                    data: {!! json_encode(array_values($topDaerah)) !!},
-                    backgroundColor: [
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)',
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)'
-                    ],
-                    borderRadius: 5,
+                    label: 'Jumlah Laporan',
+                    data: laporanData,
+                    backgroundColor: '#59a14f',
+                    borderRadius: 6
                 }]
             },
             options: {
                 responsive: true,
                 plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const index = context.dataIndex;
+                                return `Laporan: ${laporanData[index]}, Kategori: ${kategoriData[index]}`;
+                            }
+                        }
+                    },
                     legend: { display: false }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            precision:0
+                        ticks: { stepSize: 1, precision: 0 },
+                        title: {
+                            display: true,
+                            text: 'Jumlah Laporan'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Nama Daerah'
                         }
                     }
                 }
