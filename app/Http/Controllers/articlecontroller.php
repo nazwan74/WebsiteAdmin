@@ -68,8 +68,8 @@ class articlecontroller extends Controller
             try {
                 $object = $bucket->object($gsPath);
                 if ($object->exists()) {
-                    // Buat URL dengan waktu kadaluarsa (1 jam)
-                    $expiresAt = new \DateTime('now + 1 hour');
+                    // Buat URL dengan waktu kadaluarsa (1 bulan)
+                    $expiresAt = new \DateTime('now + 1 month');
                     $articleData['gambar_url'] = $object->signedUrl($expiresAt);
                 }
             } catch (\Exception $e) {
