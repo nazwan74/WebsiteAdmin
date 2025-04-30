@@ -23,23 +23,24 @@ class DashboardController extends Controller
         if (!Session::has('admin')) {
             return redirect()->route('admin.login');
         }
-        
-        // Ambil data dari koleksi "users", "laporan", dan "articles"
-        $usersSnapshots   = $this->firestore->collection('users')->documents();
-        $laporanSnapshots = $this->firestore->collection('laporan')->documents();
+
+        // Ambil data dari koleksi Firestore
+        $usersSnapshots    = $this->firestore->collection('users')->documents();
+        $laporanSnapshots  = $this->firestore->collection('laporan')->documents();
         $articlesSnapshots = $this->firestore->collection('articles')->documents();
 
-        // Hitung jumlah dokumen di masing-masing koleksi
+        // Hitung jumlah dokumen
         $totalUsers    = $usersSnapshots->size();
         $totalLaporan  = $laporanSnapshots->size();
         $totalArticles = $articlesSnapshots->size();
 
-        // Hitung laporan dengan status "selesai"
+        // Hitung laporan selesai
         $laporanSelesai = 0;
 
-        // Untuk visualisasi
+        // Untuk perhitungan
         $kategoriCount = [];
         $daerahCount = [];
+        $kategoriPerDaerah = [];
 
         foreach ($laporanSnapshots as $doc) {
             $data = $doc->data();
@@ -49,36 +50,60 @@ class DashboardController extends Controller
                 $laporanSelesai++;
             }
 
-            // Hitung kategori
             $kategori = $data['kategori'] ?? 'Tidak diketahui';
+            $daerah = $data['daerah'] ?? 'Tidak diketahui';
+
+            // Hitung total per kategori
             if (!isset($kategoriCount[$kategori])) {
                 $kategoriCount[$kategori] = 0;
             }
             $kategoriCount[$kategori]++;
 
-            // Hitung daerah
-            $daerah = $data['daerah'] ?? 'Tidak diketahui';
+            // Hitung total per daerah
             if (!isset($daerahCount[$daerah])) {
                 $daerahCount[$daerah] = 0;
             }
             $daerahCount[$daerah]++;
+
+            // Hitung kategori per daerah
+            if (!isset($kategoriPerDaerah[$daerah])) {
+                $kategoriPerDaerah[$daerah] = [];
+            }
+            if (!isset($kategoriPerDaerah[$daerah][$kategori])) {
+                $kategoriPerDaerah[$daerah][$kategori] = 0;
+            }
+            $kategoriPerDaerah[$daerah][$kategori]++;
         }
 
-        // Urutkan dan ambil 4 terbesar
+        // Ambil 4 kategori terbanyak
         arsort($kategoriCount);
-        arsort($daerahCount);
-
         $topKategori = array_slice($kategoriCount, 0, 4, true);
-        $topDaerah   = array_slice($daerahCount, 0, 4, true);
 
-        // Kirim semua data ke view
+        // Ambil 4 daerah dengan jumlah laporan terbanyak
+        arsort($daerahCount);
+        $topDaerah = array_slice($daerahCount, 0, 4, true);
+
+        // Ambil kategori terbanyak di tiap top daerah
+        $topDaerahKategori = [];
+        foreach ($topDaerah as $daerah => $jumlah) {
+            if (isset($kategoriPerDaerah[$daerah])) {
+                arsort($kategoriPerDaerah[$daerah]);
+                $kategoriTerbanyak = array_key_first($kategoriPerDaerah[$daerah]);
+                $topDaerahKategori[$daerah] = [
+                    'total' => $jumlah,
+                    'kategori_terbanyak' => $kategoriTerbanyak,
+                ];
+            }
+        }
+
+        // Kirim ke view
         return view('admin.dashboard', [
-            'totalUsers'    => $totalUsers,
-            'totalLaporan'  => $totalLaporan,
-            'totalArticles' => $totalArticles,
-            'totalSelesai'  => $laporanSelesai,
-            'topKategori'   => $topKategori,
-            'topDaerah'     => $topDaerah,
+            'totalUsers'        => $totalUsers,
+            'totalLaporan'      => $totalLaporan,
+            'totalArticles'     => $totalArticles,
+            'totalSelesai'      => $laporanSelesai,
+            'topKategori'       => $topKategori,
+            'topDaerahKategori' => $topDaerahKategori,
         ]);
     }
 }
