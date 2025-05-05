@@ -148,67 +148,110 @@
 
     <!-- Main Content -->
     <div class="main-content">
-            <div class="container-fluid">
-            <h2 class="mb-4">Laporan Pengguna</h2>
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Nama Pelapor</th>
-                                    <th>Daerah</th>
-                                    <th>Role Pelapor</th>
-                                    <th>Tanggal Laporan Masuk</th>
-                                    <th>Kategori</th>
-                                    <th>Status</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($laporan as $item)
-                                    <tr>
-                                        <td>{{ $item['id'] ?? '-' }}</td>
-                                        <td>{{ $item['nama'] ?? '-' }}</td>
-                                        <td>{{ $item['daerah'] ?? '-' }}</td>
-                                        <td>{{ $item['role'] ?? '-' }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($item['create_at'])->format('d M Y, H:i') ?? '-' }}</td>
-                                        <td>{{ $item['kategori'] ?? '-' }}</td>
-                                        <td>
-                                            @php
-                                                $status = $item['status'] ?? 'baru';
-                                                $badgeColor = match($status) {
-                                                    'selesai' => 'success',
-                                                    'diproses' => 'warning',
-                                                    'ditolak' => 'danger',
-                                                    default => 'secondary',
-                                                };
-                                            @endphp
-                                            <span class="badge bg-{{ $badgeColor }}">
-                                                {{ ucfirst($status) }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <a href="{{ url('/admin/laporan/'.$item['id']) }}" class="btn btn-sm btn-primary">
-                                                Detail
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="8" class="text-center text-muted">Tidak ada laporan ditemukan.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div> <!-- table-responsive -->
-                </div> <!-- card-body -->
-            </div> <!-- card -->
-        </div> <!-- container-fluid -->
+        <div class="container mt-4">
+            <h2 class="mb-4">Daftar Laporan</h2>
 
-    </div>
+            {{-- Filter dan Pencarian --}}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Cari nama pelapor..." id="search-input">
+                        <button class="btn btn-outline-secondary" type="button">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <select class="form-select float-end" style="width: auto;" id="category-filter">
+                        <option selected value="all">Semua Kategori</option>
+                        <option value="pernikahan dini">Pernikahan Anak</option>
+                        <option value="kekerasan pada anak">Kekerasan pada Anak</option>
+                        <option value="bullying">Bullying</option>
+                        <option value="stunting">Stunting</option>
+                    </select>
+                </div>
+            </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            {{-- Tabel Laporan --}}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nama Pelapor</th>
+                            <th>Daerah</th>
+                            <th>Role</th>
+                            <th>Waktu Lapor</th>
+                            <th>Kategori</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($laporan as $item)
+                        <tr class="laporan-row" data-kategori="{{ strtolower($item['kategori']) }}">
+                            <td>{{ $item['id'] ?? '-' }}</td>
+                            <td>{{ $item['nama'] ?? '-' }}</td>
+                            <td>{{ $item['daerah'] ?? '-' }}</td>
+                            <td>{{ $item['role'] ?? '-' }}</td>
+                            <td>{{ \Carbon\Carbon::parse($item['create_at'])->format('d M Y, H:i') ?? '-' }}</td>
+                            <td>{{ $item['kategori'] ?? '-' }}</td>
+                            <td>
+                                @php
+                                    $status = strtolower($item['status'] ?? 'baru');
+                                    $badgeColor = match($status) {
+                                        'selesai' => 'success',
+                                        'diproses' => 'warning',
+                                        'ditolak' => 'danger',
+                                        default => 'secondary',
+                                    };
+                                @endphp
+                                <span class="badge bg-{{ $badgeColor }}">
+                                    {{ ucfirst($status) }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url('/admin/laporan/'.$item['id']) }}" class="btn btn-sm btn-primary">
+                                    Detail
+                                </a>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- Script Filter & Search --}}
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const searchInput = document.getElementById('search-input');
+                const categoryFilter = document.getElementById('category-filter');
+                const rows = document.querySelectorAll('table tbody tr.laporan-row');
+
+                function filterTable() {
+                    const searchTerm = searchInput.value.toLowerCase();
+                    const selectedCategory = categoryFilter.value;
+
+                    rows.forEach(row => {
+                        const namaPelapor = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                        const kategori = row.getAttribute('data-kategori');
+
+                        const matchCategory = selectedCategory === 'all' || kategori === selectedCategory;
+                        const matchSearch = namaPelapor.includes(searchTerm);
+
+                        if (matchCategory && matchSearch) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                }
+
+                searchInput.addEventListener('input', filterTable);
+                categoryFilter.addEventListener('change', filterTable);
+            });
+        </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
