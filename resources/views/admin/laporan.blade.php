@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -83,8 +84,25 @@
             margin-top: 70px;
             padding: 20px;
         }
+
+        /* Badge colors */
+        .badge.bg-pernikahan {
+            background-color: #ffeef2;
+            color: #212529;
+        }
+        .badge.bg-kekerasan {
+            background-color: #fff0f0;
+            color: #212529;
+        }
+        .badge.bg-bullying {
+            background-color: #fff9e6;
+            color: #212529;
+        }
+        .badge.bg-stunting {
+            background-color: #eafaf2;
+            color: #212529;
+        }
     </style>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 </head>
 <body>
     <!-- Sidebar -->
@@ -112,7 +130,7 @@
                 </a>
             </li>
             <li>
-                <a href="#">
+                <a href="/admin/stunting/chart">
                     <i class="bi bi-bar-chart"></i>
                     Stunting
                 </a>
@@ -148,56 +166,63 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <div class="container mt-4">
-            <h2 class="mb-4">Daftar Laporan</h2>
-
-            {{-- Filter dan Pencarian --}}
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Cari nama pelapor..." id="search-input">
-                        <button class="btn btn-outline-secondary" type="button">
-                            <i class="bi bi-search"></i>
-                        </button>
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2>Daftar Laporan</h2>
+            </div>
+            <div class="container mt-4">
+                <!-- Filter dan Pencarian -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Cari nama pelapor..." id="search-input">
+                            <button class="btn btn-outline-secondary" type="button"><i class="bi bi-search"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <select class="form-select float-end" style="width: auto;" id="category-filter">
+                            <option selected value="all">Semua Kategori</option>
+                            <option value="pernikahan dini">Pernikahan Anak</option>
+                            <option value="kekerasan pada anak">Kekerasan pada Anak</option>
+                            <option value="bullying">Bullying</option>
+                            <option value="stunting">Stunting</option>
+                        </select>
                     </div>
                 </div>
-                <div class="col-md-6 text-end">
-                    <select class="form-select float-end" style="width: auto;" id="category-filter">
-                        <option selected value="all">Semua Kategori</option>
-                        <option value="pernikahan dini">Pernikahan Anak</option>
-                        <option value="kekerasan pada anak">Kekerasan pada Anak</option>
-                        <option value="bullying">Bullying</option>
-                        <option value="stunting">Stunting</option>
-                    </select>
-                </div>
-            </div>
 
-            {{-- Tabel Laporan --}}
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Nama Pelapor</th>
-                            <th>Daerah</th>
-                            <th>Role</th>
-                            <th>Waktu Lapor</th>
-                            <th>Kategori</th>
-                            <th>Status</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($laporan as $item)
-                        <tr class="laporan-row" data-kategori="{{ strtolower($item['kategori']) }}">
-                            <td>{{ $item['id'] ?? '-' }}</td>
-                            <td>{{ $item['nama'] ?? '-' }}</td>
-                            <td>{{ $item['daerah'] ?? '-' }}</td>
-                            <td>{{ $item['role'] ?? '-' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($item['create_at'])->format('d M Y, H:i') ?? '-' }}</td>
-                            <td>{{ $item['kategori'] ?? '-' }}</td>
-                            <td>
+                <!-- Tabel Laporan -->
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama Pelapor</th>
+                                <th>Daerah</th>
+                                <th>Role</th>
+                                <th>Waktu Lapor</th>
+                                <th>Kategori</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($laporan as $item)
                                 @php
+                                    $kategori = strtolower($item['kategori'] ?? 'lainnya');
+                                    $kategoriBadgeClass = match($kategori) {
+                                        'pernikahan dini' => 'bg-pernikahan',
+                                        'kekerasan pada anak' => 'bg-kekerasan',
+                                        'bullying' => 'bg-bullying',
+                                        'stunting' => 'bg-stunting',
+                                        default => 'bg-secondary',
+                                    };
+                                    $kategoriDisplay = match($kategori) {
+                                        'pernikahan dini' => 'Pernikahan Anak',
+                                        'kekerasan pada anak' => 'Kekerasan pada Anak',
+                                        'bullying' => 'Bullying',
+                                        'stunting' => 'Stunting',
+                                        default => ucfirst($kategori),
+                                    };
                                     $status = strtolower($item['status'] ?? 'baru');
                                     $badgeColor = match($status) {
                                         'selesai' => 'success',
@@ -206,52 +231,55 @@
                                         default => 'secondary',
                                     };
                                 @endphp
-                                <span class="badge bg-{{ $badgeColor }}">
-                                    {{ ucfirst($status) }}
-                                </span>
-                            </td>
-                            <td>
-                                <a href="{{ url('/admin/laporan/'.$item['id']) }}" class="btn btn-sm btn-primary">
-                                    Detail
-                                </a>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                <tr class="laporan-row" data-kategori="{{ $kategori }}">
+                                    <td>{{ $item['id'] ?? '-' }}</td>
+                                    <td>{{ $item['nama'] ?? '-' }}</td>
+                                    <td>{{ $item['daerah'] ?? '-' }}</td>
+                                    <td>{{ $item['role'] ?? '-' }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($item['create_at'])->format('d M Y, H:i') ?? '-' }}</td>
+                                    <td><span class="badge {{ $kategoriBadgeClass }}">{{ $kategoriDisplay }}</span></td>
+                                    <td><span class="badge bg-{{ $badgeColor }}">{{ ucfirst($status) }}</span></td>
+                                    <td>
+                                        <a href="{{ url('/admin/laporan/'.$item['id']) }}" class="btn btn-sm btn-primary">
+                                            Detail
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
+    </div>
 
-        {{-- Script Filter & Search --}}
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const searchInput = document.getElementById('search-input');
-                const categoryFilter = document.getElementById('category-filter');
-                const rows = document.querySelectorAll('table tbody tr.laporan-row');
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('search-input');
+            const categoryFilter = document.getElementById('category-filter');
+            const rows = document.querySelectorAll('table tbody tr.laporan-row');
 
-                function filterTable() {
-                    const searchTerm = searchInput.value.toLowerCase();
-                    const selectedCategory = categoryFilter.value;
+            function filterTable() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedCategory = categoryFilter.value;
 
-                    rows.forEach(row => {
-                        const namaPelapor = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                        const kategori = row.getAttribute('data-kategori');
+                rows.forEach(row => {
+                    const namaPelapor = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                    const kategori = row.getAttribute('data-kategori');
 
-                        const matchCategory = selectedCategory === 'all' || kategori === selectedCategory;
-                        const matchSearch = namaPelapor.includes(searchTerm);
+                    const matchCategory = selectedCategory === 'all' || kategori === selectedCategory;
+                    const matchSearch = namaPelapor.includes(searchTerm);
 
-                        if (matchCategory && matchSearch) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-                }
+                    row.style.display = (matchCategory && matchSearch) ? '' : 'none';
+                });
+            }
 
-                searchInput.addEventListener('input', filterTable);
-                categoryFilter.addEventListener('change', filterTable);
-            });
-        </script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            searchInput.addEventListener('input', filterTable);
+            categoryFilter.addEventListener('change', filterTable);
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

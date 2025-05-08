@@ -7,6 +7,7 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\dashboardcontroller;
+use App\Http\Controllers\stuntingcontroller;
 
 Route::get('/', function () {
     return view('Landing');
@@ -41,3 +42,5 @@ Route::get('/admin/tambah-admin', [PengaturanController::class, 'formTambahAdmin
 Route::post('/admin/tambah-admin', [PengaturanController::class, 'tambahAdmin'])->name('admin.storeAdmin');
 Route::delete('/admin/pengaturan/{uid}', [PengaturanController::class, 'hapusAdmin'])->name('admin.hapusAdmin');
 
+// Stunting
+Route::get('/admin/stunting/chart', [stuntingcontroller::class, 'chart'])->name('admin.stunting.chart');
