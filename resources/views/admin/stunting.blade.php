@@ -258,11 +258,16 @@
         // Pencarian kota
         document.getElementById('citySearch').addEventListener('input', function () {
             const query = this.value.toLowerCase();
-            const filtered = Object.fromEntries(
-                Object.entries(allData).filter(([city]) => city.toLowerCase().includes(query))
-            );
-            buildChart(filtered);
+            if (query === '') {
+                buildChart(@json($topCities)); // kembali ke top 4
+            } else {
+                const filtered = Object.fromEntries(
+                    Object.entries(allData).filter(([city]) => city.toLowerCase().includes(query))
+                );
+                buildChart(filtered);
+            }
         });
+
     </script>
 
 </body>
