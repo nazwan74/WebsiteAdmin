@@ -112,7 +112,7 @@
                 </a>
             </li>
             <li>
-                <a href="#">
+                <a href="/admin/stunting/chart">
                     <i class="bi bi-bar-chart"></i>
                     Stunting
                 </a>
