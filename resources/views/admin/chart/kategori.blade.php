@@ -243,6 +243,12 @@
             <div class="chart-title">{{ $title }}</div>
             <canvas id="kasusChart"></canvas>
         </div>
+        @if(isset($stuntingCasesLabels))
+        <div class="chart-container">
+            <div class="chart-title">Distribusi Kasus Stunting per Daerah</div>
+            <canvas id="stuntingCasesChart"></canvas>
+        </div>
+        @endif
     </div>
 
     <script>
@@ -300,6 +306,51 @@
                 }
             }
         });
+
+        @if(isset($stuntingCasesLabels))
+        // Inisialisasi Chart untuk Kasus Stunting
+        const stuntingCtx = document.getElementById('stuntingCasesChart').getContext('2d');
+        new Chart(stuntingCtx, {
+            type: 'bar',
+            data: {
+                labels: @json($stuntingCasesLabels),
+                datasets: [{
+                    label: 'Jumlah Kasus Stunting',
+                    data: @json($stuntingCasesData),
+                    backgroundColor: '#59a14f',
+                    borderColor: '#59a14f',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Distribusi Kasus Stunting per Daerah'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Jumlah Kasus'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Daerah'
+                        }
+                    }
+                }
+            }
+        });
+        @endif
     </script>
 </body>
 </html> 

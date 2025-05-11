@@ -24,6 +24,12 @@ class PengaturanController extends Controller
     public function index()
     {
         if (!Session::has('admin') || Session::get('admin.role') !== 'super_admin') {
+            if (request()->ajax()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Anda tidak memiliki akses.'
+                ]);
+            }
             return redirect()->route('admin.dashboard')->with('error', 'Anda tidak memiliki akses.');
         }
 

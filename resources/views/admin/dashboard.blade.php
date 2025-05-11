@@ -145,6 +145,8 @@
 
     </style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Add SweetAlert2 CSS and JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <!-- Sidebar -->
@@ -292,6 +294,39 @@
             const dropdown = event.currentTarget.parentElement;
             dropdown.classList.toggle('active');
         }
+
+        // Add access check for pengaturan link
+        document.addEventListener('DOMContentLoaded', function() {
+            const pengaturanLink = document.querySelector('a[href="/admin/pengaturan"]');
+            if (pengaturanLink) {
+                pengaturanLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Check if user is super_admin
+                    fetch('/admin/pengaturan', {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'error') {
+                            Swal.fire({
+                                title: 'Akses Ditolak',
+                                text: data.message,
+                                icon: 'error',
+                                confirmButtonColor: '#3085d6'
+                            });
+                        } else {
+                            window.location.href = '/admin/pengaturan';
+                        }
+                    })
+                    .catch(error => {
+                        window.location.href = '/admin/pengaturan';
+                    });
+                });
+            }
+        });
     </script>
     <!-- Script Chart -->
     <script>

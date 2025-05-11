@@ -147,10 +147,10 @@ class ChartController extends Controller
 
     public function stunting()
     {
-        // Get data from stunting collection
+        // Get data from stunting collection for stunting results
         $stuntingSnapshots = $this->firestore->collection('stunting')->documents();
         
-        // Initialize array to store data
+        // Initialize array to store stunting result data
         $daerahStuntingData = [];
         
         foreach ($stuntingSnapshots as $doc) {
@@ -172,7 +172,7 @@ class ChartController extends Controller
             $daerahStuntingData[$daerah][$stuntingResult]++;
         }
         
-        // Prepare data for chart
+        // Prepare data for stunting result chart
         $daerahLabels = array_keys($daerahStuntingData);
         $stuntingResultLabels = [];
         $datasets = [];
@@ -206,12 +206,32 @@ class ChartController extends Controller
                 'borderWidth' => 1
             ];
         }
+
+        // Get data from laporan collection for stunting cases
+        $laporanSnapshots = $this->firestore->collection('laporan')
+            ->where('kategori', '=', 'stunting')
+            ->documents();
+        
+        $daerahStuntingCases = [];
+        
+        foreach ($laporanSnapshots as $doc) {
+            $data = $doc->data();
+            $daerah = $data['daerah'] ?? 'Tidak diketahui';
+            
+            if (!isset($daerahStuntingCases[$daerah])) {
+                $daerahStuntingCases[$daerah] = 0;
+            }
+            
+            $daerahStuntingCases[$daerah]++;
+        }
         
         return view('admin.chart.kategori', [
             'title' => 'Distribusi Hasil Stunting per Kota',
             'labels' => $daerahLabels,
             'datasets' => $datasets,
-            'backgroundColor' => '#59a14f'
+            'backgroundColor' => '#59a14f',
+            'stuntingCasesLabels' => array_keys($daerahStuntingCases),
+            'stuntingCasesData' => array_values($daerahStuntingCases)
         ]);
     }
 } 
