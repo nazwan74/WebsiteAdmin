@@ -302,7 +302,9 @@
                         <h6 class="fw-bold mb-0 small">Status Laporan</h6>
                         <div class="d-flex gap-2">
                             <span class="badge bg-success">{{ $totalSelesai }} Selesai</span>
-                            <span class="badge bg-warning">{{ $totalLaporan - $totalSelesai }} Diproses</span>
+                            <span class="badge bg-warning">{{ $totalDiproses }} Diproses</span>
+                            <span class="badge bg-secondary">{{ $totalBaru }} Baru</span>
+                            <span class="badge bg-danger">{{ $totalDitolak }} Ditolak</span>
                         </div>
                     </div>
                     <div style="height: 280px;">
@@ -474,13 +476,13 @@
         });
 
         // === Status Chart ===
-        new Chart(document.getElementById('statusChart'), {
+        window.statusChart = new Chart(document.getElementById('statusChart'), {
             type: 'pie',
             data: {
-                labels: ['Selesai', 'Diproses'],
+                labels: ['Selesai', 'Diproses', 'Baru', 'Ditolak'],
                 datasets: [{
-                    data: [{{ $totalSelesai }}, {{ $totalLaporan - $totalSelesai }}],
-                    backgroundColor: ['#28a745', '#ffc107'],
+                    data: [{{ $totalSelesai }}, {{ $totalDiproses }}, {{ $totalBaru }}, {{ $totalDitolak }}],
+                    backgroundColor: ['#28a745', '#ffc107', '#6c757d', '#dc3545'],
                     borderWidth: 0
                 }]
             },

@@ -33,6 +33,9 @@
             font-weight: 600;
             color: #1a73e8;
             margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         .section-title {
             font-size: 1.1rem;
@@ -42,21 +45,29 @@
             color: #2c3e50;
             border-left: 4px solid #1a73e8;
             padding-left: 10px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         .label-key {
             font-weight: 500;
             color: #6c757d;
+            font-size: 0.9rem;
         }
         .detail-row {
             margin-bottom: 0.8rem;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 0.8rem;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            transition: all 0.2s ease;
         }
-        .detail-row:last-child {
-            border-bottom: none;
+        .detail-row:hover {
+            background-color: #f1f8ff;
         }
         .detail-value {
             font-weight: 500;
+            color: #2c3e50;
+            margin-top: 0.3rem;
         }
         .badge-status {
             font-size: 0.9rem;
@@ -66,13 +77,15 @@
         }
         .laporan-content {
             background-color: #f8f9fa;
-            padding: 1.2rem;
-            border-radius: 8px;
-            border-left: 4px solid #6c757d;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #1a73e8;
+            margin: 1rem 0;
+            line-height: 1.6;
         }
         .btn {
             border-radius: 8px;
-            padding: 0.6rem 1rem;
+            padding: 0.8rem 1.2rem;
             font-weight: 500;
             transition: all 0.2s;
         }
@@ -82,30 +95,36 @@
             align-items: center;
             justify-content: center;
             height: 45px;
+            gap: 0.5rem;
         }
         .btn i {
-            margin-right: 0.5rem;
+            font-size: 1.1rem;
         }
         .alert {
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 1rem 1.5rem;
             margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
         }
         .page-title {
             display: flex;
             align-items: center;
             margin-bottom: 1.5rem;
             color: #2c3e50;
+            font-size: 1.8rem;
         }
         .page-title i {
-            font-size: 1.8rem;
+            font-size: 2rem;
             margin-right: 0.8rem;
             color: #1a73e8;
         }
         .form-select, .form-control {
-            padding: 0.6rem 1rem;
+            padding: 0.8rem 1rem;
             border-radius: 8px;
             border: 1px solid #dee2e6;
+            font-size: 0.95rem;
         }
         .form-select:focus, .form-control:focus {
             border-color: #1a73e8;
@@ -115,12 +134,16 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .back-button {
             display: flex;
             align-items: center;
-            padding: 0.6rem 1.2rem;
+            padding: 0.8rem 1.5rem;
             background-color: #f1f8ff;
             border: 2px solid #1a73e8;
             border-radius: 8px;
@@ -129,6 +152,7 @@
             text-decoration: none;
             transition: all 0.2s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            gap: 0.5rem;
         }
         .back-button:hover {
             background-color: #1a73e8;
@@ -141,12 +165,43 @@
             background-color: #dee2e6;
             margin: 2rem 0;
         }
+        .status-section {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+        }
+        .action-section {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1.5rem;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .category-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            font-weight: 500;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .category-badge.pernikahan { background-color: #ffeef2; color: #b12c2c; }
+        .category-badge.kekerasan { background-color: #fff0f0; color: #c0392b; }
+        .category-badge.bullying { background-color: #fff3cd; color: #8a6d3b; }
+        .category-badge.stunting { background-color: #eafaf2; color: #2e7d32; }
     </style>
 </head>
 <body>
     <div class="container py-4">
         <div class="row justify-content-center">
-            <div class="col-lg-9">
+            <div class="col-lg-10">
                 <!-- Header dengan tombol kembali -->
                 <div class="page-header">
                     <h3 class="page-title mb-0">
@@ -154,13 +209,14 @@
                         <span>Detail Laporan</span>
                     </h3>
                     <a href="{{ route('admin.laporan') }}" class="back-button">
-                        <i class="bi bi-arrow-left me-2"></i> Kembali ke Daftar
+                        <i class="bi bi-arrow-left"></i>
+                        <span>Kembali ke Daftar</span>
                     </a>
                 </div>
 
                 @if(session('success'))
-                    <div class="alert alert-success d-flex align-items-center">
-                        <i class="bi bi-check-circle-fill me-2"></i>
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle-fill"></i>
                         <div>{{ session('success') }}</div>
                     </div>
                 @endif
@@ -169,117 +225,146 @@
                 <div class="card">
                     <div class="card-body">
                         <!-- Informasi Laporan -->
-                        <h4 class="card-title">
-                            <i class="bi bi-file-earmark-text me-2"></i>
-                            {{ $laporan['judul'] ?? 'Tidak Ada Judul' }}
-                        </h4>
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <h4 class="card-title">
+                                <i class="bi bi-file-earmark-text"></i>
+                                {{ $laporan['judul'] ?? 'Tidak Ada Judul' }}
+                            </h4>
+                            @php
+                                $kategori = strtolower($laporan['kategori'] ?? '');
+                                $kategoriClass = match($kategori) {
+                                    'pernikahan dini' => 'pernikahan',
+                                    'kekerasan anak' => 'kekerasan',
+                                    'bullying' => 'bullying',
+                                    'stunting' => 'stunting',
+                                    default => 'secondary'
+                                };
+                            @endphp
+                            <span class="category-badge {{ $kategoriClass }}">
+                                <i class="bi bi-tag"></i>
+                                {{ $laporan['kategori'] ?? '-' }}
+                            </span>
+                        </div>
                         
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="detail-row">
-                                    <div class="label-key mb-1">Kategori</div>
-                                    <div class="detail-value">{{ $laporan['kategori'] ?? '-' }}</div>
+                        <div class="info-grid">
+                            <div class="detail-row">
+                                <div class="label-key">
+                                    <i class="bi bi-person me-2"></i>Nama Pelapor
                                 </div>
-                                
-                                <div class="detail-row">
-                                    <div class="label-key mb-1">Nama Pelapor</div>
-                                    <div class="detail-value">{{ $laporan['nama'] ?? '-' }}</div>
+                                <div class="detail-value">{{ $laporan['nama'] ?? '-' }}</div>
+                            </div>
+                            
+                            <div class="detail-row">
+                                <div class="label-key">
+                                    <i class="bi bi-geo-alt me-2"></i>Daerah
                                 </div>
-                                
-                                <div class="detail-row">
-                                    <div class="label-key mb-1">Daerah</div>
-                                    <div class="detail-value">{{ $laporan['daerah'] ?? '-' }}</div>
+                                <div class="detail-value">{{ $laporan['daerah'] ?? '-' }}</div>
+                            </div>
+                            
+                            <div class="detail-row">
+                                <div class="label-key">
+                                    <i class="bi bi-person-badge me-2"></i>Role
+                                </div>
+                                <div class="detail-value">{{ $laporan['role'] ?? '-' }}</div>
+                            </div>
+                            
+                            <div class="detail-row">
+                                <div class="label-key">
+                                    <i class="bi bi-calendar3 me-2"></i>Tanggal Laporan
+                                </div>
+                                <div class="detail-value">
+                                    {{ \Carbon\Carbon::parse($laporan['create_at'] ?? now())->translatedFormat('d F Y, H:i') }}
                                 </div>
                             </div>
                             
-                            <div class="col-md-6">
-                                <div class="detail-row">
-                                    <div class="label-key mb-1">Role</div>
-                                    <div class="detail-value">{{ $laporan['role'] ?? '-' }}</div>
+                            <div class="detail-row">
+                                <div class="label-key">
+                                    <i class="bi bi-telephone me-2"></i>No HP
                                 </div>
-                                
-                                <div class="detail-row">
-                                    <div class="label-key mb-1">Tanggal Laporan</div>
-                                    <div class="detail-value">
-                                        {{ \Carbon\Carbon::parse($laporan['create_at'] ?? now())->translatedFormat('d F Y, H:i') }}
-                                    </div>
-                                </div>
-                                
-                                <div class="detail-row">
-                                    <div class="label-key mb-1">No HP</div>
-                                    <div class="detail-value">{{ $laporan['no_hp'] ?? '-' }}</div>
-                                </div>
+                                <div class="detail-value">{{ $laporan['no_hp'] ?? '-' }}</div>
                             </div>
                         </div>
 
-                        <div class="section-title">Isi Laporan</div>
-                        <div class="laporan-content mb-4">
+                        <div class="section-title">
+                            <i class="bi bi-chat-square-text"></i>
+                            Isi Laporan
+                        </div>
+                        <div class="laporan-content">
                             {{ $laporan['isi laporan'] ?? '-' }}
                         </div>
 
-                        <div class="d-flex align-items-center mb-4">
-                            <div class="me-3">
-                                <div class="label-key mb-1">Status Saat Ini</div>
-                                @php
-                                    $statusClass = [
-                                        'baru' => 'bg-secondary',
-                                        'diproses' => 'bg-warning',
-                                        'selesai' => 'bg-success',
-                                        'ditolak' => 'bg-danger'
-                                    ][$laporan['status']] ?? 'bg-secondary';
-                                @endphp
-                                <span class="badge {{ $statusClass }} badge-status">
-                                    {{ ucfirst($laporan['status']) }}
-                                </span>
+                        <!-- Status Section -->
+                        <div class="status-section">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="label-key mb-2">Status Saat Ini</div>
+                                    @php
+                                        $statusClass = [
+                                            'baru' => 'bg-secondary',
+                                            'diproses' => 'bg-warning',
+                                            'selesai' => 'bg-success',
+                                            'ditolak' => 'bg-danger'
+                                        ][$laporan['status']] ?? 'bg-secondary';
+                                    @endphp
+                                    <span class="badge {{ $statusClass }} badge-status">
+                                        {{ ucfirst($laporan['status']) }}
+                                    </span>
+                                </div>
+                                <div class="text-end">
+                                    <div class="label-key mb-2">ID Laporan</div>
+                                    <div class="detail-value">#{{ $laporan['id'] }}</div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Divider -->
-                        <div class="divider"></div>
-                        
-                        <!-- Bagian Aksi -->
-                        <h5 class="fw-bold mb-3">
-                            <i class="bi bi-gear me-2"></i>
-                            Kelola Laporan
-                        </h5>
+                        <!-- Action Section -->
+                        <div class="action-section">
+                            <h5 class="fw-bold mb-4">
+                                <i class="bi bi-gear me-2"></i>
+                                Kelola Laporan
+                            </h5>
 
-                        <!-- Form Ubah Status -->
-                        <form action="{{ route('admin.laporan.setStatus', $laporan['id']) }}" method="POST" class="mb-4">
-                            @csrf
+                            <!-- Form Ubah Status -->
+                            <form action="{{ route('admin.laporan.setStatus', $laporan['id']) }}" method="POST" class="mb-4" id="statusForm">
+                                @csrf
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <label for="status" class="form-label fw-bold">Ubah Status</label>
+                                        <select name="status" class="form-select" id="status" required>
+                                            <option value="">-- Pilih Status --</option>
+                                            <option value="baru">Baru</option>
+                                            <option value="diproses">Diproses</option>
+                                            <option value="selesai">Selesai</option>
+                                            <option value="ditolak">Ditolak</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary w-100 btn-action">
+                                            <i class="bi bi-check-circle"></i>
+                                            <span>Perbarui Status</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                            
+                            <!-- Baris Tombol Aksi -->
                             <div class="row g-3">
-                                <div class="col-md-8">
-                                    <label for="status" class="form-label fw-bold">Ubah Status</label>
-                                    <select name="status" class="form-select" id="status" required>
-                                        <option value="">-- Pilih Status --</option>
-                                        <option value="baru">Baru</option>
-                                        <option value="diproses">Diproses</option>
-                                        <option value="selesai">Selesai</option>
-                                        <option value="ditolak">Ditolak</option>
-                                    </select>
+                                <div class="col-md-6">
+                                    <a href="{{ route('admin.laporan.download', $laporan['id']) }}" class="btn btn-warning w-100 btn-action">
+                                        <i class="bi bi-download"></i>
+                                        <span>Download PDF</span>
+                                    </a>
                                 </div>
-                                <div class="col-md-4 d-flex align-items-end">
-                                    <button type="submit" class="btn btn-primary w-100 btn-action">
-                                        <i class="bi bi-check-circle"></i> Perbarui Status
-                                    </button>
+                                <div class="col-md-6">
+                                    <form method="POST" action="{{ route('admin.laporan.delete', $laporan['id']) }}" class="m-0" id="delete-form">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="btn btn-danger w-100 btn-action" id="delete-button">
+                                            <i class="bi bi-trash"></i>
+                                            <span>Hapus Laporan</span>
+                                        </button>
+                                    </form>
                                 </div>
-                            </div>
-                        </form>
-                        
-                        <!-- Baris Tombol Aksi -->
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <a href="{{ route('admin.laporan.download', $laporan['id']) }}" class="btn btn-warning w-100 btn-action">
-                                    <i class="bi bi-download"></i> Download PDF
-                                </a>
-                            </div>
-                            <div class="col-md-6">
-                                <form method="POST" action="{{ route('admin.laporan.delete', $laporan['id']) }}" class="m-0" id="delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" class="btn btn-danger w-100 btn-action" id="delete-button">
-                                        <i class="bi bi-trash"></i> Hapus Laporan
-                                    </button>
-                                </form>
                             </div>
                         </div>
                     </div>
@@ -306,6 +391,61 @@
                 if (result.isConfirmed) {
                     document.getElementById('delete-form').submit();
                 }
+            });
+        });
+
+        // Handle status update with AJAX
+        document.getElementById('statusForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const form = this;
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update status badge
+                    const statusBadge = document.querySelector('.badge-status');
+                    const statusClass = {
+                        'baru': 'bg-secondary',
+                        'diproses': 'bg-warning',
+                        'selesai': 'bg-success',
+                        'ditolak': 'bg-danger'
+                    }[formData.get('status')] || 'bg-secondary';
+                    
+                    statusBadge.className = `badge ${statusClass} badge-status`;
+                    statusBadge.textContent = formData.get('status').charAt(0).toUpperCase() + formData.get('status').slice(1);
+
+                    // Show success message
+                    Swal.fire({
+                        title: 'Berhasil!',
+                        text: data.message,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    // Update dashboard chart if it exists
+                    const statusChart = window.statusChart;
+                    if (statusChart) {
+                        statusChart.data.datasets[0].data = [data.data.totalSelesai, data.data.totalDiproses];
+                        statusChart.update();
+                    }
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Terjadi kesalahan saat memperbarui status.',
+                    icon: 'error'
+                });
             });
         });
     </script>

@@ -69,6 +69,47 @@ class laporancontroller extends Controller
         $this->firestore->collection('laporan')->document($id)->update([
             ['path' => 'status', 'value' => $status]
         ]);
+
+        // If it's an AJAX request, return updated counts
+        if ($request->ajax()) {
+            $laporanSnapshots = $this->firestore->collection('laporan')->documents();
+            $totalLaporan = $laporanSnapshots->size();
+            $laporanSelesai = 0;
+            $laporanDiproses = 0;
+            $laporanBaru = 0;
+            $laporanDitolak = 0;
+
+            foreach ($laporanSnapshots as $doc) {
+                $data = $doc->data();
+                $status = strtolower($data['status'] ?? 'baru');
+                switch ($status) {
+                    case 'selesai':
+                        $laporanSelesai++;
+                        break;
+                    case 'diproses':
+                        $laporanDiproses++;
+                        break;
+                    case 'baru':
+                        $laporanBaru++;
+                        break;
+                    case 'ditolak':
+                        $laporanDitolak++;
+                        break;
+                }
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Status berhasil diperbarui',
+                'data' => [
+                    'totalLaporan' => $totalLaporan,
+                    'totalSelesai' => $laporanSelesai,
+                    'totalDiproses' => $laporanDiproses,
+                    'totalBaru' => $laporanBaru,
+                    'totalDitolak' => $laporanDitolak
+                ]
+            ]);
+        }
     
         return redirect()->route('admin.laporan.detail', ['id' => $id])->with('success', 'Status berhasil diperbarui.');
     }

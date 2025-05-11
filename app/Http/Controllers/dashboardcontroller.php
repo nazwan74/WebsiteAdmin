@@ -34,8 +34,11 @@ class DashboardController extends Controller
         $totalLaporan  = $laporanSnapshots->size();
         $totalArticles = $articlesSnapshots->size();
 
-        // Hitung laporan selesai
+        // Hitung status laporan
         $laporanSelesai = 0;
+        $laporanDiproses = 0;
+        $laporanBaru = 0;
+        $laporanDitolak = 0;
 
         // Untuk perhitungan
         $kategoriCount = [];
@@ -45,9 +48,21 @@ class DashboardController extends Controller
         foreach ($laporanSnapshots as $doc) {
             $data = $doc->data();
 
-            // Hitung status selesai
-            if (isset($data['status']) && strtolower($data['status']) === 'selesai') {
-                $laporanSelesai++;
+            // Hitung status
+            $status = strtolower($data['status'] ?? 'baru');
+            switch ($status) {
+                case 'selesai':
+                    $laporanSelesai++;
+                    break;
+                case 'diproses':
+                    $laporanDiproses++;
+                    break;
+                case 'baru':
+                    $laporanBaru++;
+                    break;
+                case 'ditolak':
+                    $laporanDitolak++;
+                    break;
             }
 
             $kategori = $data['kategori'] ?? 'Tidak diketahui';
@@ -102,6 +117,9 @@ class DashboardController extends Controller
             'totalLaporan'      => $totalLaporan,
             'totalArticles'     => $totalArticles,
             'totalSelesai'      => $laporanSelesai,
+            'totalDiproses'     => $laporanDiproses,
+            'totalBaru'         => $laporanBaru,
+            'totalDitolak'      => $laporanDitolak,
             'topKategori'       => $topKategori,
             'topDaerahKategori' => $topDaerahKategori,
         ]);
