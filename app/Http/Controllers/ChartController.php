@@ -147,11 +147,70 @@ class ChartController extends Controller
 
     public function stunting()
     {
-        $chartData = $this->getChartDataByKategori('stunting');
+        // Get data from stunting collection
+        $stuntingSnapshots = $this->firestore->collection('stunting')->documents();
+        
+        // Initialize array to store data
+        $daerahStuntingData = [];
+        
+        foreach ($stuntingSnapshots as $doc) {
+            $data = $doc->data();
+            $daerah = $data['userCity'] ?? 'Tidak diketahui';
+            $stuntingResult = $data['stuntingResult'] ?? 'Tidak diketahui';
+            
+            // Initialize array for daerah if not exists
+            if (!isset($daerahStuntingData[$daerah])) {
+                $daerahStuntingData[$daerah] = [];
+            }
+            
+            // Initialize counter for stuntingResult if not exists
+            if (!isset($daerahStuntingData[$daerah][$stuntingResult])) {
+                $daerahStuntingData[$daerah][$stuntingResult] = 0;
+            }
+            
+            // Increment counter
+            $daerahStuntingData[$daerah][$stuntingResult]++;
+        }
+        
+        // Prepare data for chart
+        $daerahLabels = array_keys($daerahStuntingData);
+        $stuntingResultLabels = [];
+        $datasets = [];
+        
+        // Collect all unique stunting results
+        foreach ($daerahStuntingData as $daerahData) {
+            foreach (array_keys($daerahData) as $result) {
+                if (!in_array($result, $stuntingResultLabels)) {
+                    $stuntingResultLabels[] = $result;
+                }
+            }
+        }
+        
+        // Prepare dataset for each stunting result
+        $colors = [
+            '#4e79a7', '#f28e2c', '#e15759', '#76b7b2', 
+            '#59a14f', '#edc949', '#af7aa1', '#ff9da7'
+        ];
+        
+        foreach ($stuntingResultLabels as $index => $result) {
+            $data = [];
+            foreach ($daerahLabels as $daerah) {
+                $data[] = $daerahStuntingData[$daerah][$result] ?? 0;
+            }
+            
+            $datasets[] = [
+                'label' => $result,
+                'data' => $data,
+                'backgroundColor' => $colors[$index % count($colors)],
+                'borderColor' => $colors[$index % count($colors)],
+                'borderWidth' => 1
+            ];
+        }
+        
         return view('admin.chart.kategori', [
-            'title' => 'Distribusi Kasus Stunting per Daerah',
-            'labels' => $chartData['labels'],
-            'data' => $chartData['data'],
+            'title' => 'Distribusi Hasil Stunting per Kota',
+            'labels' => $daerahLabels,
+            'datasets' => $datasets,
             'backgroundColor' => '#59a14f'
         ]);
     }

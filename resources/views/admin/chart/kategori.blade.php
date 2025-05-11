@@ -258,19 +258,23 @@
             type: 'bar',
             data: {
                 labels: @json($labels),
-                datasets: [{
-                    label: 'Jumlah Kasus',
-                    data: @json($data),
-                    backgroundColor: '{{ $backgroundColor }}',
-                    borderColor: '{{ $backgroundColor }}',
-                    borderWidth: 1
-                }]
+                datasets: @if(isset($datasets))
+                    @json($datasets)
+                @else
+                    [{
+                        label: 'Jumlah Kasus',
+                        data: @json($data),
+                        backgroundColor: '{{ $backgroundColor }}',
+                        borderColor: '{{ $backgroundColor }}',
+                        borderWidth: 1
+                    }]
+                @endif
             },
             options: {
                 responsive: true,
                 plugins: {
                     legend: {
-                        display: false
+                        position: 'top',
                     },
                     title: {
                         display: true,
@@ -280,12 +284,14 @@
                 scales: {
                     y: {
                         beginAtZero: true,
+                        stacked: true,
                         title: {
                             display: true,
                             text: 'Jumlah Kasus'
                         }
                     },
                     x: {
+                        stacked: true,
                         title: {
                             display: true,
                             text: 'Daerah'
