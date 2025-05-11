@@ -58,6 +58,19 @@ class PengaturanController extends Controller
         }
 
         try {
+            // Ambil data admin dari Firestore berdasarkan UID
+            $adminDoc = $this->firestore->collection('admins')->document($uid)->snapshot();
+
+            if (!$adminDoc->exists()) {
+                return redirect()->route('admin.pengaturan')->withErrors(['error' => 'Admin tidak ditemukan.']);
+            }
+
+            // Cek apakah role-nya super_admin
+            $adminData = $adminDoc->data();
+            if (isset($adminData['role']) && $adminData['role'] === 'super_admin') {
+                return redirect()->route('admin.pengaturan')->withErrors(['error' => 'Akun super_admin tidak bisa dihapus.']);
+            }
+
             // Hapus user dari Firebase Authentication
             $this->auth->deleteUser($uid);
 
@@ -69,6 +82,7 @@ class PengaturanController extends Controller
             return redirect()->route('admin.pengaturan')->withErrors(['error' => 'Gagal menghapus admin: ' . $e->getMessage()]);
         }
     }
+
 
 
     public function tambahAdmin(Request $request)
