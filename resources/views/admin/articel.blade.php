@@ -253,13 +253,13 @@
         </div>
         <ul class="sidebar-menu">
             <li>
-                <a href="/admin/dashboard" class="active">
+                <a href="/admin/dashboard">
                     <i class="bi bi-grid"></i>
                     Dashboard
                 </a>
             </li>
             <li>
-                <a href="/admin/articel">
+                <a href="/admin/articel"  class="active">
                     <i class="bi bi-journal-text"></i>
                     Artikel
                 </a>
