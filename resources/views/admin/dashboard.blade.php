@@ -269,19 +269,44 @@
         <!-- Bagian Chart Visualisasi -->
         <!-- Chart Section -->
         <div class="row g-3 mt-3">
-            <div class="col-md-6">
-                <div class="bg-white shadow-sm rounded p-3" style="height: 300px;">
-                    <h6 class="fw-bold mb-3 small">Top 4 Kategori Kasus</h6>
-                    <div style="height: 230px;">
+            <!-- Top 4 Kategori Kasus -->
+            <div class="col-md-4">
+                <div class="bg-white shadow-sm rounded p-3" style="height: 350px;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0 small">Top 4 Kategori Kasus</h6>
+                        <span class="badge bg-primary">{{ array_sum(array_values($topKategori)) }} Total Kasus</span>
+                    </div>
+                    <div style="height: 280px;">
                         <canvas id="kategoriChart"></canvas>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="bg-white shadow-sm rounded p-3" style="height: 300px;">
-                    <h6 class="fw-bold mb-3 small">Top Daerah & Kategori Terbanyak</h6>
-                    <div style="height: 230px;">
+
+            <!-- Top Daerah & Kategori -->
+            <div class="col-md-4">
+                <div class="bg-white shadow-sm rounded p-3" style="height: 350px;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0 small">Top Daerah & Kategori Terbanyak</h6>
+                        <span class="badge bg-success">{{ array_sum(array_map(function($item) { return $item['total']; }, $topDaerahKategori)) }} Total Laporan</span>
+                    </div>
+                    <div style="height: 280px;">
                         <canvas id="daerahKategoriChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Laporan -->
+            <div class="col-md-4">
+                <div class="bg-white shadow-sm rounded p-3" style="height: 350px;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0 small">Status Laporan</h6>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-success">{{ $totalSelesai }} Selesai</span>
+                            <span class="badge bg-warning">{{ $totalLaporan - $totalSelesai }} Diproses</span>
+                        </div>
+                    </div>
+                    <div style="height: 280px;">
+                        <canvas id="statusChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -332,28 +357,41 @@
     <script>
         // === Kategori Chart ===
         new Chart(document.getElementById('kategoriChart'), {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: {!! json_encode(array_keys($topKategori)) !!},
                 datasets: [{
                     data: {!! json_encode(array_values($topKategori)) !!},
                     backgroundColor: ['#4e79a7', '#f28e2c', '#e15759', '#76b7b2'],
-                    hoverOffset: 8
+                    hoverOffset: 8,
+                    borderWidth: 0
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom' },
+                    legend: { 
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `${context.label}: ${context.parsed} laporan`;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed * 100) / total).toFixed(1);
+                                return `${context.label}: ${context.parsed} laporan (${percentage}%)`;
                             }
                         }
                     }
-                }
+                },
+                cutout: '60%'
             }
         });
 
@@ -371,7 +409,8 @@
                     label: 'Jumlah Laporan',
                     data: laporanData,
                     backgroundColor: '#59a14f',
-                    borderRadius: 6
+                    borderRadius: 6,
+                    borderWidth: 0
                 }]
             },
             options: {
@@ -382,7 +421,10 @@
                         callbacks: {
                             label: function(context) {
                                 const index = context.dataIndex;
-                                return `Laporan: ${laporanData[index]}, Kategori: ${kategoriData[index]}`;
+                                return [
+                                    `Laporan: ${laporanData[index]}`,
+                                    `Kategori: ${kategoriData[index]}`
+                                ];
                             }
                         }
                     },
@@ -391,16 +433,78 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { stepSize: 1, precision: 0 },
+                        ticks: { 
+                            stepSize: 1, 
+                            precision: 0,
+                            font: {
+                                size: 11
+                            }
+                        },
                         title: {
                             display: true,
-                            text: 'Jumlah Laporan'
+                            text: 'Jumlah Laporan',
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: true,
+                            drawBorder: false
                         }
                     },
                     x: {
                         title: {
                             display: true,
-                            text: 'Nama Daerah'
+                            text: 'Nama Daerah',
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // === Status Chart ===
+        new Chart(document.getElementById('statusChart'), {
+            type: 'pie',
+            data: {
+                labels: ['Selesai', 'Diproses'],
+                datasets: [{
+                    data: [{{ $totalSelesai }}, {{ $totalLaporan - $totalSelesai }}],
+                    backgroundColor: ['#28a745', '#ffc107'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed * 100) / total).toFixed(1);
+                                return `${context.label}: ${context.parsed} laporan (${percentage}%)`;
+                            }
                         }
                     }
                 }
