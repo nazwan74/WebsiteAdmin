@@ -119,40 +119,131 @@
             color: #e74c3c;
             border-color: #e74c3c;
         }
+        .sidebar-menu .dropdown-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-decoration: none;
+    }
+
+    .sidebar-menu .dropdown-toggle:hover {
+        background-color: #f1f3f9;
+        color: #4361ee;
+    }
+
+    .sidebar-menu .dropdown-toggle i {
+        margin-right: 10px;
+        font-size: 1rem;
+        color: #6c757d;
+    }
+
+    .sidebar-menu .dropdown-toggle:hover i,
+    .sidebar-menu .dropdown.active .dropdown-toggle i {
+        color: #4361ee;
+    }
+
+    .sidebar-menu .submenu {
+        display: none;
+        list-style: none;
+        padding-left: 20px;
+        margin-top: 5px;
+    }
+
+    .sidebar-menu .submenu li a {
+        padding: 6px 8px;
+        font-size: 0.85rem;
+        color: #6c757d;
+        border-radius: 6px;
+        display: block;
+    }
+
+    .sidebar-menu .submenu li a:hover {
+        background-color: #f1f3f9;
+        color: #4361ee;
+    }
+
+    .sidebar-menu .dropdown.active .submenu {
+        display: block;
+    }
+
+    .dropdown-icon {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
     </style>
+        <script>
+            function toggleDropdown(event) {
+                event.preventDefault();
+                const dropdown = event.currentTarget.parentElement;
+                dropdown.classList.toggle('active');
+            }
+        </script>
     <!-- Script untuk pencarian dan filter -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('search-input');
-        const categoryFilter = document.getElementById('category-filter');
-        const rows = document.querySelectorAll('#articles-table tbody tr.article-row');
-        
-        // Fungsi untuk filter tabel
-        function filterTable() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const selectedCategory = categoryFilter.value;
-            
-            rows.forEach(row => {
-                const title = row.querySelector('td:first-child').textContent.toLowerCase();
-                const category = row.getAttribute('data-kategori');
-                
-                const matchCategory = selectedCategory === 'all' || category === selectedCategory;
-                const matchSearch = title.includes(searchTerm);
-                
-                if (matchCategory && matchSearch) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input');
+            const categoryFilter = document.getElementById('category-filter');
+            const rows = document.querySelectorAll('#articles-table tbody tr.article-row');
+
+            function filterTable() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedCategory = categoryFilter.value;
+
+                rows.forEach(row => {
+                    const title = row.querySelector('td:first-child').textContent.toLowerCase();
+                    const description = row.getAttribute('data-description') || '';
+                    const category = row.getAttribute('data-kategori');
+
+                    const matchCategory = selectedCategory === 'all' || category === selectedCategory;
+                    const matchSearch = title.includes(searchTerm) || description.includes(searchTerm);
+
+                    if (matchCategory && matchSearch) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+
+            // Event listeners
+            searchInput.addEventListener('input', filterTable);
+            categoryFilter.addEventListener('change', filterTable);
+
+            // SweetAlert delete confirmation
+            const deleteButtons = document.querySelectorAll('.delete-article-btn');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const form = this.closest('form');
+                    const articleTitle = this.getAttribute('data-title');
+
+                    Swal.fire({
+                        title: 'Konfirmasi Hapus',
+                        text: `Apakah Anda yakin ingin menghapus artikel "${articleTitle}"?`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Ya, Hapus!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
             });
-        }
-        
-        // Event listeners
-        searchInput.addEventListener('input', filterTable);
-        categoryFilter.addEventListener('change', filterTable);
-    });
-</script>
+        });
+    </script>
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Add SweetAlert2 CSS and JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <!-- Sidebar -->
@@ -162,13 +253,13 @@
         </div>
         <ul class="sidebar-menu">
             <li>
-                <a href="/admin/dashboard" >
+                <a href="/admin/dashboard" class="active">
                     <i class="bi bi-grid"></i>
                     Dashboard
                 </a>
             </li>
             <li>
-                <a href="/admin/articel" class="active">
+                <a href="/admin/articel">
                     <i class="bi bi-journal-text"></i>
                     Artikel
                 </a>
@@ -179,16 +270,31 @@
                     Laporan
                 </a>
             </li>
-            <li>
-                <a href="/admin/stunting/chart">
-                    <i class="bi bi-bar-chart"></i>
-                    Stunting
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" onclick="toggleDropdown(event)">
+                    <span>
+                        <i class="bi bi-bar-chart"></i>
+                        Chart
+                    </span>
+                    <i ></i>
                 </a>
+                <ul class="submenu">
+                    <li><a href="/admin/chart/kekerasan-anak">Kekerasan Anak</a></li>
+                    <li><a href="/admin/chart/pernikahan-anak">Pernikahan Anak</a></li>
+                    <li><a href="/admin/chart/bullying">Bullying</a></li>
+                    <li><a href="/admin/chart/stunting">Stunting</a></li>
+                </ul>
             </li>
             <li>
                 <a href="/admin/pengaturan">
                     <i class="bi bi-gear"></i>
                     Pengaturan
+                </a>
+            </li>
+            <li>
+                <a href="/admin/profile">
+                    <i class="bi bi-person-circle"></i>
+                    Profile
                 </a>
             </li>
         </ul>
@@ -230,8 +336,8 @@
         <div class="col-md-3">
             <div class="card bg-light-red text-dark h-100">
                 <div class="card-body">
-                    <h5><span class="text-danger">✋</span> Kekerasan pada Anak</h5>
-                    <p class="text-end mb-0">{{ count(array_filter($articles, function($article) { return $article['articleType'] == 'kekerasan pada anak'; })) }} Artikel</p>
+                    <h5><span class="text-danger">✋</span> Kekerasan Anak</h5>
+                    <p class="text-end mb-0">{{ count(array_filter($articles, function($article) { return $article['articleType'] == 'kekerasan anak'; })) }} Artikel</p>
                 </div>
             </div>
         </div>
@@ -274,7 +380,7 @@
                     <select class="form-select float-end" style="width: auto;" id="category-filter">
                         <option selected value="all">Semua Kategori</option>
                         <option value="pernikahan dini">Pernikahan Anak</option>
-                        <option value="kekerasan pada anak">Kekerasan pada Anak</option>
+                        <option value="kekerasan anak">Kekerasan Anak</option>
                         <option value="bullying">Bullying</option>
                         <option value="stunting">Stunting</option>
                     </select>
@@ -300,7 +406,10 @@
                     </thead>
                     <tbody>
                         @forelse($articles as $article)
-                            <tr class="article-row" data-kategori="{{ $article['articleType'] }}">
+                            <tr class="article-row"
+                            data-kategori="{{ $article['articleType'] }}"
+                            data-description="{{ strtolower($article['description']) }}">
+
                                 <td>{{ $article['title'] }}</td>
                                 <td>
                                     @php
@@ -310,9 +419,9 @@
                                                 $badgeClass = 'bg-pernikahan';
                                                 $displayText = 'Pernikahan Anak';
                                                 break;
-                                            case 'kekerasan pada anak':
+                                            case 'kekerasan anak':
                                                 $badgeClass = 'bg-kekerasan';
-                                                $displayText = 'Kekerasan pada Anak';
+                                                $displayText = 'Kekerasan Anak';
                                                 break;
                                             case 'bullying':
                                                 $badgeClass = 'bg-bullying';
@@ -352,7 +461,7 @@
                                     <form action="{{ route('admin.articel.destroy', $article['id']) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus artikel ini?')">
+                                        <button type="button" class="btn btn-sm btn-outline-danger delete-article-btn" data-title="{{ $article['title'] }}">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>

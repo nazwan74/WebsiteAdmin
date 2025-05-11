@@ -86,7 +86,7 @@ class articlecontroller extends Controller
     {
         $request->validate([
             'title' => 'required|string',
-            'articleType' => 'required|in:stunting,bullying,pernikahan dini,kekerasan pada anak',
+            'articleType' => 'required|in:stunting,bullying,pernikahan dini,kekerasan anak',
             'description' => 'required|string',
             'photoUrl' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
@@ -227,7 +227,7 @@ class articlecontroller extends Controller
     {
         $request->validate([
             'title' => 'required|string',
-            'articleType' => 'required|in:stunting,bullying,pernikahan dini,kekerasan pada anak',
+            'articleType' => 'required|in:stunting,bullying,pernikahan dini,kekerasan anak',
             'description' => 'required|string',
             'photoUrl' => 'required|image|mimes:jpg,jpeg,png|max:2048',
         ]);

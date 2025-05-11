@@ -47,13 +47,14 @@
                         {{-- Category --}}
                         <div class="mb-3">
                             <label for="articleType" class="form-label fw-semibold">Edit Kategori</label>
-                            <select class="form-select @error('articleType') is-invalid @enderror" id="articleType" name="articleType" required>
-                                <option value="">--Pilih Kategori--</option>
-                                <option value="stunting" {{ $articleData['articleType'] == 'stunting' ? 'selected' : '' }}>Stunting</option>
-                                <option value="bullying" {{ $articleData['articleType'] == 'bullying' ? 'selected' : '' }}>Bullying</option>
-                                <option value="pernikahan dini" {{ $articleData['articleType'] == 'pernikahan dini' ? 'selected' : '' }}>Pernikahan Anak</option>
-                                <option value="kekerasan pada anak" {{ $articleData['articleType'] == 'kekerasan pada anak' ? 'selected' : '' }}>Kekerasan pada Anak</option>
-                            </select>
+                                <select class="form-select @error('articleType') is-invalid @enderror" id="articleType" name="articleType" required>
+                                    <option value="">--Pilih Kategori--</option>
+                                    <option value="stunting" {{ $articleData['articleType'] == 'stunting' ? 'selected' : '' }}>Stunting</option>
+                                    <option value="bullying" {{ $articleData['articleType'] == 'bullying' ? 'selected' : '' }}>Bullying</option>
+                                    <option value="pernikahan dini" {{ $articleData['articleType'] == 'pernikahan dini' ? 'selected' : '' }}>Pernikahan Anak</option>
+                                    <option value="kekerasan anak" {{ $articleData['articleType'] == 'kekerasan anak' ? 'selected' : '' }}>Kekerasan Anak</option> <!-- Diperbaiki -->
+                                </select>
+
                             @error('articleType')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -79,9 +80,14 @@
 
                         {{-- Buttons --}}
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('admin.articel.index') }}" class="btn btn-danger">Batal</a>
-                            <button type="submit" class="btn btn-primary">Perbaharui</button>
+                            <a href="{{ route('admin.articel.index') }}" class="btn btn-danger">
+                                <i class="bi bi-arrow-left"></i> Batal
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-arrow-repeat"></i> Perbaharui
+                            </button>
                         </div>
+
 
                     </form>
                 </div>
@@ -89,6 +95,8 @@
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
 <script>
     CKEDITOR.replace('description');
 </script>

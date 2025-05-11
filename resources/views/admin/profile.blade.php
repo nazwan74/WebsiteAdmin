@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Profile Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -142,19 +141,65 @@
         font-size: 0.8rem;
         color: #6c757d;
     }
-
+        .main-content {
+            margin-left: 180px;
+            margin-top: 70px;
+            padding: 20px;
+        }
+        .profile-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 20px;
+        }
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #e6edff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+        }
+        .profile-avatar i {
+            font-size: 40px;
+            color: #4361ee;
+        }
+        .profile-info {
+            margin-bottom: 30px;
+        }
+        .profile-info-item {
+            margin-bottom: 15px;
+        }
+        .profile-info-label {
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        .profile-info-value {
+            color: #333;
+        }
+        .password-form {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
     </style>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 </head>
 <body>
-    <!-- Sidebar -->
+        <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-logo">
                 <img src="{{ URL::to('Images/Gesa_Logo.png')}}" alt="Logo GESA" style="height: 80px;">
         </div>
         <ul class="sidebar-menu">
             <li>
-                <a href="/admin/dashboard" class="active">
+                <a href="/admin/dashboard">
                     <i class="bi bi-grid"></i>
                     Dashboard
                 </a>
@@ -195,7 +240,7 @@
                 </a>
             </li>
             <li>
-                <a href="/admin/profile">
+                <a href="/admin/profile"  class="active">
                     <i class="bi bi-person-circle"></i>
                     Profile
                 </a>
@@ -208,8 +253,8 @@
         <div class="container-fluid">
             <div class="d-flex align-items-center">
                 <div class="ms-3">
-                    <div class="navbar-dashboard-title">Dashboard Overview</div>
-                    <div class="navbar-dashboard-subtitle">Welcome back, Admin</div>
+                    <div class="navbar-dashboard-title">Profile Admin</div>
+                    <div class="navbar-dashboard-subtitle">Pengaturan Akun</div>
                 </div>
             </div>
             <div class="ms-auto me-3">
@@ -225,63 +270,62 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <div class="row">
-        <div class="col-md-3 mb-4">
-            <div class="bg-white shadow-sm rounded p-3">
-                <div class="d-flex align-items-center mb-2">
-                    <i class="bi bi-people-fill text-primary me-2" style="font-size: 1.5rem;"></i>
-                    <h6 class="mb-0 text-muted">Total Pengguna</h6>
+        <div class="profile-container">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <i class="bi bi-person-circle"></i>
                 </div>
-                <h3 class="fw-bold">{{ $totalUsers }}</h3>
+                <h3>{{ $admin['name'] ?? 'Admin' }}</h3>
+                <span class="badge bg-primary">{{ ucfirst($admin['role'] ?? 'admin') }}</span>
             </div>
-        </div>
-        <div class="col-md-3 mb-4">
-            <div class="bg-white shadow-sm rounded p-3">
-                <div class="d-flex align-items-center mb-2">
-                    <i class="bi bi-file-earmark-text-fill text-warning me-2" style="font-size: 1.5rem;"></i>
-                    <h6 class="mb-0 text-muted">Laporan Masuk</h6>
-                </div>
-                <h3 class="fw-bold">{{ $totalLaporan }}</h3>
-            </div>
-        </div>
-        <div class="col-md-3 mb-4">
-            <div class="bg-white shadow-sm rounded p-3">
-                <div class="d-flex align-items-center mb-2">
-                    <i class="bi bi-check-circle-fill text-success me-2" style="font-size: 1.5rem;"></i>
-                    <h6 class="mb-0 text-muted">Kasus Selesai</h6>
-                </div>
-                <h3 class="fw-bold">{{ $totalSelesai }}</h3>
-            </div>
-        </div>
-        <div class="col-md-3 mb-4">
-            <div class="bg-white shadow-sm rounded p-3">
-                <div class="d-flex align-items-center mb-2">
-                    <i class="bi bi-book-fill me-2" style="font-size: 1.5rem; color: #8e44ad;"></i>
-                    <h6 class="mb-0 text-muted">Artikel Edukasi</h6>
-                </div>
-                <h3 class="fw-bold">{{ $totalArticles }}</h3>
-            </div>
-        </div>
-    </div>
 
-        <!-- Bagian Chart Visualisasi -->
-        <!-- Chart Section -->
-        <div class="row g-3 mt-3">
-            <div class="col-md-6">
-                <div class="bg-white shadow-sm rounded p-3" style="height: 300px;">
-                    <h6 class="fw-bold mb-3 small">Top 4 Kategori Kasus</h6>
-                    <div style="height: 230px;">
-                        <canvas id="kategoriChart"></canvas>
-                    </div>
+            <!-- Profile Information -->
+            <div class="profile-info">
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Email</div>
+                    <div class="profile-info-value">{{ $admin['email'] }}</div>
+                </div>
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Role</div>
+                    <div class="profile-info-value">{{ ucfirst($admin['role'] ?? 'admin') }}</div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="bg-white shadow-sm rounded p-3" style="height: 300px;">
-                    <h6 class="fw-bold mb-3 small">Top Daerah & Kategori Terbanyak</h6>
-                    <div style="height: 230px;">
-                        <canvas id="daerahKategoriChart"></canvas>
+
+            <!-- Password Change Form -->
+            <div class="password-form">
+                <h4 class="mb-4">Ubah Password</h4>
+                
+                @if(session('success'))
+                    <div class="alert alert-success">
+                        {{ session('success') }}
                     </div>
-                </div>
+                @endif
+
+                @if($errors->any())
+                    <div class="alert alert-danger">
+                        {{ $errors->first() }}
+                    </div>
+                @endif
+
+                <form action="{{ route('admin.profile.update-password') }}" method="POST">
+                    @csrf
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Password Saat Ini</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">Password Baru</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password_confirmation" class="form-label">Konfirmasi Password Baru</label>
+                        <input type="password" class="form-control" id="new_password_confirmation" name="new_password_confirmation" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-key me-2"></i>Ubah Password
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -290,88 +334,29 @@
         function toggleDropdown(event) {
             event.preventDefault();
             const dropdown = event.currentTarget.parentElement;
+            const allDropdowns = document.querySelectorAll('.dropdown');
+            
+            // Close all other dropdowns
+            allDropdowns.forEach(d => {
+                if (d !== dropdown) {
+                    d.classList.remove('active');
+                }
+            });
+            
+            // Toggle current dropdown
             dropdown.classList.toggle('active');
         }
-    </script>
-    <!-- Script Chart -->
-    <script>
-        // === Kategori Chart ===
-        new Chart(document.getElementById('kategoriChart'), {
-            type: 'pie',
-            data: {
-                labels: {!! json_encode(array_keys($topKategori)) !!},
-                datasets: [{
-                    data: {!! json_encode(array_values($topKategori)) !!},
-                    backgroundColor: ['#4e79a7', '#f28e2c', '#e15759', '#76b7b2'],
-                    hoverOffset: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom' },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.label}: ${context.parsed} laporan`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
 
-        // === Daerah & Kategori Chart ===
-        const daerahData = @json($topDaerahKategori);
-        const daerahLabels = Object.keys(daerahData);
-        const laporanData = daerahLabels.map(d => daerahData[d].total);
-        const kategoriData = daerahLabels.map(d => daerahData[d].kategori_terbanyak);
-
-        new Chart(document.getElementById('daerahKategoriChart'), {
-            type: 'bar',
-            data: {
-                labels: daerahLabels,
-                datasets: [{
-                    label: 'Jumlah Laporan',
-                    data: laporanData,
-                    backgroundColor: '#59a14f',
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const index = context.dataIndex;
-                                return `Laporan: ${laporanData[index]}, Kategori: ${kategoriData[index]}`;
-                            }
-                        }
-                    },
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1, precision: 0 },
-                        title: {
-                            display: true,
-                            text: 'Jumlah Laporan'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Nama Daerah'
-                        }
-                    }
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+                if (!dropdown.contains(event.target)) {
+                    dropdown.classList.remove('active');
                 }
-            }
+            });
         });
     </script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html>
+</html> 

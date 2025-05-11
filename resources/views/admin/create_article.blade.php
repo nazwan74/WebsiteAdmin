@@ -35,7 +35,7 @@
                         <option value="stunting">Stunting</option>
                         <option value="bullying">Bullying</option>
                         <option value="pernikahan dini">Pernikahan Anak</option>
-                        <option value="kekerasan pada anak">Kekerasan pada Anak</option>
+                        <option value="kekerasan anak">Kekerasan Anak</option>
                     </select>
                     @error('articleType')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -62,8 +62,12 @@
 
                 {{-- Buttons --}}
                 <div class="d-flex justify-content-between">
-                    <a href="{{ route('admin.articel.index') }}" class="btn btn-danger">Batal</a>
-                    <button type="submit" class="btn btn-primary">Simpan Artikel</button>
+                    <a href="{{ route('admin.articel.index') }}" class="btn btn-danger">
+                        <i class="bi bi-arrow-left"></i> Batal
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Simpan Artikel
+                    </button>
                 </div>
             </form>
 
@@ -71,6 +75,8 @@
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
 <script>
     CKEDITOR.replace('description');
 </script>

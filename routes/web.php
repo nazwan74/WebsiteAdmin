@@ -8,6 +8,8 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\dashboardcontroller;
 use App\Http\Controllers\stuntingcontroller;
+use App\Http\Controllers\ChartController;
+use App\Http\Controllers\ProfileController;
 
 Route::get('/', function () {
     return view('Landing');
@@ -44,3 +46,14 @@ Route::delete('/admin/pengaturan/{uid}', [PengaturanController::class, 'hapusAdm
 
 // Stunting
 Route::get('/admin/stunting/chart', [stuntingcontroller::class, 'chart'])->name('admin.stunting.chart');
+
+// Chart
+Route::get('/admin/chart', [ChartController::class, 'index'])->name('admin.chart');
+Route::get('/admin/chart/kekerasan-anak', [ChartController::class, 'kekerasanAnak'])->name('admin.chart.kekerasan-anak');
+Route::get('/admin/chart/pernikahan-anak', [ChartController::class, 'pernikahanAnak'])->name('admin.chart.pernikahan-anak');
+Route::get('/admin/chart/bullying', [ChartController::class, 'bullying'])->name('admin.chart.bullying');
+Route::get('/admin/chart/stunting', [ChartController::class, 'stunting'])->name('admin.chart.stunting');
+
+// Profile
+Route::get('/admin/profile', [ProfileController::class, 'index'])->name('admin.profile');
+Route::post('/admin/profile/update-password', [ProfileController::class, 'updatePassword'])->name('admin.profile.update-password');

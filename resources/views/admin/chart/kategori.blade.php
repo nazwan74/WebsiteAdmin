@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>{{ $title }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -142,19 +142,35 @@
         font-size: 0.8rem;
         color: #6c757d;
     }
-
+        .main-content {
+            margin-left: 180px;
+            margin-top: 70px;
+            padding: 20px;
+        }
+        .chart-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+        }
     </style>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 </head>
 <body>
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-logo">
-                <img src="{{ URL::to('Images/Gesa_Logo.png')}}" alt="Logo GESA" style="height: 80px;">
+            <img src="{{ URL::to('Images/Gesa_Logo.png')}}" alt="Logo GESA" style="height: 80px;">
         </div>
         <ul class="sidebar-menu">
             <li>
-                <a href="/admin/dashboard" class="active">
+                <a href="/admin/dashboard">
                     <i class="bi bi-grid"></i>
                     Dashboard
                 </a>
@@ -171,13 +187,13 @@
                     Laporan
                 </a>
             </li>
-            <li class="dropdown">
+            <li class="dropdown active">
                 <a href="#" class="dropdown-toggle" onclick="toggleDropdown(event)">
                     <span>
                         <i class="bi bi-bar-chart"></i>
                         Chart
                     </span>
-                    <i ></i>
+                    <i></i>
                 </a>
                 <ul class="submenu">
                     <li><a href="/admin/chart/kekerasan-anak">Kekerasan Anak</a></li>
@@ -186,8 +202,6 @@
                     <li><a href="/admin/chart/stunting">Stunting</a></li>
                 </ul>
             </li>
-
-
             <li>
                 <a href="/admin/pengaturan">
                     <i class="bi bi-gear"></i>
@@ -208,8 +222,8 @@
         <div class="container-fluid">
             <div class="d-flex align-items-center">
                 <div class="ms-3">
-                    <div class="navbar-dashboard-title">Dashboard Overview</div>
-                    <div class="navbar-dashboard-subtitle">Welcome back, Admin</div>
+                    <div class="navbar-dashboard-title">{{ $title }}</div>
+                    <div class="navbar-dashboard-subtitle">Admin</div>
                 </div>
             </div>
             <div class="ms-auto me-3">
@@ -225,64 +239,9 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <div class="row">
-        <div class="col-md-3 mb-4">
-            <div class="bg-white shadow-sm rounded p-3">
-                <div class="d-flex align-items-center mb-2">
-                    <i class="bi bi-people-fill text-primary me-2" style="font-size: 1.5rem;"></i>
-                    <h6 class="mb-0 text-muted">Total Pengguna</h6>
-                </div>
-                <h3 class="fw-bold">{{ $totalUsers }}</h3>
-            </div>
-        </div>
-        <div class="col-md-3 mb-4">
-            <div class="bg-white shadow-sm rounded p-3">
-                <div class="d-flex align-items-center mb-2">
-                    <i class="bi bi-file-earmark-text-fill text-warning me-2" style="font-size: 1.5rem;"></i>
-                    <h6 class="mb-0 text-muted">Laporan Masuk</h6>
-                </div>
-                <h3 class="fw-bold">{{ $totalLaporan }}</h3>
-            </div>
-        </div>
-        <div class="col-md-3 mb-4">
-            <div class="bg-white shadow-sm rounded p-3">
-                <div class="d-flex align-items-center mb-2">
-                    <i class="bi bi-check-circle-fill text-success me-2" style="font-size: 1.5rem;"></i>
-                    <h6 class="mb-0 text-muted">Kasus Selesai</h6>
-                </div>
-                <h3 class="fw-bold">{{ $totalSelesai }}</h3>
-            </div>
-        </div>
-        <div class="col-md-3 mb-4">
-            <div class="bg-white shadow-sm rounded p-3">
-                <div class="d-flex align-items-center mb-2">
-                    <i class="bi bi-book-fill me-2" style="font-size: 1.5rem; color: #8e44ad;"></i>
-                    <h6 class="mb-0 text-muted">Artikel Edukasi</h6>
-                </div>
-                <h3 class="fw-bold">{{ $totalArticles }}</h3>
-            </div>
-        </div>
-    </div>
-
-        <!-- Bagian Chart Visualisasi -->
-        <!-- Chart Section -->
-        <div class="row g-3 mt-3">
-            <div class="col-md-6">
-                <div class="bg-white shadow-sm rounded p-3" style="height: 300px;">
-                    <h6 class="fw-bold mb-3 small">Top 4 Kategori Kasus</h6>
-                    <div style="height: 230px;">
-                        <canvas id="kategoriChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="bg-white shadow-sm rounded p-3" style="height: 300px;">
-                    <h6 class="fw-bold mb-3 small">Top Daerah & Kategori Terbanyak</h6>
-                    <div style="height: 230px;">
-                        <canvas id="daerahKategoriChart"></canvas>
-                    </div>
-                </div>
-            </div>
+        <div class="chart-container">
+            <div class="chart-title">{{ $title }}</div>
+            <canvas id="kasusChart"></canvas>
         </div>
     </div>
 
@@ -292,86 +251,49 @@
             const dropdown = event.currentTarget.parentElement;
             dropdown.classList.toggle('active');
         }
-    </script>
-    <!-- Script Chart -->
-    <script>
-        // === Kategori Chart ===
-        new Chart(document.getElementById('kategoriChart'), {
-            type: 'pie',
-            data: {
-                labels: {!! json_encode(array_keys($topKategori)) !!},
-                datasets: [{
-                    data: {!! json_encode(array_values($topKategori)) !!},
-                    backgroundColor: ['#4e79a7', '#f28e2c', '#e15759', '#76b7b2'],
-                    hoverOffset: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom' },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.label}: ${context.parsed} laporan`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
 
-        // === Daerah & Kategori Chart ===
-        const daerahData = @json($topDaerahKategori);
-        const daerahLabels = Object.keys(daerahData);
-        const laporanData = daerahLabels.map(d => daerahData[d].total);
-        const kategoriData = daerahLabels.map(d => daerahData[d].kategori_terbanyak);
-
-        new Chart(document.getElementById('daerahKategoriChart'), {
+        // Inisialisasi Chart
+        const ctx = document.getElementById('kasusChart').getContext('2d');
+        new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: daerahLabels,
+                labels: @json($labels),
                 datasets: [{
-                    label: 'Jumlah Laporan',
-                    data: laporanData,
-                    backgroundColor: '#59a14f',
-                    borderRadius: 6
+                    label: 'Jumlah Kasus',
+                    data: @json($data),
+                    backgroundColor: '{{ $backgroundColor }}',
+                    borderColor: '{{ $backgroundColor }}',
+                    borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
                 plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const index = context.dataIndex;
-                                return `Laporan: ${laporanData[index]}, Kategori: ${kategoriData[index]}`;
-                            }
-                        }
+                    legend: {
+                        display: false
                     },
-                    legend: { display: false }
+                    title: {
+                        display: true,
+                        text: '{{ $title }}'
+                    }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { stepSize: 1, precision: 0 },
                         title: {
                             display: true,
-                            text: 'Jumlah Laporan'
+                            text: 'Jumlah Kasus'
                         }
                     },
                     x: {
                         title: {
                             display: true,
-                            text: 'Nama Daerah'
+                            text: 'Daerah'
                         }
                     }
                 }
             }
         });
     </script>
-
 </body>
-</html>
+</html> 
