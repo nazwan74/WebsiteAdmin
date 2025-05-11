@@ -6,6 +6,8 @@
     <title>{{ $title }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Add SweetAlert2 CSS and JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -257,6 +259,39 @@
             const dropdown = event.currentTarget.parentElement;
             dropdown.classList.toggle('active');
         }
+
+        // Add access check for pengaturan link
+        document.addEventListener('DOMContentLoaded', function() {
+            const pengaturanLink = document.querySelector('a[href="/admin/pengaturan"]');
+            if (pengaturanLink) {
+                pengaturanLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Check if user is super_admin
+                    fetch('/admin/pengaturan', {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'error') {
+                            Swal.fire({
+                                title: 'Akses Ditolak',
+                                text: data.message,
+                                icon: 'error',
+                                confirmButtonColor: '#3085d6'
+                            });
+                        } else {
+                            window.location.href = '/admin/pengaturan';
+                        }
+                    })
+                    .catch(error => {
+                        window.location.href = '/admin/pengaturan';
+                    });
+                });
+            }
+        });
 
         // Inisialisasi Chart
         const ctx = document.getElementById('kasusChart').getContext('2d');
