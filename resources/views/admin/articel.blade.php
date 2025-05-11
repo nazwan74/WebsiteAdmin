@@ -400,7 +400,8 @@
                         <tr>
                             <th>Judul Artikel</th>
                             <th>Kategori</th>
-                            <th>Tanggal</th>
+                            <th>Tanggal Rilis</th>
+                            <th>Tanggal Edit</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -450,6 +451,24 @@
                                             }
                                         @endphp
                                         {{ $date }}
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td>
+                                    @if(isset($article['updateDate']))
+                                        @php
+                                            if ($article['updateDate'] instanceof Illuminate\Support\Carbon) {
+                                                $updateDate = $article['updateDate']->format('d M Y');
+                                            } elseif (is_string($article['updateDate'])) {
+                                                $updateDate = date('d M Y', strtotime($article['updateDate']));
+                                            } else {
+                                                $updateDate = $article['updateDate']->get()->format('d M Y');
+                                            }
+                                        @endphp
+                                        <span class="text-info">
+                                            <i class="bi bi-pencil-square"></i> {{ $updateDate }}
+                                        </span>
                                     @else
                                         -
                                     @endif
