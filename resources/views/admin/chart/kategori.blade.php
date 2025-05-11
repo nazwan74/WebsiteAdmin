@@ -243,6 +243,12 @@
             <div class="chart-title">{{ $title }}</div>
             <canvas id="kasusChart"></canvas>
         </div>
+        @if(isset($stuntingCasesLabels))
+        <div class="chart-container">
+            <div class="chart-title">Distribusi Kasus Stunting per Daerah</div>
+            <canvas id="stuntingCasesChart"></canvas>
+        </div>
+        @endif
     </div>
 
     <script>
@@ -258,11 +264,61 @@
             type: 'bar',
             data: {
                 labels: @json($labels),
+                datasets: @if(isset($datasets))
+                    @json($datasets)
+                @else
+                    [{
+                        label: 'Jumlah Kasus',
+                        data: @json($data),
+                        backgroundColor: '{{ $backgroundColor }}',
+                        borderColor: '{{ $backgroundColor }}',
+                        borderWidth: 1
+                    }]
+                @endif
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: '{{ $title }}'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        stacked: true,
+                        title: {
+                            display: true,
+                            text: 'Jumlah Kasus'
+                        }
+                    },
+                    x: {
+                        stacked: true,
+                        title: {
+                            display: true,
+                            text: 'Daerah'
+                        }
+                    }
+                }
+            }
+        });
+
+        @if(isset($stuntingCasesLabels))
+        // Inisialisasi Chart untuk Kasus Stunting
+        const stuntingCtx = document.getElementById('stuntingCasesChart').getContext('2d');
+        new Chart(stuntingCtx, {
+            type: 'bar',
+            data: {
+                labels: @json($stuntingCasesLabels),
                 datasets: [{
-                    label: 'Jumlah Kasus',
-                    data: @json($data),
-                    backgroundColor: '{{ $backgroundColor }}',
-                    borderColor: '{{ $backgroundColor }}',
+                    label: 'Jumlah Kasus Stunting',
+                    data: @json($stuntingCasesData),
+                    backgroundColor: '#59a14f',
+                    borderColor: '#59a14f',
                     borderWidth: 1
                 }]
             },
@@ -270,11 +326,11 @@
                 responsive: true,
                 plugins: {
                     legend: {
-                        display: false
+                        position: 'top',
                     },
                     title: {
                         display: true,
-                        text: '{{ $title }}'
+                        text: 'Distribusi Kasus Stunting per Daerah'
                     }
                 },
                 scales: {
@@ -294,6 +350,7 @@
                 }
             }
         });
+        @endif
     </script>
 </body>
 </html> 
