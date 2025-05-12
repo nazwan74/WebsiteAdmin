@@ -37,16 +37,26 @@ class ProfileController extends Controller
             'current_password' => 'required',
             'new_password' => 'required|min:6|confirmed',
             'new_password_confirmation' => 'required'
+        ], [
+            'new_password.confirmed' => 'Konfirmasi password baru tidak cocok',
+            'current_password.required' => 'Password saat ini harus diisi',
+            'new_password.required' => 'Password baru harus diisi',
+            'new_password.min' => 'Password baru minimal 6 karakter',
+            'new_password_confirmation.required' => 'Konfirmasi password baru harus diisi'
         ]);
 
         try {
             $adminUid = Session::get('admin.uid');
             
             // Verifikasi password lama
-            $signInResult = $this->auth->signInWithEmailAndPassword(
-                Session::get('admin.email'),
-                $request->current_password
-            );
+            try {
+                $signInResult = $this->auth->signInWithEmailAndPassword(
+                    Session::get('admin.email'),
+                    $request->current_password
+                );
+            } catch (\Exception $e) {
+                return redirect()->back()->withErrors(['current_password' => 'Password saat ini salah']);
+            }
 
             // Update password
             $this->auth->updateUser($adminUid, [
@@ -55,6 +65,9 @@ class ProfileController extends Controller
 
             return redirect()->route('admin.profile')->with('success', 'Password berhasil diperbarui.');
         } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'password-mismatch')) {
+                return redirect()->back()->withErrors(['new_password' => 'Konfirmasi password baru tidak cocok']);
+            }
             return redirect()->back()->withErrors(['error' => 'Gagal memperbarui password: ' . $e->getMessage()]);
         }
     }
