@@ -23,7 +23,17 @@
                     <input class="form-control @error('photoUrl') is-invalid @enderror" type="file" id="photoUrl" name="photoUrl" accept="image/*" required>
                     <small class="text-muted">Ukran Maximum File: 2MB</small>
                     @error('photoUrl')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">
+                            @if($message == 'The photo url field is required.')
+                                Thumbnail artikel harus diisi
+                            @elseif($message == 'The photo url must be an image.')
+                                File yang diunggah harus berupa gambar
+                            @elseif($message == 'The photo url must not be greater than 2048 kilobytes.')
+                                Ukuran file tidak boleh lebih dari 2MB
+                            @else
+                                {{ $message }}
+                            @endif
+                        </div>
                     @enderror
                 </div>
 
@@ -38,7 +48,13 @@
                         <option value="kekerasan anak">Kekerasan Anak</option>
                     </select>
                     @error('articleType')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">
+                            @if($message == 'The article type field is required.')
+                                Kategori artikel harus dipilih
+                            @else
+                                {{ $message }}
+                            @endif
+                        </div>
                     @enderror
                 </div>
 
@@ -47,7 +63,13 @@
                     <label for="title" class="form-label fw-semibold">Tambah Judul Artikel</label>
                     <input type="text" class="form-control @error('title') is-invalid @enderror" id="title" name="title" placeholder="Tulis Judul Artikel Disini" required>
                     @error('title')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">
+                            @if($message == 'The title field is required.')
+                                Judul artikel harus diisi
+                            @else
+                                {{ $message }}
+                            @endif
+                        </div>
                     @enderror
                 </div>
 
@@ -56,7 +78,13 @@
                     <label for="description" class="form-label fw-semibold">Tambah Konten Artikel</label>
                     <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="5" placeholder="Tulis Isi Artikel Disini..." required></textarea>
                     @error('description')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">
+                            @if($message == 'The description field is required.')
+                                Konten artikel harus diisi
+                            @else
+                                {{ $message }}
+                            @endif
+                        </div>
                     @enderror
                 </div>
 

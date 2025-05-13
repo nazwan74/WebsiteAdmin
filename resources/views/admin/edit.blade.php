@@ -41,7 +41,15 @@
                             <small class="text-muted">Ukuran Maximum File: 2MB</small>
                             <small class="d-block text-muted">Kosongkan jika tidak ingin mengganti gambar</small>
                             @error('photoUrl')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">
+                                    @if($message == 'The photo url must be an image.')
+                                        File yang diunggah harus berupa gambar
+                                    @elseif($message == 'The photo url must not be greater than 2048 kilobytes.')
+                                        Ukuran file tidak boleh lebih dari 2MB
+                                    @else
+                                        {{ $message }}
+                                    @endif
+                                </div>
                             @enderror
                         </div>
                         {{-- Category --}}
@@ -52,11 +60,17 @@
                                     <option value="stunting" {{ $articleData['articleType'] == 'stunting' ? 'selected' : '' }}>Stunting</option>
                                     <option value="bullying" {{ $articleData['articleType'] == 'bullying' ? 'selected' : '' }}>Bullying</option>
                                     <option value="pernikahan dini" {{ $articleData['articleType'] == 'pernikahan dini' ? 'selected' : '' }}>Pernikahan Anak</option>
-                                    <option value="kekerasan anak" {{ $articleData['articleType'] == 'kekerasan anak' ? 'selected' : '' }}>Kekerasan Anak</option> <!-- Diperbaiki -->
+                                    <option value="kekerasan anak" {{ $articleData['articleType'] == 'kekerasan anak' ? 'selected' : '' }}>Kekerasan Anak</option>
                                 </select>
 
                             @error('articleType')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">
+                                    @if($message == 'The article type field is required.')
+                                        Kategori artikel harus dipilih
+                                    @else
+                                        {{ $message }}
+                                    @endif
+                                </div>
                             @enderror
                         </div>
 
@@ -65,7 +79,13 @@
                             <label for="title" class="form-label fw-semibold">Edit Judul Artikel</label>
                             <input type="text" class="form-control @error('title') is-invalid @enderror" id="title" name="title" placeholder="Tulis Judul Artikel Disini" value="{{ $articleData['title'] }}" required>
                             @error('title')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">
+                                    @if($message == 'The title field is required.')
+                                        Judul artikel harus diisi
+                                    @else
+                                        {{ $message }}
+                                    @endif
+                                </div>
                             @enderror
                         </div>
 
@@ -74,7 +94,13 @@
                             <label for="description" class="form-label fw-semibold">Edit Konten Artikel</label>
                             <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="5" placeholder="Tulis Isi Artikel Disini..." required>{{ $articleData['description'] }}</textarea>
                             @error('description')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">
+                                    @if($message == 'The description field is required.')
+                                        Konten artikel harus diisi
+                                    @else
+                                        {{ $message }}
+                                    @endif
+                                </div>
                             @enderror
                         </div>
 
