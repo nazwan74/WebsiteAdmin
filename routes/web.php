@@ -12,7 +12,7 @@ use App\Http\Controllers\ChartController;
 use App\Http\Controllers\ProfileController;
 
 Route::get('/', function () {
-    return view('Landing');
+    return redirect()->route('admin.login');
 });
 
 // Admin Auth
