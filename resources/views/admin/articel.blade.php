@@ -285,12 +285,14 @@
                     <li><a href="/admin/chart/stunting">Stunting</a></li>
                 </ul>
             </li>
+            @if(Session::get('admin.role') === 'super_admin')
             <li>
                 <a href="/admin/pengaturan">
                     <i class="bi bi-gear"></i>
                     Pengaturan
                 </a>
             </li>
+            @endif
             <li>
                 <a href="/admin/profile">
                     <i class="bi bi-person-circle"></i>
@@ -310,9 +312,9 @@
                 </div>
             </div>
             <div class="ms-auto d-flex align-items-center gap-2 me-3">
-                <form method="POST" action="{{ route('admin.logout') }}">
+                <form method="POST" action="{{ route('admin.logout') }}" id="logoutForm">
                     @csrf
-                    <button type="submit" class="btn btn-outline-danger">
+                    <button type="button" class="btn btn-outline-danger" onclick="confirmLogout()">
                         <i class="bi bi-box-arrow-right me-2"></i>Logout
                     </button>
                 </form>
@@ -503,6 +505,23 @@
             event.preventDefault();
             const dropdown = event.currentTarget.parentElement;
             dropdown.classList.toggle('active');
+        }
+
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Konfirmasi Logout',
+                text: 'Apakah Anda yakin ingin keluar?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Logout',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('logoutForm').submit();
+                }
+            });
         }
 
         // Add access check for pengaturan link

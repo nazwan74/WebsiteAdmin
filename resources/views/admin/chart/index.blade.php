@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -227,9 +228,9 @@
                 </div>
             </div>
             <div class="ms-auto me-3">
-                <form method="POST" action="{{ route('admin.logout') }}">
+                <form method="POST" action="{{ route('admin.logout') }}" id="logoutForm">
                     @csrf
-                    <button type="submit" class="btn btn-outline-danger">
+                    <button type="button" class="btn btn-outline-danger" onclick="confirmLogout()">
                         <i class="bi bi-box-arrow-right me-2"></i>Logout
                     </button>
                 </form>
@@ -250,6 +251,23 @@
             event.preventDefault();
             const dropdown = event.currentTarget.parentElement;
             dropdown.classList.toggle('active');
+        }
+
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Konfirmasi Logout',
+                text: 'Apakah Anda yakin ingin keluar?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Logout',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('logoutForm').submit();
+                }
+            });
         }
 
         // Inisialisasi Chart
