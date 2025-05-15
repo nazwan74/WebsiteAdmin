@@ -73,6 +73,22 @@
                     @enderror
                 </div>
 
+                {{-- Hashtags --}}
+                <div class="mb-3">
+                    <label for="hashtags" class="form-label fw-semibold">Tambah Hashtag</label>
+                    <input type="text" class="form-control @error('hashtags') is-invalid @enderror" id="hashtags" name="hashtags" placeholder="Contoh: #stunting #anak #kesehatan" required>
+                    <small class="text-muted">Pisahkan setiap hashtag dengan spasi</small>
+                    @error('hashtags')
+                        <div class="invalid-feedback">
+                            @if($message == 'The hashtags field is required.')
+                                Hashtag harus diisi
+                            @else
+                                {{ $message }}
+                            @endif
+                        </div>
+                    @enderror
+                </div>
+
                 {{-- Content --}}
                 <div class="mb-4">
                     <label for="description" class="form-label fw-semibold">Tambah Konten Artikel</label>
@@ -107,6 +123,26 @@
 
 <script>
     CKEDITOR.replace('description');
+
+    // Add form submit handler to combine hashtags with content
+    document.querySelector('form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Get hashtags value
+        const hashtags = document.getElementById('hashtags').value;
+        
+        // Get CKEditor content
+        const content = CKEDITOR.instances.description.getData();
+        
+        // Combine content with hashtags
+        const combinedContent = content + '<br><br>' + hashtags;
+        
+        // Set the combined content back to CKEditor
+        CKEDITOR.instances.description.setData(combinedContent);
+        
+        // Submit the form
+        this.submit();
+    });
 </script>
 </body>
 </html>

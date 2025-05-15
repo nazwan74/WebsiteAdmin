@@ -89,6 +89,7 @@ class articlecontroller extends Controller
             'articleType' => 'required|in:stunting,bullying,pernikahan dini,kekerasan anak',
             'description' => 'required|string',
             'photoUrl' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'hashtags' => 'required|string',
         ]);
 
         $articleRef = $this->firestore->collection('articles')->document($id);
@@ -103,6 +104,7 @@ class articlecontroller extends Controller
             'title' => $request->title,
             'articleType' => $request->articleType,
             'description' => $request->description,
+            'hashtags' => $request->hashtags,
             'updateDate' => now()->toDateTimeString(),
         ];
 
@@ -230,6 +232,7 @@ class articlecontroller extends Controller
             'articleType' => 'required|in:stunting,bullying,pernikahan dini,kekerasan anak',
             'description' => 'required|string',
             'photoUrl' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'hashtags' => 'required|string',
         ]);
 
         $image = $request->file('photoUrl');
@@ -254,6 +257,7 @@ class articlecontroller extends Controller
                 'title' => $request->title,
                 'articleType' => $request->articleType,
                 'description' => $request->description,
+                'hashtags' => $request->hashtags,
                 'photoUrl' => $publicUrl, // URL publik langsung
                 'gsUrl' => $gsUrl, // URL gs:// untuk operasi internal
                 'releasedDate' => now()->toDateTimeString(),

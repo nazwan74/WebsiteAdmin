@@ -197,10 +197,13 @@
                 rows.forEach(row => {
                     const title = row.querySelector('td:first-child').textContent.toLowerCase();
                     const description = row.getAttribute('data-description') || '';
+                    const hashtags = row.getAttribute('data-hashtags') || '';
                     const category = row.getAttribute('data-kategori');
 
                     const matchCategory = selectedCategory === 'all' || category === selectedCategory;
-                    const matchSearch = title.includes(searchTerm) || description.includes(searchTerm);
+                    const matchSearch = title.includes(searchTerm) || 
+                                     description.includes(searchTerm) || 
+                                     hashtags.includes(searchTerm);
 
                     if (matchCategory && matchSearch) {
                         row.style.display = '';
@@ -227,10 +230,16 @@
                         text: `Apakah Anda yakin ingin menghapus artikel "${articleTitle}"?`,
                         icon: 'warning',
                         showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#3085d6',
-                        confirmButtonText: 'Ya, Hapus!',
-                        cancelButtonText: 'Batal'
+                        confirmButtonColor: '#6c757d',
+                        cancelButtonColor: '#28a745',
+                        confirmButtonText: 'Hapus',
+                        cancelButtonText: 'Batal',
+                        reverseButtons: true,
+                        focusCancel: true,
+                        customClass: {
+                            confirmButton: 'btn btn-secondary',
+                            cancelButton: 'btn btn-success'
+                        }
                     }).then((result) => {
                         if (result.isConfirmed) {
                             form.submit();
@@ -411,7 +420,8 @@
                         @forelse($articles as $article)
                             <tr class="article-row"
                             data-kategori="{{ $article['articleType'] }}"
-                            data-description="{{ strtolower($article['description']) }}">
+                            data-description="{{ strtolower($article['description']) }}"
+                            data-hashtags="{{ isset($article['hashtags']) ? strtolower($article['hashtags']) : '' }}">
 
                                 <td>{{ $article['title'] }}</td>
                                 <td>

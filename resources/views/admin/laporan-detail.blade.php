@@ -349,19 +349,15 @@
                             
                             <!-- Baris Tombol Aksi -->
                             <div class="row g-3">
-                                <div class="col-md-6">
-                                    <a href="{{ route('admin.laporan.download', $laporan['id']) }}" class="btn btn-warning w-100 btn-action">
+                                <div class="col-12 d-flex justify-content-end gap-2">
+                                    <a href="{{ route('admin.laporan.download', $laporan['id']) }}" class="btn btn-warning btn-sm">
                                         <i class="bi bi-download"></i>
-                                        <span>Download PDF</span>
                                     </a>
-                                </div>
-                                <div class="col-md-6">
                                     <form method="POST" action="{{ route('admin.laporan.delete', $laporan['id']) }}" class="m-0" id="delete-form">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="button" class="btn btn-danger w-100 btn-action" id="delete-button">
+                                        <button type="button" class="btn btn-danger btn-sm" id="delete-button">
                                             <i class="bi bi-trash"></i>
-                                            <span>Hapus Laporan</span>
                                         </button>
                                     </form>
                                 </div>
@@ -383,10 +379,16 @@
                 text: 'Apakah Anda yakin ingin menghapus laporan ini?',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal'
+                confirmButtonColor: '#6c757d',
+                cancelButtonColor: '#28a745',
+                confirmButtonText: 'Hapus',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                focusCancel: true,
+                customClass: {
+                    confirmButton: 'btn btn-secondary',
+                    cancelButton: 'btn btn-success'
+                }
             }).then((result) => {
                 if (result.isConfirmed) {
                     document.getElementById('delete-form').submit();

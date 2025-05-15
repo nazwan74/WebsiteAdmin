@@ -522,14 +522,14 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="filterModalLabel">Filter Laporan</h5>
+                    <h5 class="modal-title" id="filterModalLabel">Pilih Filter Laporan</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="filterForm">
                         <!-- Filter Daerah -->
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Daerah</label>
+                            <label class="form-label fw-bold">Pilih Daerah</label>
                             <select class="form-select" id="daerahFilter" multiple size="3">
                                 <!-- Options will be populated dynamically with JavaScript -->
                             </select>
@@ -537,7 +537,7 @@
 
                         <!-- Filter Waktu -->
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Waktu Lapor</label>
+                            <label class="form-label fw-bold">Pilih Waktu Lapor</label>
                             <div class="date-range-inputs">
                                 <input type="date" class="form-control" id="startDate" placeholder="Tanggal Awal">
                                 <input type="date" class="form-control" id="endDate" placeholder="Tanggal Akhir">
@@ -546,7 +546,7 @@
 
                         <!-- Filter Kategori -->
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Kategori</label>
+                            <label class="form-label fw-bold">Pilih Kategori</label>
                             <div class="d-flex flex-wrap gap-2">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="kategoriPernikahan" value="pernikahan dini">
@@ -569,7 +569,7 @@
 
                         <!-- Filter Status -->
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Status</label>
+                            <label class="form-label fw-bold">Pilih Status</label>
                             <div class="d-flex flex-wrap gap-2">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="statusBaru" value="baru">

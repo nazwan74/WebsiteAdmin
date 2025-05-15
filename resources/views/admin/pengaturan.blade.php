@@ -313,10 +313,16 @@
                     text: `Apakah Anda yakin ingin menghapus admin "${adminEmail}"?`,
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Ya, Hapus!',
-                    cancelButtonText: 'Batal'
+                    confirmButtonColor: '#6c757d',
+                    cancelButtonColor: '#28a745',
+                    confirmButtonText: 'Hapus',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true,
+                    focusCancel: true,
+                    customClass: {
+                        confirmButton: 'btn btn-secondary',
+                        cancelButton: 'btn btn-success'
+                    }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         form.submit();
