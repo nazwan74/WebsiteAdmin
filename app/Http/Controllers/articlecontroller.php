@@ -134,7 +134,7 @@ class articlecontroller extends Controller
                 );
 
                 // Buat URL publik langsung (tanpa tanda tangan)
-                $publicUrl = 'https://firebasestorage.googleapis.com/' . $bucket->name() . '/o' . $filename;$publicUrl = 'https://firebasestorage.googleapis.com/v0/b/' . $bucket->name() . '/o/' . urlencode($filename) . '?alt=media';
+                $publicUrl = 'https://firebasestorage.googleapis.com/v0/b/' . $bucket->name() . '/o/' . urlencode($filename) . '?alt=media&token=' . Str::random(40);
                 $gsUrl = 'gs://' . $bucket->name() . '/' . $filename;
                 
                 $updateData['photoUrl'] = $publicUrl; // URL publik untuk aplikasi
@@ -159,7 +159,7 @@ class articlecontroller extends Controller
                     $object->delete();
 
                     // Buat URL publik baru sesuai path baru
-                    $publicUrl = 'https://firebasestorage.googleapis.com/v0/b/' . $bucket->name() . '/o/' . urlencode($filename) . '?alt=media';
+                    $publicUrl = 'https://firebasestorage.googleapis.com/v0/b/' . $bucket->name() . '/o/' . urlencode($filename) . '?alt=media&token=' . Str::random(40);
                     $updateData['gsUrl'] = 'gs://' . $bucket->name() . '/' . $newPath;
                     $updateData['photoUrl'] = $publicUrl;
                 }
@@ -248,7 +248,7 @@ class articlecontroller extends Controller
             );
 
             // Buat URL publik langsung (tanpa tanda tangan)
-            $publicUrl = 'https://firebasestorage.googleapis.com/v0/b/' . $bucket->name() . '/o/' . urlencode($filename) . '?alt=media';
+            $publicUrl = 'https://firebasestorage.googleapis.com/v0/b/' . $bucket->name() . '/o/' . urlencode($filename) . '?alt=media&token=' . Str::random(40);
             // Simpan format gs:// untuk operasi internal
             $gsUrl = 'gs://' . $bucket->name() . '/' . $filename;
 
