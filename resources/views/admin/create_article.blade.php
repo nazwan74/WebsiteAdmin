@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <title>Tambah Artikel Baru</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+    <!-- Summernote CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 
@@ -120,28 +121,45 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Summernote JS -->
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
 
 <script>
-    CKEDITOR.replace('description');
+    $(document).ready(function() {
+        $('#description').summernote({
+            height: 300,
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'underline', 'clear']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ]
+        });
 
-    // Add form submit handler to combine hashtags with content
-    document.querySelector('form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Get hashtags value
-        const hashtags = document.getElementById('hashtags').value;
-        
-        // Get CKEditor content
-        const content = CKEDITOR.instances.description.getData();
-        
-        // Combine content with hashtags
-        const combinedContent = content + '<br><br>' + hashtags;
-        
-        // Set the combined content back to CKEditor
-        CKEDITOR.instances.description.setData(combinedContent);
-        
-        // Submit the form
-        this.submit();
+        // Add form submit handler to combine hashtags with content
+        $('form').on('submit', function(e) {
+            e.preventDefault();
+            
+            // Get hashtags value
+            const hashtags = $('#hashtags').val();
+            
+            // Get Summernote content
+            const content = $('#description').summernote('code');
+            
+            // Combine content with hashtags
+            const combinedContent = content + '<br><br>' + hashtags;
+            
+            // Set the combined content back to Summernote
+            $('#description').summernote('code', combinedContent);
+            
+            // Submit the form
+            this.submit();
+        });
     });
 </script>
 </body>

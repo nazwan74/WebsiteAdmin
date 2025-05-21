@@ -121,18 +121,31 @@
             cursor: pointer;
         }
         .filter-count {
-            background-color: #4361ee;
+            background-color: #6c757d;
             color: white;
-            padding: 0px 6px;
-            border-radius: 50%;
-            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
             margin-left: 5px;
         }
         .btn-filter {
-            border-color: #dee2e6;
+            border: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .btn-filter:hover {
-            background-color: #f8f9fa;
+            background-color: #e9ecef;
+            border-color: #ced4da;
+            color: #495057;
+        }
+        .btn-filter i {
+            font-size: 1rem;
         }
         .active-filters {
             margin-top: 10px;
@@ -752,6 +765,10 @@
             activeFilters.daerah.forEach(daerah => {
                 addFilterBadge('Daerah: ' + daerah, () => {
                     activeFilters.daerah = activeFilters.daerah.filter(d => d !== daerah);
+                    // Reset the daerah filter dropdown
+                    Array.from(daerahFilter.options).forEach(option => {
+                        option.selected = false;
+                    });
                     updateActiveFiltersUI();
                     applyFilters();
                 });
@@ -797,7 +814,6 @@
                         break;
                     default:
                         displayKategori = kategori;
-                        // Create a capitalized version for the ID
                         kategoriId = 'kategori' + kategori.charAt(0).toUpperCase() + kategori.slice(1).replace(/\s+/g, '');
                 }
                 
@@ -890,6 +906,30 @@
         
         // Initial filter UI setup
         updateActiveFiltersUI();
+
+        // Add event listener for modal show
+        document.getElementById('filterModal').addEventListener('show.bs.modal', function () {
+            // Reset daerah filter dropdown based on active filters
+            Array.from(daerahFilter.options).forEach(option => {
+                option.selected = activeFilters.daerah.includes(option.value);
+            });
+
+            // Reset date inputs
+            document.getElementById('startDate').value = activeFilters.dateStart;
+            document.getElementById('endDate').value = activeFilters.dateEnd;
+
+            // Reset kategori checkboxes
+            document.querySelectorAll('input[id^="kategori"]').forEach(checkbox => {
+                const value = checkbox.value;
+                checkbox.checked = activeFilters.kategori.includes(value);
+            });
+
+            // Reset status checkboxes
+            document.querySelectorAll('input[id^="status"]').forEach(checkbox => {
+                const value = checkbox.value;
+                checkbox.checked = activeFilters.status.includes(value);
+            });
+        });
     });
     </script>
 </body>

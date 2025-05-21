@@ -128,17 +128,19 @@ class articlecontroller extends Controller
                 $folder = 'images/articles/' . $request->articleType . '/' . now()->format('Ymd');
                 $filename = $folder . '/' . Str::random(20) . '.' . $image->getClientOriginalExtension();
 
-                $bucket->upload(
+                $object = $bucket->upload(
                     fopen($image->getRealPath(), 'r'),
                     ['name' => $filename]
                 );
 
-                // Buat URL publik langsung (tanpa tanda tangan)
-                $publicUrl = 'https://firebasestorage.googleapis.com/v0/b/' . $bucket->name() . '/o/' . urlencode($filename) . '?alt=media&token=' . Str::random(40);
+                // Generate signed URL that expires in 1 year
+                $expiresAt = new \DateTime('now + 1 year');
+                $signedUrl = $object->signedUrl($expiresAt);
+                
                 $gsUrl = 'gs://' . $bucket->name() . '/' . $filename;
                 
-                $updateData['photoUrl'] = $publicUrl; // URL publik untuk aplikasi
-                $updateData['gsUrl'] = $gsUrl; // URL gs:// untuk keperluan internal
+                $updateData['photoUrl'] = $signedUrl;
+                $updateData['gsUrl'] = $gsUrl;
 
             } catch (\Exception $e) {
                 \Log::error('Upload error: ' . $e->getMessage());
@@ -155,13 +157,15 @@ class articlecontroller extends Controller
 
                 $object = $bucket->object($oldPath);
                 if ($object->exists()) {
-                    $object->copy($bucket, ['name' => $newPath]);
+                    $newObject = $object->copy($bucket, ['name' => $newPath]);
                     $object->delete();
 
-                    // Buat URL publik baru sesuai path baru
-                    $publicUrl = 'https://firebasestorage.googleapis.com/v0/b/' . $bucket->name() . '/o/' . urlencode($filename) . '?alt=media&token=' . Str::random(40);
+                    // Generate new signed URL for the copied object
+                    $expiresAt = new \DateTime('now + 1 year');
+                    $signedUrl = $newObject->signedUrl($expiresAt);
+                    
                     $updateData['gsUrl'] = 'gs://' . $bucket->name() . '/' . $newPath;
-                    $updateData['photoUrl'] = $publicUrl;
+                    $updateData['photoUrl'] = $signedUrl;
                 }
             }
         } 
@@ -242,13 +246,15 @@ class articlecontroller extends Controller
         try {
             // Upload ke Firebase Storage
             $bucket = $this->storage->getBucket();
-            $bucket->upload(
+            $object = $bucket->upload(
                 fopen($image->getRealPath(), 'r'),
                 ['name' => $filename]
             );
 
-            // Buat URL publik langsung (tanpa tanda tangan)
-            $publicUrl = 'https://firebasestorage.googleapis.com/v0/b/' . $bucket->name() . '/o/' . urlencode($filename) . '?alt=media&token=' . Str::random(40);
+            // Generate signed URL that expires in 1 year
+            $expiresAt = new \DateTime('now + 1 year');
+            $signedUrl = $object->signedUrl($expiresAt);
+            
             // Simpan format gs:// untuk operasi internal
             $gsUrl = 'gs://' . $bucket->name() . '/' . $filename;
 
@@ -258,8 +264,8 @@ class articlecontroller extends Controller
                 'articleType' => $request->articleType,
                 'description' => $request->description,
                 'hashtags' => $request->hashtags,
-                'photoUrl' => $publicUrl, // URL publik langsung
-                'gsUrl' => $gsUrl, // URL gs:// untuk operasi internal
+                'photoUrl' => $signedUrl, // Use signed URL instead of public URL
+                'gsUrl' => $gsUrl,
                 'releasedDate' => now()->toDateTimeString(),
             ]);
 

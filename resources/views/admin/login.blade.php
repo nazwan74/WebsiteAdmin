@@ -85,7 +85,9 @@
         <div class="row justify-content-center">
         <div class="col-md-5 col-lg-4">
             <div class="login-card">
-            <h4 class="text-center mb-4">Admin Login</h4>
+            <div class="text-center mb-4">
+                <img src="{{ asset('images/Gesa_Logo.png') }}" alt="Gesa Logo" class="img-fluid" style="max-height: 80px;">
+            </div>
 
             @if($errors->any())
                 <div class="alert alert-danger">{{ $errors->first() }}</div>
