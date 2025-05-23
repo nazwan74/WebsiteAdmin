@@ -235,7 +235,7 @@
                     <i class="bi bi-people-fill text-primary me-2" style="font-size: 1.5rem;"></i>
                     <h6 class="mb-0 text-muted">Total Pengguna</h6>
                 </div>
-                <h3 class="fw-bold">{{ $totalUsers }}</h3>
+                <h3 class="fw-bold" id="totalUsers">1</h3>
             </div>
         </div>
         <div class="col-md-3 mb-4">
@@ -244,7 +244,7 @@
                     <i class="bi bi-file-earmark-text-fill text-warning me-2" style="font-size: 1.5rem;"></i>
                     <h6 class="mb-0 text-muted">Laporan Masuk</h6>
                 </div>
-                <h3 class="fw-bold">{{ $totalLaporan }}</h3>
+                <h3 class="fw-bold" id="totalLaporan">1</h3>
             </div>
         </div>
         <div class="col-md-3 mb-4">
@@ -253,7 +253,7 @@
                     <i class="bi bi-check-circle-fill text-success me-2" style="font-size: 1.5rem;"></i>
                     <h6 class="mb-0 text-muted">Kasus Selesai</h6>
                 </div>
-                <h3 class="fw-bold">{{ $totalSelesai }}</h3>
+                <h3 class="fw-bold" id="totalSelesai">1</h3>
             </div>
         </div>
         <div class="col-md-3 mb-4">
@@ -262,7 +262,7 @@
                     <i class="bi bi-book-fill me-2" style="font-size: 1.5rem; color: #8e44ad;"></i>
                     <h6 class="mb-0 text-muted">Artikel Edukasi</h6>
                 </div>
-                <h3 class="fw-bold">{{ $totalArticles }}</h3>
+                <h3 class="fw-bold" id="totalArticles">1</h3>
             </div>
         </div>
     </div>
@@ -371,6 +371,40 @@
                     });
                 });
             }
+        });
+
+        // Add counting animation function
+        function animateCount(element, target, duration = 2000) {
+            let start = 1; // Changed from 0 to 1
+            const increment = (target - 1) / (duration / 16); // Adjusted increment calculation
+            const timer = setInterval(() => {
+                start += increment;
+                if (start >= target) {
+                    element.textContent = Math.round(target);
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.round(start);
+                }
+            }, 16);
+        }
+
+        // Initialize counting animations when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate all statistics
+            const stats = {
+                'totalUsers': {{ $totalUsers }},
+                'totalLaporan': {{ $totalLaporan }},
+                'totalSelesai': {{ $totalSelesai }},
+                'totalArticles': {{ $totalArticles }}
+            };
+
+            Object.entries(stats).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = "1"; // Set initial value to 1
+                    animateCount(element, value);
+                }
+            });
         });
     </script>
     <!-- Script Chart -->
