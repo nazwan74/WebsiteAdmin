@@ -33,8 +33,8 @@ class PengaturanController extends Controller
             return redirect()->route('admin.dashboard')->with('error', 'Anda tidak memiliki akses.');
         }
 
-        // Ambil semua dokumen dari koleksi 'admins'
-        $adminSnapshots = $this->firestore->collection('admins')->documents();
+        // Ambil semua dokumen dari koleksi 'admins' dan urutkan berdasarkan created_at
+        $adminSnapshots = $this->firestore->collection('admins')->orderBy('created_at', 'desc')->documents();
         $admins = [];
 
         foreach ($adminSnapshots as $doc) {

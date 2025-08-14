@@ -31,6 +31,13 @@ return [
 
     'connections' => [
 
+        'firebase' => [
+            'driver' => 'firebase',
+            'database' => '',
+            'credentials' => base_path(env('FIREBASE_CREDENTIALS')),
+            'storage_bucket' => env('FIREBASE_STORAGE_BUCKET'),
+        ],
+
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),

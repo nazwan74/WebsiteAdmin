@@ -20,6 +20,12 @@ Route::get('/admin/login', [AuthController::class, 'showLogin'])->name('admin.lo
 Route::post('/admin/login', [AuthController::class, 'login']);
 Route::post('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
 
+// Admin Forgot Password
+Route::get('/admin/forgot-password', [AuthController::class, 'showForgotPassword'])->name('admin.forgot-password');
+Route::post('/admin/forgot-password/send', [AuthController::class, 'sendPasswordResetEmail'])->name('admin.forgot-password.send');
+Route::get('/admin/reset-password', [AuthController::class, 'showResetPassword'])->name('admin.reset-password');
+Route::post('/admin/reset-password', [AuthController::class, 'resetPassword'])->name('admin.reset-password');
+
 // Admin dashboard
 Route::get('/admin/dashboard', [dashboardcontroller::class, 'index'])->name('admin.dashboard');
 
