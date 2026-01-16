@@ -250,21 +250,7 @@
                     Laporan
                 </a>
             </li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" onclick="toggleDropdown(event)">
-                    <span>
-                        <i class="bi bi-bar-chart"></i>
-                        Chart
-                    </span>
-                    <i></i>
-                </a>
-                <ul class="submenu">
-                    <li><a href="/admin/chart/kekerasan-anak">Kekerasan Anak</a></li>
-                    <li><a href="/admin/chart/pernikahan-anak">Pernikahan Anak</a></li>
-                    <li><a href="/admin/chart/bullying">Bullying</a></li>
-                    <li><a href="/admin/chart/stunting">Stunting</a></li>
-                </ul>
-            </li>
+            
 
             @if(Session::get('admin.role') === 'super_admin')
             <li>

@@ -258,21 +258,7 @@
                     Laporan
                 </a>
             </li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" onclick="toggleDropdown(event)">
-                    <span>
-                        <i class="bi bi-bar-chart"></i>
-                        Chart
-                    </span>
-                    <i></i>
-                </a>
-                <ul class="submenu">
-                    <li><a href="/admin/chart/kekerasan-anak">Kekerasan Anak</a></li>
-                    <li><a href="/admin/chart/pernikahan-anak">Pernikahan Anak</a></li>
-                    <li><a href="/admin/chart/bullying">Bullying</a></li>
-                    <li><a href="/admin/chart/stunting">Stunting</a></li>
-                </ul>
-            </li>
+            
             <li>
                 <a href="/admin/pengaturan" class="active">
                     <i class="bi bi-gear"></i>
@@ -314,9 +300,9 @@
             <!-- Header Daftar Admin -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>Daftar Admin</h2>
-                <a href="{{ route('admin.tambahAdmin') }}" class="btn btn-primary">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahAdmin">
                     <i class="bi bi-plus-circle me-1"></i> Tambah Admin
-                </a>
+                </button>   
             </div>
 
             <!-- Pesan Flash -->
@@ -378,6 +364,55 @@
             </div>
         </div>
     </div>
+        <div class="modal fade" id="modalTambahAdmin" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+        
+        <form method="POST" action="{{ route('admin.storeAdmin') }}">
+            @csrf
+
+            <div class="modal-header">
+            <h5 class="modal-title">Tambah Admin</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+            <!-- Email -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Email</label>
+                <input type="email" name="email" class="form-control" required>
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Password</label>
+                <input type="password" name="password" class="form-control" minlength="6" required>
+                <small class="text-muted">Minimal 6 karakter</small>
+            </div>
+
+            <!-- Role -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Role</label>
+                <select name="role" class="form-select" required>
+                <option value="">-- Pilih Role --</option>
+                <option value="admin">Admin</option>
+                <option value="super_admin">Super Admin</option>
+                </select>
+            </div>
+            </div>
+
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Simpan
+            </button>
+            </div>
+
+        </form>
+        </div>
+    </div>
+    </div>
+
 
     <!-- JavaScript Eksternal -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

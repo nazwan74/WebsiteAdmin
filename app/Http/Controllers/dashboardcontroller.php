@@ -26,12 +26,16 @@ class DashboardController extends Controller
 
         // Ambil data dari koleksi Firestore
         $usersSnapshots    = $this->firestore->collection('users')->documents();
-        $laporanSnapshots  = $this->firestore->collection('laporan')->documents();
         $articlesSnapshots = $this->firestore->collection('articles')->documents();
+
+        // Struktur baru laporan: laporan/{kategoriDoc}/{userIdSubcollection}/{laporanId}
+        $kategoriMap = [
+            'kekerasan_anak', 'bullying', 'pernikahan_anak', 'stunting'
+        ];
 
         // Hitung jumlah dokumen
         $totalUsers    = $usersSnapshots->size();
-        $totalLaporan  = $laporanSnapshots->size();
+        $totalLaporan  = 0;
         $totalArticles = $articlesSnapshots->size();
 
         // Hitung status laporan
@@ -45,49 +49,62 @@ class DashboardController extends Controller
         $daerahCount = [];
         $kategoriPerDaerah = [];
 
-        foreach ($laporanSnapshots as $doc) {
-            $data = $doc->data();
+        foreach ($kategoriMap as $kategoriKey) {
+            $kategoriDocRef = $this->firestore->collection('laporan')->document($kategoriKey);
+            foreach ($kategoriDocRef->collections() as $userCollection) {
+                foreach ($userCollection->documents() as $doc) {
+                    if (!$doc->exists()) continue;
+                    $totalLaporan++;
+                    $data = $doc->data();
 
-            // Hitung status
-            $status = strtolower($data['status'] ?? 'baru');
-            switch ($status) {
-                case 'selesai':
-                    $laporanSelesai++;
-                    break;
-                case 'diproses':
-                    $laporanDiproses++;
-                    break;
-                case 'baru':
-                    $laporanBaru++;
-                    break;
-                case 'ditolak':
-                    $laporanDitolak++;
-                    break;
-            }
+                    // Hitung status
+                    $status = strtolower($data['status'] ?? 'baru');
+                    switch ($status) {
+                        case 'selesai':
+                            $laporanSelesai++;
+                            break;
+                        case 'diproses':
+                            $laporanDiproses++;
+                            break;
+                        case 'ditolak':
+                            $laporanDitolak++;
+                            break;
+                        default:
+                            $laporanBaru++;
+                            break;
+                    }
 
-            $kategori = $data['kategori'] ?? 'Tidak diketahui';
-            $daerah = $data['daerah'] ?? 'Tidak diketahui';
+                    $kategoriDisplay = match ($kategoriKey) {
+                        'kekerasan_anak' => 'Kekerasan Anak',
+                        'bullying' => 'Bullying',
+                        'pernikahan_anak' => 'Pernikahan Anak',
+                        'stunting' => 'Stunting',
+                        default => 'Tidak diketahui'
+                    };
+                    $daerah = $data['tempat_kejadian'] ?? ($data['daerah'] ?? 'Tidak diketahui');
 
-            // Hitung total per kategori
-            if (!isset($kategoriCount[$kategori])) {
-                $kategoriCount[$kategori] = 0;
-            }
-            $kategoriCount[$kategori]++;
+                    // Hitung total per kategori
+                    if (!isset($kategoriCount[$kategoriDisplay])) {
+                        $kategoriCount[$kategoriDisplay] = 0;
+                    }
+                    $kategoriCount[$kategoriDisplay]++;
 
-            // Hitung total per daerah
-            if (!isset($daerahCount[$daerah])) {
-                $daerahCount[$daerah] = 0;
-            }
-            $daerahCount[$daerah]++;
+                    // Hitung total per daerah
+                    if (!isset($daerahCount[$daerah])) {
+                        $daerahCount[$daerah] = 0;
+                    }
+                    $daerahCount[$daerah]++;
 
-            // Hitung kategori per daerah
-            if (!isset($kategoriPerDaerah[$daerah])) {
-                $kategoriPerDaerah[$daerah] = [];
+                    // Hitung kategori per daerah
+                    if (!isset($kategoriPerDaerah[$daerah])) {
+                        $kategoriPerDaerah[$daerah] = [];
+                    }
+                    if (!isset($kategoriPerDaerah[$daerah][$kategoriDisplay])) {
+                        $kategoriPerDaerah[$daerah][$kategoriDisplay] = 0;
+                    }
+                    $kategoriPerDaerah[$daerah][$kategoriDisplay]++;
+                }
             }
-            if (!isset($kategoriPerDaerah[$daerah][$kategori])) {
-                $kategoriPerDaerah[$daerah][$kategori] = 0;
-            }
-            $kategoriPerDaerah[$daerah][$kategori]++;
         }
 
         // Ambil 4 kategori terbanyak

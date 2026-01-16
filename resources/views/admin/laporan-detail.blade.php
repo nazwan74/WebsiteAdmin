@@ -301,7 +301,7 @@
                             @php
                                 $kategori = strtolower($laporan['kategori'] ?? '');
                                 $kategoriClass = match($kategori) {
-                                    'pernikahan dini' => 'pernikahan',
+                                    'pernikahan anak' => 'pernikahan',
                                     'kekerasan anak' => 'kekerasan',
                                     'bullying' => 'bullying',
                                     'stunting' => 'stunting',
@@ -350,7 +350,7 @@
                                 <div class="label-key">
                                     <i class="bi bi-telephone me-2"></i>No HP
                                 </div>
-                                <div class="detail-value">{{ $laporan['no_hp'] ?? '-' }}</div>
+                                <div class="detail-value">{{ $laporan['no_hp'] ?? ($laporan['no_hp'] ?? '-') }}</div>
                             </div>
                         </div>
 
@@ -360,8 +360,10 @@
                             Isi Laporan
                         </div>
                         <div class="laporan-content">
-                            {{ $laporan['isi laporan'] ?? '-' }}
+                            {{ $laporan['deskripsi_lengkap'] ?? ($laporan['isi laporan'] ?? '-') }}
                         </div>
+
+                        
 
                         <!-- Bagian Status -->
                         <div class="status-section">
@@ -420,6 +422,9 @@
                             <!-- Tombol Aksi -->
                             <div class="row g-3">
                                 <div class="col-12 d-flex justify-content-end gap-2">
+                                    <a href="{{ route('admin.laporan.chat', $laporan['id']) }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-chat-dots"></i>
+                                    </a>
                                     <a href="{{ route('admin.laporan.download', $laporan['id']) }}" class="btn btn-warning btn-sm">
                                         <i class="bi bi-download"></i>
                                     </a>

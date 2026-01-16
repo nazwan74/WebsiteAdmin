@@ -207,7 +207,7 @@
                         @php
                             $kategori = strtolower($laporan['kategori'] ?? '');
                             $kategoriClass = match($kategori) {
-                                'pernikahan dini' => 'kategori-pernikahan',
+                                'pernikahan anak' => 'kategori-pernikahan',
                                 'kekerasan anak' => 'kategori-kekerasan',
                                 'bullying' => 'kategori-bullying',
                                 'stunting' => 'kategori-stunting',
@@ -273,7 +273,7 @@
         <div class="info-section">
             <h3>Isi Laporan</h3>
             <div class="isi-laporan">
-                {!! nl2br(e($laporan['isi laporan'] ?? 'Tidak ada isi laporan')) !!}
+                {!! nl2br(e($laporan['deskripsi_lengkap'] ?? ($laporan['isi laporan'] ?? 'Tidak ada isi laporan'))) !!}
             </div>
         </div>
     </div>

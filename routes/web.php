@@ -8,7 +8,6 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\dashboardcontroller;
 use App\Http\Controllers\stuntingcontroller;
-use App\Http\Controllers\ChartController;
 use App\Http\Controllers\ProfileController;
 
 Route::get('/', function () {
@@ -44,21 +43,22 @@ Route::post('/admin/laporan/{id}/set-status', [laporancontroller::class, 'setSta
 Route::delete('/admin/laporan/{id}', [LaporanController::class, 'destroy'])->name('admin.laporan.delete');
 Route::get('/admin/laporan/{id}/download', [laporancontroller::class, 'downloadPDF'])->name('admin.laporan.download');
 
+// Laporan Chat
+Route::get('/admin/laporan/{id}/chat', [laporancontroller::class, 'chat'])->name('admin.laporan.chat');
+Route::get('/admin/laporan/{id}/chat/messages', [laporancontroller::class, 'chatMessages'])->name('admin.laporan.chat.messages');
+Route::post('/admin/laporan/{id}/chat/send', [laporancontroller::class, 'sendChat'])->name('admin.laporan.chat.send');
+Route::delete('/admin/laporan/{id}/chat/{messageId}', [laporancontroller::class, 'deleteChat'])->name('admin.laporan.chat.delete');
+Route::put('/admin/laporan/{id}/chat/{messageId}', [laporancontroller::class, 'updateChat'])->name('admin.laporan.chat.update');
+
 //Pengaturan
 Route::get('/admin/pengaturan', [PengaturanController::class, 'index'])->name('admin.pengaturan');
-Route::get('/admin/tambah-admin', [PengaturanController::class, 'formTambahAdmin'])->name('admin.tambahAdmin');
 Route::post('/admin/tambah-admin', [PengaturanController::class, 'tambahAdmin'])->name('admin.storeAdmin');
 Route::delete('/admin/pengaturan/{uid}', [PengaturanController::class, 'hapusAdmin'])->name('admin.hapusAdmin');
 
 // Stunting
 Route::get('/admin/stunting/chart', [stuntingcontroller::class, 'chart'])->name('admin.stunting.chart');
 
-// Chart
-Route::get('/admin/chart', [ChartController::class, 'index'])->name('admin.chart');
-Route::get('/admin/chart/kekerasan-anak', [ChartController::class, 'kekerasanAnak'])->name('admin.chart.kekerasan-anak');
-Route::get('/admin/chart/pernikahan-anak', [ChartController::class, 'pernikahanAnak'])->name('admin.chart.pernikahan-anak');
-Route::get('/admin/chart/bullying', [ChartController::class, 'bullying'])->name('admin.chart.bullying');
-Route::get('/admin/chart/stunting', [ChartController::class, 'stunting'])->name('admin.chart.stunting');
+// Chart routes removed
 
 // Profile
 Route::get('/admin/profile', [ProfileController::class, 'index'])->name('admin.profile');

@@ -423,21 +423,7 @@
                     Laporan
                 </a>
             </li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" onclick="toggleDropdown(event)">
-                    <span>
-                        <i class="bi bi-bar-chart"></i>
-                        Chart
-                    </span>
-                    <i></i>
-                </a>
-                <ul class="submenu">
-                    <li><a href="/admin/chart/kekerasan-anak">Kekerasan Anak</a></li>
-                    <li><a href="/admin/chart/pernikahan-anak">Pernikahan Anak</a></li>
-                    <li><a href="/admin/chart/bullying">Bullying</a></li>
-                    <li><a href="/admin/chart/stunting">Stunting</a></li>
-                </ul>
-            </li>
+            
 
             @if(Session::get('admin.role') === 'super_admin')
             <li>
@@ -487,7 +473,7 @@
                 <div class="row mb-3">
                     <div class="col-md-8">
                         <div class="input-group">
-                            <input type="text" class="form-control" placeholder="Cari artikel..." id="search-input">
+                            <input type="text" class="form-control" placeholder="Cari laporan..." id="search-input">
                             <button class="btn btn-outline-secondary" type="button">
                                 <i class="bi bi-search"></i>
                             </button>
@@ -521,14 +507,14 @@
                                 @php
                                     $kategori = strtolower($item['kategori'] ?? 'lainnya');
                                     $kategoriBadgeClass = match($kategori) {
-                                        'pernikahan dini' => 'bg-pernikahan',
+                                        'pernikahan anak' => 'bg-pernikahan',
                                         'kekerasan anak' => 'bg-kekerasan',
                                         'bullying' => 'bg-bullying',
                                         'stunting' => 'bg-stunting',
                                         default => 'bg-secondary',
                                     };
                                     $kategoriDisplay = match($kategori) {
-                                        'pernikahan dini' => 'Pernikahan Anak',
+                                        'pernikahan anak' => 'Pernikahan Anak',
                                         'kekerasan anak' => 'Kekerasan Anak',
                                         'bullying' => 'Bullying',
                                         'stunting' => 'Stunting',
@@ -600,7 +586,7 @@
                             <label class="form-label fw-bold">Pilih Kategori</label>
                             <div class="d-flex flex-wrap gap-2">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="kategoriPernikahan" value="pernikahan dini">
+                                    <input class="form-check-input" type="checkbox" id="kategoriPernikahan" value="pernikahan anak">
                                     <label class="form-check-label" for="kategoriPernikahan">Pernikahan Anak</label>
                                 </div>
                                 <div class="form-check">
