@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Chat Laporan #{{ $laporan['id'] }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -48,14 +49,14 @@
                 <h4 class="mb-0">Chat Laporan</h4>
                 <div class="text-muted small">#{{ $laporan['id'] }} — {{ $laporan['judul'] ?? 'Laporan' }}</div>
             </div>
-            <a href="{{ route('admin.laporan.detail', $laporan['id']) }}" class="btn btn-outline-secondary">
+            <a href="{{ route('admin.laporan', $laporan['id']) }}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Kembali
             </a>
         </div>
 
         <div id="chatBox" class="chat-box"></div>
 
-        <form id="sendForm" class="mt-3 d-flex gap-2 composer">
+        <form id="sendForm" class="mt-3 d-flex gap-2 composer" action="javascript:void(0)" method="post" onsubmit="return false;">
             <textarea id="messageInput" class="form-control" placeholder="Tulis pesan... (Enter untuk kirim, Shift+Enter baris baru)" rows="1" required></textarea>
             <button type="submit" class="btn btn-primary">
                 <i class="bi bi-send"></i>
@@ -233,26 +234,40 @@
 
         document.getElementById('sendForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
-            if (!message) return;
+            if (!message) return false;
+            const btn = this.querySelector('button[type="submit"]');
+            const origHtml = btn ? btn.innerHTML : '';
+            if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; }
             fetch(sendUrl, {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '{{ csrf_token() }}',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({ message })
             })
-            .then(r => r.json())
-            .then(data => {
-                if (data.status === 'success') {
+            .then(function(r) {
+                if (r.status === 419) {
+                    return r.text().then(function() { throw new Error('CSRF'); });
+                }
+                return r.json();
+            })
+            .then(function(data) {
+                if (data && data.status === 'success') {
                     input.value = '';
                     fetchMessages();
                 }
             })
-            .catch(() => {});
+            .catch(function() {})
+            .finally(function() {
+                if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+            });
+            return false;
         });
 
 

@@ -20,7 +20,7 @@
             background-color: #f4f6f9;
         }
         
-        /* Gaya Sidebar */
+        /* Gaya Sidebar - z-index tinggi agar di atas navbar & tabel */
         .sidebar {
             width: 180px;
             height: 100vh;
@@ -30,6 +30,64 @@
             position: fixed;
             top: 0;
             left: 0;
+            z-index: 1050;
+            transition: transform 0.3s ease;
+        }
+
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1040;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* Hamburger Button */
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #333;
+            cursor: pointer;
+            padding: 0.5rem;
+            margin-right: 1rem;
+        }
+
+        .hamburger-btn:hover {
+            color: #4361ee;
+        }
+
+        /* Responsive: Mobile */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+            }
+
+            .navbar {
+                margin-left: 0 !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+
+            .hamburger-btn {
+                display: block;
+            }
         }
         
         .sidebar-logo {
@@ -149,6 +207,7 @@
             margin-left: 180px;
             background-color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: margin-left 0.3s ease;
         }
         
         .navbar-dashboard-title {
@@ -161,11 +220,14 @@
             color: #6c757d;
         }
         
-        /* Gaya Konten Utama */
+        /* Gaya Konten Utama - z-index rendah agar di bawah sidebar saat dibuka */
         .main-content {
             margin-left: 180px;
             margin-top: 70px;
             padding: 20px;
+            transition: margin-left 0.3s ease;
+            position: relative;
+            z-index: 1;
         }
         
         /* Gaya Card Statistik */
@@ -178,16 +240,15 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
         }
         
-        /* Gaya Chart Container */
-        .bg-white.shadow-sm.rounded.p-3 {
-            border: 1px solid #e9ecef;
-        }
     </style>
 </head>
 
 <body>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-logo">
             <img src="{{ URL::to('Images/Gesa_Logo.png')}}" alt="Logo GESA" style="height: 80px;">
         </div>
@@ -231,6 +292,9 @@
     <!-- Bar Navigasi -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
         <div class="container-fluid">
+            <button class="hamburger-btn" id="hamburgerBtn" type="button">
+                <i class="bi bi-list"></i>
+            </button>
             <div class="d-flex align-items-center">
                 <div class="ms-3">
                     <div class="navbar-dashboard-title">Dashboard Overview</div>
@@ -290,49 +354,131 @@
             </div>
         </div>
 
-        <!-- Bagian Chart Visualisasi -->
-        <div class="row g-3 mt-3">
-            <!-- Top 4 Kategori Kasus -->
-            <div class="col-md-4">
-                <div class="bg-white shadow-sm rounded p-3" style="height: 350px;">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold mb-0 small">Top 4 Kategori Kasus</h6>
-                        <span class="badge bg-primary">{{ array_sum(array_values($topKategori)) }} Total Kasus</span>
-                    </div>
-                    <div style="height: 280px;">
-                        <canvas id="kategoriChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Top Daerah & Kategori -->
-            <div class="col-md-4">
-                <div class="bg-white shadow-sm rounded p-3" style="height: 350px;">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold mb-0 small">Top Daerah & Kategori Terbanyak</h6>
-                        <span class="badge bg-success">{{ array_sum(array_map(function($item) { return $item['total']; }, $topDaerahKategori)) }} Total Laporan</span>
-                    </div>
-                    <div style="height: 280px;">
-                        <canvas id="daerahKategoriChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Status Laporan -->
-            <div class="col-md-4">
-                <div class="bg-white shadow-sm rounded p-3" style="height: 350px;">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold mb-0 small">Status Laporan</h6>
-                        <div class="d-flex gap-2">
-                            <span class="badge bg-success">{{ $totalSelesai }} Selesai</span>
-                            <span class="badge bg-warning">{{ $totalDiproses }} Diproses</span>
-                            <span class="badge bg-secondary">{{ $totalBaru }} Baru</span>
-                            <span class="badge bg-danger">{{ $totalDitolak }} Ditolak</span>
+        <!-- Tren Laporan per Periode + Laporan Terbaru (satu baris) -->
+        <div class="row mt-3 g-3">
+            <!-- Grafik Tren -->
+            <div class="col-lg-7">
+                <div class="bg-white shadow-sm rounded p-3 h-100">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <h6 class="fw-bold mb-0">Tren Laporan per Periode</h6>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <form method="GET" action="{{ route('admin.dashboard') }}" id="filterTrenForm" class="d-flex flex-wrap align-items-center gap-2">
+                                <label class="form-label mb-0 small text-muted">Tahun:</label>
+                                <select name="tahun" class="form-select form-select-sm" style="width: auto; min-width: 120px;" onchange="document.getElementById('filterTrenForm').submit();">
+                                    <option value="">12 bulan terakhir</option>
+                                    @foreach($tahunList ?? [] as $y)
+                                        <option value="{{ $y }}" {{ (request('tahun') == $y || ($filterTahun ?? '') == $y) ? 'selected' : '' }}>{{ $y }}</option>
+                                    @endforeach
+                                </select>
+                                <label class="form-label mb-0 small text-muted ms-1">Bulan:</label>
+                                <select name="bulan" class="form-select form-select-sm" style="width: auto; min-width: 140px;" onchange="document.getElementById('filterTrenForm').submit();" {{ empty($filterTahun) ? 'disabled' : '' }}>
+                                    <option value="">Semua bulan</option>
+                                    @php
+                                        $bulanNama = ['1' => 'Januari', '2' => 'Februari', '3' => 'Maret', '4' => 'April', '5' => 'Mei', '6' => 'Juni', '7' => 'Juli', '8' => 'Agustus', '9' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'];
+                                    @endphp
+                                    @foreach($bulanNama as $num => $nama)
+                                        <option value="{{ $num }}" {{ (request('bulan') == $num || ($filterBulan ?? '') == $num) ? 'selected' : '' }}>{{ $nama }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary">Terapkan</button>
+                            </form>
+                            <span class="badge bg-primary">{{ $trenPeriodLabel ?? '12 bulan terakhir' }}</span>
                         </div>
                     </div>
                     <div style="height: 280px;">
-                        <canvas id="statusChart"></canvas>
+                        <canvas id="trenLaporanChart"></canvas>
                     </div>
+                </div>
+            </div>
+            <!-- Tabel Laporan Terbaru -->
+            <div class="col-lg-5">
+                <div class="bg-white shadow-sm rounded p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0">Laporan Terbaru</h6>
+                        <a href="{{ route('admin.laporan') }}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
+                    </div>
+                    <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                        <table class="table table-hover table-sm align-middle mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Kategori</th>
+                                    <th>Daerah</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($laporanTerbaru ?? [] as $item)
+                                    @php
+                                        $status = strtolower($item['status'] ?? 'baru');
+                                        $badgeColor = match($status) {
+                                            'selesai' => 'success',
+                                            'diproses' => 'warning',
+                                            'ditolak' => 'danger',
+                                            default => 'secondary',
+                                        };
+                                        $tanggalBuat = $item['created_date'] ?? ($item['create_at'] ?? null);
+                                        $parsedBuat = null;
+                                        if ($tanggalBuat !== null && $tanggalBuat !== '') {
+                                            try {
+                                                $parsedBuat = $tanggalBuat instanceof \DateTimeInterface
+                                                    ? \Carbon\Carbon::instance($tanggalBuat)
+                                                    : \Carbon\Carbon::parse($tanggalBuat);
+                                            } catch (\Throwable $e) {
+                                                try {
+                                                    $parsedBuat = \Carbon\Carbon::createFromLocaleFormat('d M Y H:i', 'id', $tanggalBuat);
+                                                } catch (\Throwable $e2) {
+                                                    try {
+                                                        $parsedBuat = \Carbon\Carbon::createFromLocaleFormat('d M Y', 'id', $tanggalBuat);
+                                                    } catch (\Throwable $e3) {
+                                                        $parsedBuat = null;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    @endphp
+                                    <tr>
+                                        <td class="text-nowrap">{{ $parsedBuat ? $parsedBuat->locale('id')->translatedFormat('d M Y, H:i') : ($tanggalBuat ?: '-') }}</td>
+                                        <td>{{ $item['kategori'] ?? '-' }}</td>
+                                        <td>{{ $item['daerah'] ?? '-' }}</td>
+                                        <td><span class="badge bg-{{ $badgeColor }}">{{ ucfirst($status) }}</span></td>
+                                        <td>
+                                        <button
+                                            class="btn btn-primary btn-sm"
+                                            onclick="openDetailLaporan('{{ $item['id'] }}')">
+                                            Detail
+                                        </button>
+                                    </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">Belum ada laporan.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <!-- Modal Detail Laporan -->
+        <div class="modal fade" id="detailLaporanModal" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Detail Laporan</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body" id="detailLaporanContent">
+                        <div class="text-center py-5">
+                            <div class="spinner-border"></div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -343,6 +489,41 @@
 
     <!-- Script Kustom -->
     <script>
+        // Hamburger Menu Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+
+            function closeSidebar() {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+
+            if (hamburgerBtn) {
+                hamburgerBtn.addEventListener('click', toggleSidebar);
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', closeSidebar);
+            }
+
+            // Close sidebar when clicking on menu links (mobile)
+            const menuLinks = document.querySelectorAll('.sidebar-menu a');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        closeSidebar();
+                    }
+                });
+            });
+        });
+
         // Fungsi toggle dropdown
         function toggleDropdown(event) {
             event.preventDefault();
@@ -432,165 +613,99 @@
                 }
             });
         });
-    </script>
 
-    <!-- Script Chart -->
-    <script>
-        // === Chart Kategori ===
-        new Chart(document.getElementById('kategoriChart'), {
-            type: 'doughnut',
-            data: {
-                labels: {!! json_encode(array_keys($topKategori)) !!},
-                datasets: [{
-                    data: {!! json_encode(array_values($topKategori)) !!},
-                    backgroundColor: ['#4e79a7', '#f28e2c', '#e15759', '#76b7b2'],
-                    hoverOffset: 8,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { 
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true,
-                            font: {
-                                size: 11
-                            }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((context.parsed * 100) / total).toFixed(1);
-                                return `${context.label}: ${context.parsed} laporan (${percentage}%)`;
-                            }
-                        }
-                    }
+        //Script Chart: Tren Laporan per Periode
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('trenLaporanChart');
+            if (!ctx) return;
+
+            const labels = @json($trenLaporanLabels);
+            const data = @json($trenLaporanData);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Jumlah Laporan',
+                        data: data,
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.15)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#4361ee',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
                 },
-                cutout: '60%'
-            }
-        });
-
-        // === Chart Daerah & Kategori ===
-        const daerahData = @json($topDaerahKategori);
-        const daerahLabels = Object.keys(daerahData);
-        const laporanData = daerahLabels.map(d => daerahData[d].total);
-        const kategoriData = daerahLabels.map(d => daerahData[d].kategori_terbanyak);
-
-        new Chart(document.getElementById('daerahKategoriChart'), {
-            type: 'bar',
-            data: {
-                labels: daerahLabels,
-                datasets: [{
-                    label: 'Jumlah Laporan',
-                    data: laporanData,
-                    backgroundColor: '#59a14f',
-                    borderRadius: 6,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const index = context.dataIndex;
-                                return [
-                                    `Laporan: ${laporanData[index]}`,
-                                    `Kategori: ${kategoriData[index]}`
-                                ];
-                            }
-                        }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
                     },
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { 
-                            stepSize: 1, 
-                            precision: 0,
-                            font: {
-                                size: 11
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Jumlah Laporan',
-                            font: {
-                                size: 11
-                            }
-                        },
-                        grid: {
-                            display: true,
-                            drawBorder: false
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Nama Daerah',
-                            font: {
-                                size: 11
-                            }
-                        },
-                        grid: {
+                    plugins: {
+                        legend: {
                             display: false
                         },
-                        ticks: {
-                            font: {
-                                size: 11
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // === Chart Status ===
-        window.statusChart = new Chart(document.getElementById('statusChart'), {
-            type: 'pie',
-            data: {
-                labels: ['Selesai', 'Diproses', 'Baru', 'Ditolak'],
-                datasets: [{
-                    data: [{{ $totalSelesai }}, {{ $totalDiproses }}, {{ $totalBaru }}, {{ $totalDitolak }}],
-                    backgroundColor: ['#28a745', '#ffc107', '#6c757d', '#dc3545'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true,
-                            font: {
-                                size: 11
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Laporan: ' + context.parsed.y + ' kasus';
+                                }
                             }
                         }
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((context.parsed * 100) / total).toFixed(1);
-                                return `${context.label}: ${context.parsed} laporan (${percentage}%)`;
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0,
+                                font: { size: 11 }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0,
+                                font: { size: 11 }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Jumlah Laporan',
+                                font: { size: 11 }
+                            },
+                            grid: {
+                                drawBorder: false
                             }
                         }
                     }
                 }
-            }
+            });
         });
+
+        function openDetailLaporan(id) {
+            const modal = new bootstrap.Modal(document.getElementById('detailLaporanModal'));
+            modal.show();
+
+            fetch(`/admin/laporan/${id}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('detailLaporanContent').innerHTML = html;
+            });
+        }
     </script>
+
+    
 </body>
 </html>

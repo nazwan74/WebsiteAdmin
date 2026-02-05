@@ -28,13 +28,14 @@ class articlecontroller extends Controller
         $bucket = $this->storage->getBucket();
     }
 
-    // fungsi untuk menampilkan semua artikel
-    // dengan urutan terbaru
-    public function index()
+    /**
+     * Ambil daftar artikel dari Firestore (urut releasedDate DESC).
+     * @return array
+     */
+    private function getArticlesList()
     {
         $documents = $this->firestore->collection('articles')->orderBy('releasedDate', 'DESC')->documents();
         $articles = [];
-    
         foreach ($documents as $doc) {
             if ($doc->exists()) {
                 $data = $doc->data();
@@ -42,8 +43,98 @@ class articlecontroller extends Controller
                 $articles[] = $data;
             }
         }
-    
+        return $articles;
+    }
+
+    // fungsi untuk menampilkan semua artikel dengan urutan terbaru
+    public function index()
+    {
+        $articles = $this->getArticlesList();
         return view('admin.articel', compact('articles'));
+    }
+
+    /**
+     * Download daftar artikel dalam format CSV.
+     * Query: kategori (articleType), search (judul/deskripsi/hashtag).
+     */
+    public function downloadList(Request $request)
+    {
+        $articles = $this->getArticlesList();
+
+        $kategori = $request->query('kategori');
+        if ($kategori !== null && $kategori !== '' && $kategori !== 'all') {
+            $articles = array_values(array_filter($articles, function ($item) use ($kategori) {
+                return ($item['articleType'] ?? '') === $kategori;
+            }));
+        }
+
+        $search = $request->query('search');
+        if ($search !== null && $search !== '') {
+            $searchLower = mb_strtolower(trim($search));
+            $articles = array_values(array_filter($articles, function ($item) use ($searchLower) {
+                $title = mb_strtolower($item['title'] ?? '');
+                $desc = mb_strtolower($item['description'] ?? '');
+                $tags = mb_strtolower($item['hashtags'] ?? '');
+                return mb_strpos($title, $searchLower) !== false
+                    || mb_strpos($desc, $searchLower) !== false
+                    || mb_strpos($tags, $searchLower) !== false;
+            }));
+        }
+
+        $filename = 'daftar-artikel-' . date('Y-m-d-His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($articles) {
+            $stream = fopen('php://output', 'w');
+            fprintf($stream, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($stream, [
+                'No',
+                'ID',
+                'Judul Artikel',
+                'Kategori',
+                'Tanggal Rilis',
+                'Tanggal Edit',
+                'Hashtags',
+            ], ';');
+
+            foreach ($articles as $i => $item) {
+                $released = $item['releasedDate'] ?? null;
+                $updated = $item['updateDate'] ?? null;
+                if ($released instanceof \DateTimeInterface) {
+                    $released = $released->format('Y-m-d H:i');
+                } elseif ($released instanceof Timestamp) {
+                    $released = $released->get()->format('Y-m-d H:i');
+                } elseif (is_string($released)) {
+                    $released = date('Y-m-d H:i', strtotime($released));
+                } elseif ($released !== null) {
+                    $released = (string) $released;
+                }
+                if ($updated instanceof \DateTimeInterface) {
+                    $updated = $updated->format('Y-m-d H:i');
+                } elseif ($updated instanceof Timestamp) {
+                    $updated = $updated->get()->format('Y-m-d H:i');
+                } elseif (is_string($updated)) {
+                    $updated = date('Y-m-d H:i', strtotime($updated));
+                } elseif ($updated !== null) {
+                    $updated = (string) $updated;
+                }
+                $kategoriLabel = $item['articleType'] ?? '-';
+                fputcsv($stream, [
+                    $i + 1,
+                    $item['id'] ?? '-',
+                    $item['title'] ?? '-',
+                    $kategoriLabel,
+                    $released ?? '-',
+                    $updated ?? '-',
+                    $item['hashtags'] ?? '-',
+                ], ';');
+            }
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     // fungsi untuk menampilkan artikel berdasarkan id

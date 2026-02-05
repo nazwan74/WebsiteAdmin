@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Laporan</title>
     
     <!-- CSS Eksternal -->
@@ -29,6 +30,63 @@
             position: fixed;
             top: 0;
             left: 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* Hamburger Button */
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #333;
+            cursor: pointer;
+            padding: 0.5rem;
+            margin-right: 1rem;
+        }
+
+        .hamburger-btn:hover {
+            color: #4361ee;
+        }
+
+        /* Responsive: Mobile */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .navbar {
+                margin-left: 0 !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+
+            .hamburger-btn {
+                display: block;
+            }
         }
         
         .sidebar-logo {
@@ -148,6 +206,7 @@
             margin-left: 180px;
             background-color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: margin-left 0.3s ease;
         }
         
         .navbar-dashboard-title {
@@ -165,6 +224,7 @@
             margin-left: 180px;
             margin-top: 70px;
             padding: 20px;
+            transition: margin-left 0.3s ease;
         }
         
         /* Gaya Badge Kategori */
@@ -395,12 +455,36 @@
         #filterModal .btn-secondary:hover {
             background-color: #e2e6ea;
         }
+
+        /* Pagination */
+        .pagination-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding: 0.75rem 0;
+        }
+        .pagination-info {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .pagination-wrapper .pagination {
+            margin: 0;
+        }
+        .pagination-wrapper .page-link {
+            padding: 0.4rem 0.75rem;
+        }
     </style>
 </head>
 
 <body>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-logo">
             <img src="{{ URL::to('Images/Gesa_Logo.png')}}" alt="Logo GESA" style="height: 80px;">
         </div>
@@ -445,6 +529,9 @@
     <!-- Bar Navigasi -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
         <div class="container-fluid">
+            <button class="hamburger-btn" id="hamburgerBtn" type="button">
+                <i class="bi bi-list"></i>
+            </button>
             <div class="d-flex align-items-center">
                 <div class="ms-3">
                     <div class="navbar-dashboard-title">Manajemen Laporan</div>
@@ -465,8 +552,11 @@
     <!-- Konten Utama -->
     <div class="main-content">
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h2>Daftar Laporan</h2>
+                <a href="{{ route('admin.laporan.downloadList') }}" id="downloadListBtn" class="btn btn-success">
+                    <i class="bi bi-download me-2"></i>Download List
+                </a>
             </div>
             <div class="container mt-4">
                 <!-- Filter dan Pencarian -->
@@ -487,25 +577,23 @@
                 <!-- Area Filter Aktif -->
                 <div class="active-filters" id="activeFilters"></div>
 
-                <!-- Tabel Laporan -->
+                <!-- Tabel Laporan (field: user_name, case_type, incident_date, report_status, created_date) -->
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>ID</th>
                                 <th>Nama Pelapor</th>
-                                <th>Daerah</th>
-                                <th>Role</th>
-                                <th>Waktu Lapor</th>
-                                <th>Kategori</th>
+                                <th>Tipe Kasus</th>
+                                <th>Tanggal Kejadian</th>
                                 <th>Status</th>
+                                <th>Tanggal Buat</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($laporan as $item)
                                 @php
-                                    $kategori = strtolower($item['kategori'] ?? 'lainnya');
+                                    $kategori = strtolower($item['case_type'] ?? ($item['kategori'] ?? 'lainnya'));
                                     $kategoriBadgeClass = match($kategori) {
                                         'pernikahan anak' => 'bg-pernikahan',
                                         'kekerasan anak' => 'bg-kekerasan',
@@ -513,46 +601,102 @@
                                         'stunting' => 'bg-stunting',
                                         default => 'bg-secondary',
                                     };
-                                    $kategoriDisplay = match($kategori) {
-                                        'pernikahan anak' => 'Pernikahan Anak',
-                                        'kekerasan anak' => 'Kekerasan Anak',
-                                        'bullying' => 'Bullying',
-                                        'stunting' => 'Stunting',
-                                        default => ucfirst($kategori),
-                                    };
-                                    $status = strtolower($item['status'] ?? 'baru');
+                                    $kategoriDisplay = $item['case_type'] ?? ($item['kategori'] ?? '-');
+                                    $status = strtolower($item['report_status'] ?? ($item['status'] ?? 'baru'));
                                     $badgeColor = match($status) {
                                         'selesai' => 'success',
                                         'diproses' => 'warning',
                                         'ditolak' => 'danger',
                                         default => 'secondary',
                                     };
+                                    $tanggalKejadian = $item['incident_date'] ?? null;
+                                    $tanggalBuat = $item['created_date'] ?? ($item['create_at'] ?? null);
+                                    $parsedKejadian = null;
+                                    $parsedBuat = null;
+                                    if ($tanggalKejadian !== null && $tanggalKejadian !== '') {
+                                        try {
+                                            $parsedKejadian = $tanggalKejadian instanceof \DateTimeInterface
+                                                ? \Carbon\Carbon::instance($tanggalKejadian)
+                                                : \Carbon\Carbon::parse($tanggalKejadian);
+                                        } catch (\Throwable $e) {
+                                            try {
+                                                $parsedKejadian = \Carbon\Carbon::createFromLocaleFormat('d M Y', 'id', $tanggalKejadian);
+                                            } catch (\Throwable $e2) {
+                                                $parsedKejadian = null;
+                                            }
+                                        }
+                                    }
+                                    if ($tanggalBuat !== null && $tanggalBuat !== '') {
+                                        try {
+                                            $parsedBuat = $tanggalBuat instanceof \DateTimeInterface
+                                                ? \Carbon\Carbon::instance($tanggalBuat)
+                                                : \Carbon\Carbon::parse($tanggalBuat);
+                                        } catch (\Throwable $e) {
+                                            try {
+                                                $parsedBuat = \Carbon\Carbon::createFromLocaleFormat('d M Y H:i', 'id', $tanggalBuat);
+                                            } catch (\Throwable $e2) {
+                                                try {
+                                                    $parsedBuat = \Carbon\Carbon::createFromLocaleFormat('d M Y', 'id', $tanggalBuat);
+                                                } catch (\Throwable $e3) {
+                                                    $parsedBuat = null;
+                                                }
+                                            }
+                                        }
+                                    }
                                 @endphp
                                 <tr class="laporan-row" 
                                     data-kategori="{{ $kategori }}"
                                     data-daerah="{{ $item['daerah'] ?? '' }}"
-                                    data-tanggal="{{ \Carbon\Carbon::parse($item['create_at'])->format('Y-m-d') }}"
+                                    data-tanggal="{{ $parsedBuat ? $parsedBuat->format('Y-m-d') : '' }}"
                                     data-status="{{ $status }}">
-                                    <td>{{ $item['id'] ?? '-' }}</td>
-                                    <td>{{ $item['nama'] ?? '-' }}</td>
-                                    <td>{{ $item['daerah'] ?? '-' }}</td>
-                                    <td>{{ $item['role'] ?? '-' }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($item['create_at'])->format('d M Y, H:i') ?? '-' }}</td>
+                                    <td>{{ $item['user_name'] ?? ($item['nama'] ?? '-') }}</td>
                                     <td><span class="badge {{ $kategoriBadgeClass }}">{{ $kategoriDisplay }}</span></td>
+                                    <td class="text-nowrap">{{ $parsedKejadian ? $parsedKejadian->locale('id')->translatedFormat('d M Y') : ($tanggalKejadian ?: '-') }}</td>
                                     <td><span class="badge bg-{{ $badgeColor }}">{{ ucfirst($status) }}</span></td>
+                                    <td class="text-nowrap">{{ $parsedBuat ? $parsedBuat->locale('id')->translatedFormat('d M Y, H:i') : ($tanggalBuat ?: '-') }}</td>
                                     <td>
-                                        <a href="{{ url('/admin/laporan/'.$item['id']) }}" class="btn btn-sm btn-primary">
+                                        <button
+                                            class="btn btn-primary btn-sm"
+                                            onclick="openDetailLaporan('{{ $item['id'] }}')">
                                             Detail
-                                        </a>
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination -->
+                <div id="paginationWrapper" class="pagination-wrapper d-none">
+                    <div class="pagination-info" id="paginationInfo"></div>
+                    <nav aria-label="Navigasi halaman laporan">
+                        <ul class="pagination mb-0" id="paginationNav"></ul>
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Modal Detail Laporan -->
+    <div class="modal fade" id="detailLaporanModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Detail Laporan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body" id="detailLaporanContent">
+                    <div class="text-center py-5">
+                        <div class="spinner-border"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
 
     <!-- Modal Filter -->
     <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
@@ -581,27 +725,25 @@
                             </div>
                         </div>
 
-                        <!-- Filter Kategori -->
+                        <!-- Filter Kategori (dinamis, bentuk list) -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">Pilih Kategori</label>
-                            <div class="d-flex flex-wrap gap-2">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="kategoriPernikahan" value="pernikahan anak">
-                                    <label class="form-check-label" for="kategoriPernikahan">Pernikahan Anak</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="kategoriKekerasan" value="kekerasan anak">
-                                    <label class="form-check-label" for="kategoriKekerasan">Kekerasan Anak</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="kategoriBullying" value="bullying">
-                                    <label class="form-check-label" for="kategoriBullying">Bullying</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="kategoriStunting" value="stunting">
-                                    <label class="form-check-label" for="kategoriStunting">Stunting</label>
-                                </div>
-                            </div>
+                            <ul id="kategoriFilterContainer" class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+                                @forelse($kategoriList ?? [] as $kategori)
+                                    @php
+                                        $kategoriValue = is_string($kategori) ? strtolower($kategori) : $kategori;
+                                        $kategoriId = 'kategori-' . \Illuminate\Support\Str::slug($kategoriValue);
+                                    @endphp
+                                    <li class="list-group-item py-2 px-3 border-0">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="{{ $kategoriId }}" name="kategoriFilter" value="{{ $kategoriValue }}">
+                                            <label class="form-check-label" for="{{ $kategoriId }}">{{ $kategori }}</label>
+                                        </div>
+                                    </li>
+                                @empty
+                                    <li class="list-group-item text-muted small border-0">Tidak ada kategori dalam data laporan.</li>
+                                @endforelse
+                            </ul>
                         </div>
 
                         <!-- Filter Status -->
@@ -667,6 +809,41 @@
             });
         }
 
+        // Hamburger Menu Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+
+            function closeSidebar() {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+
+            if (hamburgerBtn) {
+                hamburgerBtn.addEventListener('click', toggleSidebar);
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', closeSidebar);
+            }
+
+            // Close sidebar when clicking on menu links (mobile)
+            const menuLinks = document.querySelectorAll('.sidebar-menu a');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        closeSidebar();
+                    }
+                });
+            });
+        });
+
         // Fungsi saat dokumen siap
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('search-input');
@@ -699,9 +876,14 @@
                 kategori: [],
                 status: []
             };
+
+            // Pagination
+            const perPage = 10;
+            let currentPage = 1;
             
             // Terapkan filter pencarian
             searchInput.addEventListener('input', function() {
+                currentPage = 1;
                 applyFilters();
             });
             
@@ -714,9 +896,9 @@
                 activeFilters.dateStart = document.getElementById('startDate').value;
                 activeFilters.dateEnd = document.getElementById('endDate').value;
                 
-                // Ambil filter kategori
+                // Ambil filter kategori (dinamis)
                 activeFilters.kategori = [];
-                document.querySelectorAll('input[id^="kategori"]:checked').forEach(checkbox => {
+                document.querySelectorAll('#kategoriFilterContainer input[name="kategoriFilter"]:checked').forEach(checkbox => {
                     activeFilters.kategori.push(checkbox.value);
                 });
                 
@@ -728,6 +910,7 @@
                 
                 // Update UI dan terapkan filter
                 updateActiveFiltersUI();
+                currentPage = 1;
                 applyFilters();
             });
             
@@ -747,6 +930,7 @@
                 
                 // Update UI
                 updateActiveFiltersUI();
+                currentPage = 1;
                 applyFilters();
             });
             
@@ -784,39 +968,16 @@
                     filterCount++;
                 }
                 
-                // Tambah filter kategori dengan mapping ID yang tepat
+                // Tambah filter kategori (dinamis)
                 activeFilters.kategori.forEach(kategori => {
-                    let displayKategori = '';
-                    let kategoriId = '';
-                    
-                    switch(kategori) {
-                        case 'pernikahan dini':
-                            displayKategori = 'Pernikahan Anak';
-                            kategoriId = 'kategoriPernikahan';
-                            break;
-                        case 'kekerasan anak':
-                            displayKategori = 'Kekerasan Anak';
-                            kategoriId = 'kategoriKekerasan';
-                            break;
-                        case 'bullying':
-                            displayKategori = 'Bullying';
-                            kategoriId = 'kategoriBullying';
-                            break;
-                        case 'stunting':
-                            displayKategori = 'Stunting';
-                            kategoriId = 'kategoriStunting';
-                            break;
-                        default:
-                            displayKategori = kategori;
-                            kategoriId = 'kategori' + kategori.charAt(0).toUpperCase() + kategori.slice(1).replace(/\s+/g, '');
-                    }
-                    
+                    const displayKategori = kategori.charAt(0).toUpperCase() + kategori.slice(1);
                     addFilterBadge('Kategori: ' + displayKategori, () => {
                         activeFilters.kategori = activeFilters.kategori.filter(k => k !== kategori);
-                        // Pastikan checkbox tidak tercentang
-                        const checkbox = document.getElementById(kategoriId);
-                        if (checkbox) {
-                            checkbox.checked = false;
+                        const container = document.getElementById('kategoriFilterContainer');
+                        if (container) {
+                            container.querySelectorAll('input[name="kategoriFilter"]').forEach(cb => {
+                                if (cb.value === kategori) cb.checked = false;
+                            });
                         }
                         updateActiveFiltersUI();
                         applyFilters();
@@ -896,10 +1057,90 @@
                     row.style.display = (matchSearch && matchDaerah && matchDate && 
                                         matchKategori && matchStatus) ? '' : 'none';
                 });
+
+                // Terapkan pagination pada baris yang tampil
+                const visibleRows = Array.from(rows).filter(r => r.style.display !== 'none');
+                const totalVisible = visibleRows.length;
+                const totalPages = Math.max(1, Math.ceil(totalVisible / perPage));
+                if (currentPage > totalPages) currentPage = totalPages;
+                const start = (currentPage - 1) * perPage;
+                const end = start + perPage;
+                visibleRows.forEach((row, i) => {
+                    row.style.display = (i >= start && i < end) ? '' : 'none';
+                });
+
+                // Perbarui UI pagination dan URL download
+                updatePaginationUI(totalVisible, totalPages);
+                updateDownloadLink();
+            }
+
+            // Update tampilan pagination (info + navigasi)
+            function updatePaginationUI(totalVisible, totalPages) {
+                const wrapper = document.getElementById('paginationWrapper');
+                const infoEl = document.getElementById('paginationInfo');
+                const navEl = document.getElementById('paginationNav');
+                if (!wrapper || !infoEl || !navEl) return;
+
+                if (totalVisible === 0) {
+                    wrapper.classList.add('d-none');
+                    return;
+                }
+                wrapper.classList.remove('d-none');
+
+                const start = (currentPage - 1) * perPage + 1;
+                const end = Math.min(currentPage * perPage, totalVisible);
+                infoEl.textContent = `Menampilkan ${start}–${end} dari ${totalVisible} laporan`;
+
+                navEl.innerHTML = '';
+                const addPageItem = (label, pageNum, disabled, active) => {
+                    const li = document.createElement('li');
+                    li.className = 'page-item' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
+                    const a = document.createElement('a');
+                    a.className = 'page-link';
+                    a.href = '#';
+                    a.textContent = label;
+                    if (!disabled) {
+                        a.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            currentPage = pageNum;
+                            applyFilters();
+                        });
+                    }
+                    li.appendChild(a);
+                    navEl.appendChild(li);
+                };
+
+                addPageItem('Sebelumnya', currentPage - 1, currentPage <= 1, false);
+                const maxButtons = 5;
+                let from = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                let to = Math.min(totalPages, from + maxButtons - 1);
+                if (to - from + 1 < maxButtons) from = Math.max(1, to - maxButtons + 1);
+                for (let p = from; p <= to; p++) {
+                    addPageItem(p, p, false, p === currentPage);
+                }
+                addPageItem('Selanjutnya', currentPage + 1, currentPage >= totalPages, false);
             }
             
-            // Setup awal UI filter
+            // Perbarui link Download List dengan filter + pencarian saat ini
+            function updateDownloadLink() {
+                const baseUrl = '{{ route("admin.laporan.downloadList") }}';
+                const params = [];
+                if (activeFilters.daerah.length) params.push('daerah=' + encodeURIComponent(activeFilters.daerah.join(',')));
+                if (activeFilters.dateStart) params.push('date_start=' + encodeURIComponent(activeFilters.dateStart));
+                if (activeFilters.dateEnd) params.push('date_end=' + encodeURIComponent(activeFilters.dateEnd));
+                if (activeFilters.kategori.length) params.push('kategori=' + encodeURIComponent(activeFilters.kategori.join(',')));
+                if (activeFilters.status.length) params.push('status=' + encodeURIComponent(activeFilters.status.join(',')));
+                const searchVal = searchInput.value.trim();
+                if (searchVal) params.push('search=' + encodeURIComponent(searchVal));
+                const url = params.length ? baseUrl + '?' + params.join('&') : baseUrl;
+                const btn = document.getElementById('downloadListBtn');
+                if (btn) btn.setAttribute('href', url);
+            }
+            
+            // Setup awal UI filter dan pagination
             updateActiveFiltersUI();
+            updateDownloadLink();
+            applyFilters();
 
             // Event listener untuk modal show
             document.getElementById('filterModal').addEventListener('show.bs.modal', function () {
@@ -924,6 +1165,79 @@
                     checkbox.checked = activeFilters.status.includes(value);
                 });
             });
+        });
+
+        function openDetailLaporan(id) {
+            const modal = new bootstrap.Modal(document.getElementById('detailLaporanModal'));
+            modal.show();
+
+            fetch(`/admin/laporan/${id}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('detailLaporanContent').innerHTML = html;
+            });
+        }
+
+        /* =========================
+        EVENT DELEGATION (AMAN)
+        ========================= */
+        document.addEventListener('submit', function(e) {
+
+            /* UPDATE STATUS */
+            if (e.target.id === 'statusForm') {
+                e.preventDefault();
+
+                const form = e.target;
+                const url = form.action;
+                const data = new FormData(form);
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: data
+                })
+                .then(res => res.json())
+                .then(res => {
+                    Swal.fire({
+                        title: 'Berhasil',
+                        text: res.message,
+                        icon: 'success'
+                    }).then(() => {
+                        location.reload(); // Muat ulang halaman untuk memperbarui status
+                    });
+                });
+            }
+        });
+
+        /* DELETE LAPORAN */
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'delete-laporan') {
+
+                const url = e.target.dataset.url;
+
+                Swal.fire({
+                    title: 'Yakin?',
+                    text: 'Laporan akan dihapus permanen',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Hapus'
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            }
+                        })
+                        .then(() => location.reload());
+                    }
+                });
+            }
         });
 
         // Cek akses untuk link pengaturan

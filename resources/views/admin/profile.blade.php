@@ -29,6 +29,42 @@
             position: fixed;
             top: 0;
             left: 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .sidebar-overlay.active { display: block; }
+
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #333;
+            cursor: pointer;
+            padding: 0.5rem;
+            margin-right: 1rem;
+        }
+
+        .hamburger-btn:hover { color: #4361ee; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+            .navbar { margin-left: 0 !important; }
+            .main-content { margin-left: 0 !important; }
+            .hamburger-btn { display: block; }
         }
         
         .sidebar-logo {
@@ -148,6 +184,7 @@
             margin-left: 180px;
             background-color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: margin-left 0.3s ease;
         }
         
         .navbar-dashboard-title {
@@ -165,6 +202,7 @@
             margin-left: 180px;
             margin-top: 70px;
             padding: 20px;
+            transition: margin-left 0.3s ease;
         }
         
         /* Gaya Container Profile */
@@ -226,8 +264,9 @@
 </head>
 
 <body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-logo">
             <img src="{{ URL::to('Images/Gesa_Logo.png')}}" alt="Logo GESA" style="height: 80px;">
         </div>
@@ -272,6 +311,9 @@
     <!-- Bar Navigasi -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
         <div class="container-fluid">
+            <button class="hamburger-btn" id="hamburgerBtn" type="button">
+                <i class="bi bi-list"></i>
+            </button>
             <div class="d-flex align-items-center">
                 <div class="ms-3">
                     <div class="navbar-dashboard-title">Profile Admin</div>
@@ -380,6 +422,32 @@
 
     <!-- Script Kustom -->
     <script>
+        // Hamburger Menu Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+
+            function closeSidebar() {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+
+            if (hamburgerBtn) hamburgerBtn.addEventListener('click', toggleSidebar);
+            if (overlay) overlay.addEventListener('click', closeSidebar);
+
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) closeSidebar();
+                });
+            });
+        });
+
         // Fungsi toggle dropdown
         function toggleDropdown(event) {
             event.preventDefault();

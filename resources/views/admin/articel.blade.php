@@ -26,6 +26,63 @@
             position: fixed;
             top: 0;
             left: 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* Hamburger Button */
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #333;
+            cursor: pointer;
+            padding: 0.5rem;
+            margin-right: 1rem;
+        }
+
+        .hamburger-btn:hover {
+            color: #4361ee;
+        }
+
+        /* Responsive: Mobile */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .navbar {
+                margin-left: 0 !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+
+            .hamburger-btn {
+                display: block;
+            }
         }
         
         .sidebar-logo {
@@ -145,6 +202,7 @@
             margin-left: 180px;
             background-color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: margin-left 0.3s ease;
         }
         
         .navbar-dashboard-title {
@@ -162,6 +220,7 @@
             margin-left: 180px;
             margin-top: 70px;
             padding: 20px;
+            transition: margin-left 0.3s ease;
         }
         
         /* Warna Latar Belakang */
@@ -212,12 +271,36 @@
             color: #e74c3c;
             border-color: #e74c3c;
         }
+
+        /* Pagination */
+        .pagination-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding: 0.75rem 0;
+        }
+        .pagination-info {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .pagination-wrapper .pagination {
+            margin: 0;
+        }
+        .pagination-wrapper .page-link {
+            padding: 0.4rem 0.75rem;
+        }
     </style>
 </head>
 
 <body>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-logo">
             <img src="{{ URL::to('Images/Gesa_Logo.png')}}" alt="Logo GESA" style="height: 80px;">
         </div>
@@ -260,6 +343,9 @@
     <!-- Bar Navigasi -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
         <div class="container-fluid">
+            <button class="hamburger-btn" id="hamburgerBtn" type="button">
+                <i class="bi bi-list"></i>
+            </button>
             <div class="d-flex align-items-center">
                 <div class="ms-3">
                     <div class="navbar-dashboard-title">Manajemen Artikel</div>
@@ -318,11 +404,16 @@
 
         <!-- Bagian Daftar Artikel -->
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h2>Daftar Artikel</h2>
-                <a href="{{ route('admin.articel.create') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-1"></i>Tambah Artikel
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('admin.articel.downloadList') }}" id="downloadListBtn" class="btn btn-success">
+                        <i class="bi bi-download me-1"></i>Download List
+                    </a>
+                    <a href="{{ route('admin.articel.create') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Tambah Artikel
+                    </a>
+                </div>
             </div>
             <div class="card-body">
                 <div class="row mb-3">
@@ -452,6 +543,13 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination -->
+                <div id="paginationWrapper" class="pagination-wrapper d-none">
+                    <div class="pagination-info" id="paginationInfo"></div>
+                    <nav aria-label="Navigasi halaman artikel">
+                        <ul class="pagination mb-0" id="paginationNav"></ul>
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
@@ -462,6 +560,41 @@
 
     <!-- Script Kustom -->
     <script>
+        // Hamburger Menu Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+
+            function closeSidebar() {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+
+            if (hamburgerBtn) {
+                hamburgerBtn.addEventListener('click', toggleSidebar);
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', closeSidebar);
+            }
+
+            // Close sidebar when clicking on menu links (mobile)
+            const menuLinks = document.querySelectorAll('.sidebar-menu a');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        closeSidebar();
+                    }
+                });
+            });
+        });
+
         // Fungsi toggle dropdown
         function toggleDropdown(event) {
             event.preventDefault();
@@ -489,12 +622,14 @@
 
         // Fungsi saat dokumen siap
         document.addEventListener('DOMContentLoaded', function() {
-            // Fungsionalitas pencarian dan filter
             const searchInput = document.getElementById('search-input');
             const categoryFilter = document.getElementById('category-filter');
             const rows = document.querySelectorAll('#articles-table tbody tr.article-row');
 
-            function filterTable() {
+            const perPage = 10;
+            let currentPage = 1;
+
+            function applyFilters() {
                 const searchTerm = searchInput.value.toLowerCase();
                 const selectedCategory = categoryFilter.value;
 
@@ -505,21 +640,91 @@
                     const category = row.getAttribute('data-kategori');
 
                     const matchCategory = selectedCategory === 'all' || category === selectedCategory;
-                    const matchSearch = title.includes(searchTerm) || 
-                                     description.includes(searchTerm) || 
-                                     hashtags.includes(searchTerm);
+                    const matchSearch = title.includes(searchTerm) ||
+                        description.includes(searchTerm) ||
+                        hashtags.includes(searchTerm);
 
-                    if (matchCategory && matchSearch) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
+                    row.style.display = (matchCategory && matchSearch) ? '' : 'none';
                 });
+
+                const visibleRows = Array.from(rows).filter(r => r.style.display !== 'none');
+                const totalVisible = visibleRows.length;
+                const totalPages = Math.max(1, Math.ceil(totalVisible / perPage));
+                if (currentPage > totalPages) currentPage = totalPages;
+                const start = (currentPage - 1) * perPage;
+                const end = start + perPage;
+                visibleRows.forEach((row, i) => {
+                    row.style.display = (i >= start && i < end) ? '' : 'none';
+                });
+
+                updatePaginationUI(totalVisible, totalPages);
+                updateDownloadLink();
             }
 
-            // Event listener untuk pencarian dan filter
-            searchInput.addEventListener('input', filterTable);
-            categoryFilter.addEventListener('change', filterTable);
+            function updatePaginationUI(totalVisible, totalPages) {
+                const wrapper = document.getElementById('paginationWrapper');
+                const infoEl = document.getElementById('paginationInfo');
+                const navEl = document.getElementById('paginationNav');
+                if (!wrapper || !infoEl || !navEl) return;
+                if (totalVisible === 0) {
+                    wrapper.classList.add('d-none');
+                    return;
+                }
+                wrapper.classList.remove('d-none');
+                const start = (currentPage - 1) * perPage + 1;
+                const end = Math.min(currentPage * perPage, totalVisible);
+                infoEl.textContent = 'Menampilkan ' + start + '–' + end + ' dari ' + totalVisible + ' artikel';
+
+                navEl.innerHTML = '';
+                function addPageItem(label, pageNum, disabled, active) {
+                    const li = document.createElement('li');
+                    li.className = 'page-item' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
+                    const a = document.createElement('a');
+                    a.className = 'page-link';
+                    a.href = '#';
+                    a.textContent = label;
+                    if (!disabled) {
+                        a.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            currentPage = pageNum;
+                            applyFilters();
+                        });
+                    }
+                    li.appendChild(a);
+                    navEl.appendChild(li);
+                }
+                addPageItem('Sebelumnya', currentPage - 1, currentPage <= 1, false);
+                const maxButtons = 5;
+                let from = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                let to = Math.min(totalPages, from + maxButtons - 1);
+                if (to - from + 1 < maxButtons) from = Math.max(1, to - maxButtons + 1);
+                for (let p = from; p <= to; p++) addPageItem(p, p, false, p === currentPage);
+                addPageItem('Selanjutnya', currentPage + 1, currentPage >= totalPages, false);
+            }
+
+            function updateDownloadLink() {
+                const baseUrl = '{{ route("admin.articel.downloadList") }}';
+                const params = [];
+                const cat = categoryFilter.value;
+                if (cat && cat !== 'all') params.push('kategori=' + encodeURIComponent(cat));
+                const searchVal = searchInput.value.trim();
+                if (searchVal) params.push('search=' + encodeURIComponent(searchVal));
+                const url = params.length ? baseUrl + '?' + params.join('&') : baseUrl;
+                const btn = document.getElementById('downloadListBtn');
+                if (btn) btn.setAttribute('href', url);
+            }
+
+            searchInput.addEventListener('input', function() {
+                currentPage = 1;
+                applyFilters();
+            });
+            categoryFilter.addEventListener('change', function() {
+                currentPage = 1;
+                applyFilters();
+            });
+
+            updateDownloadLink();
+            applyFilters();
 
             // Konfirmasi hapus dengan SweetAlert
             const deleteButtons = document.querySelectorAll('.delete-article-btn');

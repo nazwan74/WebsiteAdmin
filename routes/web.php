@@ -30,6 +30,7 @@ Route::get('/admin/dashboard', [dashboardcontroller::class, 'index'])->name('adm
 
 // Admin Articles
 Route::get('/admin/articel', [ArticleController::class, 'index'])->name('admin.articel.index');
+Route::get('/admin/articel/export/csv', [ArticleController::class, 'downloadList'])->name('admin.articel.downloadList');
 Route::get('/admin/articel/create', [ArticleController::class, 'create'])->name('admin.articel.create');
 Route::post('/admin/articel/store', [ArticleController::class, 'store'])->name('admin.articel.store');
 Route::delete('/admin/articel/{id}', [ArticleController::class, 'destroy'])->name('admin.articel.destroy');
@@ -38,6 +39,7 @@ Route::put('/admin/articel/{id}', [ArticleController::class, 'update'])->name('a
 
 // Laporan
 Route::get('/admin/laporan', [LaporanController::class, 'index'])->name('admin.laporan');
+Route::get('/admin/laporan/export/csv', [laporancontroller::class, 'downloadList'])->name('admin.laporan.downloadList');
 Route::get('/admin/laporan/{id}', [laporancontroller::class, 'detail'])->name('admin.laporan.detail');
 Route::post('/admin/laporan/{id}/set-status', [laporancontroller::class, 'setStatus'])->name('admin.laporan.setStatus');
 Route::delete('/admin/laporan/{id}', [LaporanController::class, 'destroy'])->name('admin.laporan.delete');
