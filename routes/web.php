@@ -57,11 +57,6 @@ Route::get('/admin/pengaturan', [PengaturanController::class, 'index'])->name('a
 Route::post('/admin/tambah-admin', [PengaturanController::class, 'tambahAdmin'])->name('admin.storeAdmin');
 Route::delete('/admin/pengaturan/{uid}', [PengaturanController::class, 'hapusAdmin'])->name('admin.hapusAdmin');
 
-// Stunting
-Route::get('/admin/stunting/chart', [stuntingcontroller::class, 'chart'])->name('admin.stunting.chart');
-
-// Chart routes removed
-
 // Profile
 Route::get('/admin/profile', [ProfileController::class, 'index'])->name('admin.profile');
 Route::post('/admin/profile/update-password', [ProfileController::class, 'updatePassword'])->name('admin.profile.update-password');
