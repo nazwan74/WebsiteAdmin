@@ -161,8 +161,8 @@
                             <div class="input-group">
                                 <i class="bi bi-envelope-fill form-icon"></i>
                                 <input type="email" class="form-control @error('email') is-invalid @enderror" 
-                                       name="email" value="{{ old('email') }}" required 
-                                       placeholder="Masukkan email admin">
+                                    name="email" value="{{ old('email') }}" required 
+                                    placeholder="Masukkan email admin">
                             </div>
                             @error('email')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
