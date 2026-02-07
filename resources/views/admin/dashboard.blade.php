@@ -89,15 +89,6 @@
                 display: block;
             }
         }
-
-        /* Modal dan backdrop di atas sidebar (1050) */
-        #detailLaporanModal.modal {
-            z-index: 1060;
-        }
-
-        body .modal-backdrop {
-            z-index: 1055;
-        }
         
         .sidebar-logo {
             display: flex;
@@ -471,21 +462,23 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Modal Detail Laporan (di luar main-content agar tampil di atas sidebar) -->
-    <div class="modal fade" id="detailLaporanModal" tabindex="-1" aria-labelledby="detailLaporanModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="detailLaporanModalLabel">Detail Laporan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                </div>
-                <div class="modal-body" id="detailLaporanContent">
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-primary"></div>
-                        <p class="mt-2 text-muted small">Memuat detail...</p>
+            <!-- Modal Detail Laporan -->
+        <div class="modal fade" id="detailLaporanModal" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Detail Laporan</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
+
+                    <div class="modal-body" id="detailLaporanContent">
+                        <div class="text-center py-5">
+                            <div class="spinner-border"></div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -700,27 +693,15 @@
         });
 
         function openDetailLaporan(id) {
-            const modalEl = document.getElementById('detailLaporanModal');
-            const contentEl = document.getElementById('detailLaporanContent');
-            if (!modalEl || !contentEl) return;
-
-            contentEl.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted small">Memuat detail...</p></div>';
-
-            const modal = new bootstrap.Modal(modalEl);
+            const modal = new bootstrap.Modal(document.getElementById('detailLaporanModal'));
             modal.show();
 
             fetch(`/admin/laporan/${id}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' }
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
-            .then(function(res) {
-                if (!res.ok) throw new Error('Gagal memuat');
-                return res.text();
-            })
-            .then(function(html) {
-                contentEl.innerHTML = html;
-            })
-            .catch(function() {
-                contentEl.innerHTML = '<div class="alert alert-danger">Gagal memuat detail laporan. Coba lagi atau buka dari halaman Laporan.</div>';
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('detailLaporanContent').innerHTML = html;
             });
         }
     </script>
