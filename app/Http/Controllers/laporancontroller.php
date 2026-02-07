@@ -319,6 +319,16 @@ class laporancontroller extends Controller
     public function setStatus(Request $request, $id)
     {
         $status = $request->input('status');
+        
+        // Normalize status format: diproses -> Diproses, selesai -> Selesai, ditolak -> Ditolak
+        $statusMap = [
+            'diproses' => 'Diproses',
+            'selesai' => 'Selesai',
+            'ditolak' => 'Ditolak',
+            'baru' => 'Baru',
+        ];
+        
+        $normalizedStatus = $statusMap[strtolower($status)] ?? ucfirst(strtolower($status));
 
         $found = $this->findReportRefById($id);
         if (!$found) {
@@ -330,7 +340,7 @@ class laporancontroller extends Controller
 
         [, , $docRef] = $found;
         $docRef->update([
-            ['path' => 'report_status', 'value' => $status]
+            ['path' => 'report_status', 'value' => $normalizedStatus]
         ]);
 
         // If it's an AJAX request, return updated counts
@@ -494,16 +504,25 @@ class laporancontroller extends Controller
         $since = request()->query('since');
         $collection = $docRef->collection('chat');
 
-        // Query delta jika since ada; jika tidak, ambil SEMUA pesan untuk menampilkan seluruh histori
+        // Konversi since ke integer jika ada
         if ($since) {
-            $query = $collection
-                ->where('created_at', '>', $since)
-                ->orderBy('created_at')
-                ->limit(200);
-            $documents = $query->documents();
+            $since = intval($since);
+            if ($since > 0) {
+                $query = $collection
+                    ->where('createdAt', '>', $since)
+                    ->orderBy('createdAt')
+                    ->limit(200);
+                $documents = $query->documents();
+            } else {
+                // Jika since tidak valid, ambil semua
+                $documents = $collection
+                    ->orderBy('createdAt')
+                    ->documents();
+            }
         } else {
+            // Ambil SEMUA pesan untuk menampilkan seluruh histori
             $documents = $collection
-                ->orderBy('created_at')
+                ->orderBy('createdAt')
                 ->documents();
         }
 
@@ -512,14 +531,14 @@ class laporancontroller extends Controller
             if (!$chatDoc->exists()) continue;
             $data = $chatDoc->data();
             $messages[] = array_merge($data, [
-                'id' => $chatDoc->id(),
+                'chatId' => $chatDoc->id(),
             ]);
         }
 
-        // Pastikan urutan naik berdasarkan created_at untuk konsistensi UI
+        // Pastikan urutan naik berdasarkan createdAt untuk konsistensi UI
         usort($messages, function ($a, $b) {
-            $ta = $a['created_at'] ?? '';
-            $tb = $b['created_at'] ?? '';
+            $ta = $a['createdAt'] ?? '';
+            $tb = $b['createdAt'] ?? '';
             if ($ta === $tb) return 0;
             return $ta < $tb ? -1 : 1;
         });
@@ -533,7 +552,7 @@ class laporancontroller extends Controller
     public function sendChat(Request $request, $id)
     {
         $request->validate([
-            'message' => 'required|string',
+            'textMessage' => 'required|string',
         ]);
 
         $found = $this->findReportRefById($id);
@@ -542,12 +561,50 @@ class laporancontroller extends Controller
         }
 
         [, , $docRef] = $found;
+        $nowMillis = round(microtime(true) * 1000);
+
+        // Ambil data laporan untuk mendapatkan user_id
+        $reportSnap = $docRef->snapshot();
+        $reportData = $reportSnap ? $reportSnap->data() : [];
+        $reportedUserId = $reportData['user_id'] ?? $reportData['userId'] ?? null;
+
+        // Jika laporan menyertakan user_id, gunakan itu. Jika tidak, fallback ke sesi admin.
+        $userId = $reportedUserId ?? (Session::get('admin.uid') ?? 'admin');
+
+        // Tetap pakai nilai 'ADMIN' untuk chatType seperti diminta
+        $chatType = 'ADMIN';
+
         $payload = [
-            'message' => $request->input('message'),
-            'sender' => 'admin',
-            'created_at' => now()->toDateTimeString(),
+            'textMessage' => $request->input('textMessage'),
+            'userId' => $userId,
+            'createdAt' => $nowMillis,
+            'dayMessage' => Carbon::now()->format('Y-m-d'),
+            'imageMessage' => $request->input('imageMessage') ?? null,
+            'messageStatus' => 'Terkirim',
+            'reportId' => $id,
+            'chatType' => $chatType,
         ];
-        $docRef->collection('chat')->add($payload);
+
+        // Tambah dokumen chat dan kemudian simpan chatId di dalam dokumen itu
+        $newDocRef = $docRef->collection('chat')->add($payload);
+        try {
+            // Jika add() mengembalikan DocumentReference, ambil id dan update field chatId
+            $chatId = null;
+            if (is_object($newDocRef) && method_exists($newDocRef, 'id')) {
+                $chatId = $newDocRef->id();
+            } elseif (is_array($newDocRef) && isset($newDocRef['name'])) {
+                // Fallback: beberapa klien mungkin mengembalikan array dengan nama
+                $chatId = basename($newDocRef['name']);
+            }
+
+            if ($chatId) {
+                $newDocRef->update([
+                    ['path' => 'chatId', 'value' => $chatId],
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Jangan ganggu alur jika update chatId gagal
+        }
 
         return response()->json(['status' => 'success']);
     }
@@ -573,7 +630,7 @@ class laporancontroller extends Controller
     public function updateChat(Request $request, $id, $messageId)
     {
         $request->validate([
-            'message' => 'required|string'
+            'textMessage' => 'required|string'
         ]);
 
         $found = $this->findReportRefById($id);
@@ -589,8 +646,8 @@ class laporancontroller extends Controller
         }
 
         $messageRef->update([
-            ['path' => 'message', 'value' => $request->input('message')],
-            ['path' => 'edited_at', 'value' => now()->toDateTimeString()],
+            ['path' => 'textMessage', 'value' => $request->input('textMessage')],
+            ['path' => 'messageStatus', 'value' => 'edited'],
         ]);
 
         return response()->json(['status' => 'success']);
