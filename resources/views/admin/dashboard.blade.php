@@ -320,7 +320,7 @@
                 <div class="bg-white shadow-sm rounded p-3">
                     <div class="d-flex align-items-center mb-2">
                         <i class="bi bi-people-fill text-primary me-2" style="font-size: 1.5rem;"></i>
-                        <h6 class="mb-0 text-muted">Total Pengguna Aplikasi</h6>
+                        <h6 class="mb-0 text-muted">Pengguna Aplikasi</h6>
                     </div>
                     <h3 class="fw-bold" id="totalUsers">1</h3>
                 </div>
