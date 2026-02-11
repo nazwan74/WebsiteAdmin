@@ -458,8 +458,7 @@
                             @forelse($articles as $article)
                                 <tr class="article-row"
                                 data-kategori="{{ $article['articleType'] }}"
-                                data-description="{{ strtolower($article['description']) }}"
-                                data-hashtags="{{ isset($article['hashtags']) ? strtolower($article['hashtags']) : '' }}">
+                                data-description="{{ strtolower($article['description']) }}">
                                     <td>{{ $article['title'] }}</td>
                                     <td>
                                         @php
@@ -636,13 +635,11 @@
                 rows.forEach(row => {
                     const title = row.querySelector('td:first-child').textContent.toLowerCase();
                     const description = row.getAttribute('data-description') || '';
-                    const hashtags = row.getAttribute('data-hashtags') || '';
                     const category = row.getAttribute('data-kategori');
 
                     const matchCategory = selectedCategory === 'all' || category === selectedCategory;
                     const matchSearch = title.includes(searchTerm) ||
-                        description.includes(searchTerm) ||
-                        hashtags.includes(searchTerm);
+                        description.includes(searchTerm);
 
                     row.style.display = (matchCategory && matchSearch) ? '' : 'none';
                 });

@@ -319,16 +319,6 @@ class laporancontroller extends Controller
     public function setStatus(Request $request, $id)
     {
         $status = $request->input('status');
-        
-        // Normalize status format: diproses -> Diproses, selesai -> Selesai, ditolak -> Ditolak
-        $statusMap = [
-            'diproses' => 'Diproses',
-            'selesai' => 'Selesai',
-            'ditolak' => 'Ditolak',
-            'baru' => 'Baru',
-        ];
-        
-        $normalizedStatus = $statusMap[strtolower($status)] ?? ucfirst(strtolower($status));
 
         $found = $this->findReportRefById($id);
         if (!$found) {
@@ -340,7 +330,7 @@ class laporancontroller extends Controller
 
         [, , $docRef] = $found;
         $docRef->update([
-            ['path' => 'report_status', 'value' => $normalizedStatus]
+            ['path' => 'report_status', 'value' => $status]
         ]);
 
         // If it's an AJAX request, return updated counts

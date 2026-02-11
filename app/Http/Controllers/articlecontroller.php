@@ -74,10 +74,8 @@ class articlecontroller extends Controller
             $articles = array_values(array_filter($articles, function ($item) use ($searchLower) {
                 $title = mb_strtolower($item['title'] ?? '');
                 $desc = mb_strtolower($item['description'] ?? '');
-                $tags = mb_strtolower($item['hashtags'] ?? '');
                 return mb_strpos($title, $searchLower) !== false
-                    || mb_strpos($desc, $searchLower) !== false
-                    || mb_strpos($tags, $searchLower) !== false;
+                    || mb_strpos($desc, $searchLower) !== false;
             }));
         }
 
@@ -97,7 +95,8 @@ class articlecontroller extends Controller
                 'Kategori',
                 'Tanggal Rilis',
                 'Tanggal Edit',
-                'Hashtags',
+                'Tanggal Rilis',
+                'Tanggal Edit',
             ], ';');
 
             foreach ($articles as $i => $item) {
@@ -129,7 +128,8 @@ class articlecontroller extends Controller
                     $kategoriLabel,
                     $released ?? '-',
                     $updated ?? '-',
-                    $item['hashtags'] ?? '-',
+                    $released ?? '-',
+                    $updated ?? '-',
                 ], ';');
             }
         };
@@ -180,7 +180,7 @@ class articlecontroller extends Controller
             'articleType' => 'required|in:stunting,bullying,pernikahan dini,kekerasan anak',
             'description' => 'required|string',
             'photoUrl' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'hashtags' => 'required|string',
+
         ]);
 
         $articleRef = $this->firestore->collection('articles')->document($id);
@@ -195,7 +195,7 @@ class articlecontroller extends Controller
             'title' => $request->title,
             'articleType' => $request->articleType,
             'description' => $request->description,
-            'hashtags' => $request->hashtags,
+
             'updateDate' => now()->toDateTimeString(),
         ];
 
@@ -322,18 +322,19 @@ class articlecontroller extends Controller
     // dengan validasi input
     public function store(Request $request)
     {
+        
         $request->validate([
             'title' => 'required|string',
             'articleType' => 'required|in:stunting,bullying,pernikahan dini,kekerasan anak',
             'description' => 'required|string',
             'photoUrl' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-            'hashtags' => 'required|string',
+
         ]);
 
         $image = $request->file('photoUrl');
         $folder = 'images/articles/' . $request->articleType . '/' . now()->format('Ymd');
         $filename = $folder . '/' . Str::random(20) . '.' . $image->getClientOriginalExtension();
-
+        
         try {
             // Upload ke Firebase Storage
             $bucket = $this->storage->getBucket();
@@ -341,20 +342,18 @@ class articlecontroller extends Controller
                 fopen($image->getRealPath(), 'r'),
                 ['name' => $filename]
             );
-
             // Generate signed URL that expires in 1 year
             $expiresAt = new \DateTime('now + 1 year');
             $signedUrl = $object->signedUrl($expiresAt);
             
             // Simpan format gs:// untuk operasi internal
             $gsUrl = 'gs://' . $bucket->name() . '/' . $filename;
-
             // Simpan ke Firestore
             $this->firestore->collection('articles')->add([
                 'title' => $request->title,
                 'articleType' => $request->articleType,
                 'description' => $request->description,
-                'hashtags' => $request->hashtags,
+
                 'photoUrl' => $signedUrl, // Use signed URL instead of public URL
                 'gsUrl' => $gsUrl,
                 'releasedDate' => now()->toDateTimeString(),
@@ -362,6 +361,7 @@ class articlecontroller extends Controller
 
             return redirect()->route('admin.articel.index')->with('success', 'Artikel berhasil disimpan!');
         } catch (\Exception $e) {
+            dd($e->getMessage());
             \Log::error('Upload error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Gagal upload gambar: ' . $e->getMessage());
         }

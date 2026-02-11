@@ -462,8 +462,9 @@
                 </div>
             </div>
         </div>
+    </div>
 
-            <!-- Modal Detail Laporan -->
+                <!-- Modal Detail Laporan -->
         <div class="modal fade" id="detailLaporanModal" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
@@ -482,7 +483,6 @@
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- JavaScript Eksternal -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
