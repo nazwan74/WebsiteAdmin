@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Kreait\Firebase\Factory;
 use Illuminate\Support\Facades\Redirect;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
 
 
 class laporancontroller extends Controller
@@ -39,6 +40,7 @@ class laporancontroller extends Controller
     }
 
     protected $firestore;
+    protected $storage;
     protected $kategoriMap = [
         'kekerasan_anak'   => 'Kekerasan Anak',
         'bullying'         => 'Bullying',
@@ -59,6 +61,7 @@ class laporancontroller extends Controller
             ->withDefaultStorageBucket(config('firebase.storage_bucket'));
 
         $this->firestore = $factory->createFirestore()->database();
+        $this->storage = $factory->createStorage();
     }
 
     /**
@@ -496,15 +499,37 @@ class laporancontroller extends Controller
 
         // Konversi since ke integer jika ada
         if ($since) {
-            $since = intval($since);
+            $since = intval($since); // timestamp millis
             if ($since > 0) {
-                $query = $collection
+                // Pesan dari USER (mobile) mungkin tidak punya lastActionAt,
+                // hanya createdAt. Kita perlu 2 query dan gabungkan hasilnya.
+
+                // Query 1: Pesan yang diubah/dihapus/dibuat oleh admin (punya lastActionAt)
+                $q1 = $collection
+                    ->where('lastActionAt', '>', $since)
+                    ->orderBy('lastActionAt')
+                    ->limit(200);
+                $docs1 = $q1->documents();
+
+                // Query 2: Pesan baru (termasuk dari user) berdasarkan createdAt
+                $q2 = $collection
                     ->where('createdAt', '>', $since)
                     ->orderBy('createdAt')
                     ->limit(200);
-                $documents = $query->documents();
+                $docs2 = $q2->documents();
+
+                // Gabungkan dan deduplicate berdasarkan document ID
+                $merged = [];
+                foreach ($docs1 as $doc) {
+                    if ($doc->exists()) $merged[$doc->id()] = $doc;
+                }
+                foreach ($docs2 as $doc) {
+                    if ($doc->exists() && !isset($merged[$doc->id()])) {
+                        $merged[$doc->id()] = $doc;
+                    }
+                }
+                $documents = array_values($merged);
             } else {
-                // Jika since tidak valid, ambil semua
                 $documents = $collection
                     ->orderBy('createdAt')
                     ->documents();
@@ -518,19 +543,21 @@ class laporancontroller extends Controller
 
         $messages = [];
         foreach ($documents as $chatDoc) {
-            if (!$chatDoc->exists()) continue;
-            $data = $chatDoc->data();
-            $messages[] = array_merge($data, [
-                'chatId' => $chatDoc->id(),
-            ]);
+            // Handle both DocumentSnapshot (from Firestore query) and raw objects
+            if (is_object($chatDoc) && method_exists($chatDoc, 'exists')) {
+                if (!$chatDoc->exists()) continue;
+                $data = $chatDoc->data();
+                $messages[] = array_merge($data, [
+                    'chatId' => $chatDoc->id(),
+                ]);
+            }
         }
 
-        // Pastikan urutan naik berdasarkan createdAt untuk konsistensi UI
+        // Sort via PHP untuk konsistensi (terutama jika query campuran)
         usort($messages, function ($a, $b) {
-            $ta = $a['createdAt'] ?? '';
-            $tb = $b['createdAt'] ?? '';
-            if ($ta === $tb) return 0;
-            return $ta < $tb ? -1 : 1;
+            $ta = $a['createdAt'] ?? 0;
+            $tb = $b['createdAt'] ?? 0;
+            return $ta <=> $tb;
         });
 
         return response()->json([
@@ -542,8 +569,14 @@ class laporancontroller extends Controller
     public function sendChat(Request $request, $id)
     {
         $request->validate([
-            'textMessage' => 'required|string',
+            'textMessage' => 'nullable|string',
+            'imageFile'   => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120', // max 5MB
         ]);
+
+        // Harus ada minimal teks atau gambar
+        if (!$request->input('textMessage') && !$request->hasFile('imageFile')) {
+            return response()->json(['status' => 'error', 'message' => 'Pesan atau gambar wajib diisi'], 422);
+        }
 
         $found = $this->findReportRefById($id);
         if (!$found) {
@@ -564,13 +597,37 @@ class laporancontroller extends Controller
         // Tetap pakai nilai 'ADMIN' untuk chatType seperti diminta
         $chatType = 'ADMIN';
 
+        // Upload gambar jika ada
+        $imageUrl = null;
+        if ($request->hasFile('imageFile')) {
+            try {
+                $image = $request->file('imageFile');
+                $folder = 'images/chats/' . $id . '/' . now()->format('Ymd');
+                $filename = $folder . '/' . Str::random(20) . '.' . $image->getClientOriginalExtension();
+
+                $bucket = $this->storage->getBucket();
+                $object = $bucket->upload(
+                    fopen($image->getRealPath(), 'r'),
+                    ['name' => $filename]
+                );
+
+                // Generate signed URL (1 tahun)
+                $expiresAt = new \DateTime('now + 1 year');
+                $imageUrl = $object->signedUrl($expiresAt);
+            } catch (\Exception $e) {
+                \Log::error('Chat image upload error: ' . $e->getMessage());
+                return response()->json(['status' => 'error', 'message' => 'Gagal mengupload gambar'], 500);
+            }
+        }
+
         $payload = [
-            'textMessage' => $request->input('textMessage'),
+            'textMessage' => $request->input('textMessage') ?? '',
             'userId' => $userId,
             'createdAt' => $nowMillis,
+            'lastActionAt' => $nowMillis,
             'dayMessage' => Carbon::now()->format('Y-m-d'),
-            'imageMessage' => $request->input('imageMessage') ?? null,
-            'messageStatus' => 'Terkirim',
+            'imageMessage' => $imageUrl,
+            'messageStatus' => 'terkirim',
             'reportId' => $id,
             'chatType' => $chatType,
         ];
@@ -578,12 +635,10 @@ class laporancontroller extends Controller
         // Tambah dokumen chat dan kemudian simpan chatId di dalam dokumen itu
         $newDocRef = $docRef->collection('chat')->add($payload);
         try {
-            // Jika add() mengembalikan DocumentReference, ambil id dan update field chatId
             $chatId = null;
             if (is_object($newDocRef) && method_exists($newDocRef, 'id')) {
                 $chatId = $newDocRef->id();
             } elseif (is_array($newDocRef) && isset($newDocRef['name'])) {
-                // Fallback: beberapa klien mungkin mengembalikan array dengan nama
                 $chatId = basename($newDocRef['name']);
             }
 
@@ -613,7 +668,12 @@ class laporancontroller extends Controller
             return response()->json(['status' => 'error', 'message' => 'Pesan tidak ditemukan'], 404);
         }
 
-        $messageRef->delete();
+        // Soft delete
+        $nowMillis = round(microtime(true) * 1000);
+        $messageRef->update([
+            ['path' => 'isDeleted', 'value' => true],
+            ['path' => 'lastActionAt', 'value' => $nowMillis]
+        ]);
         return response()->json(['status' => 'success']);
     }
 
@@ -635,9 +695,11 @@ class laporancontroller extends Controller
             return response()->json(['status' => 'error', 'message' => 'Pesan tidak ditemukan'], 404);
         }
 
+        $nowMillis = round(microtime(true) * 1000);
         $messageRef->update([
             ['path' => 'textMessage', 'value' => $request->input('textMessage')],
-            ['path' => 'messageStatus', 'value' => 'edited'],
+            ['path' => 'messageStatus', 'value' => 'teredit'],
+            ['path' => 'lastActionAt', 'value' => $nowMillis]
         ]);
 
         return response()->json(['status' => 'success']);

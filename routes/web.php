@@ -19,7 +19,7 @@ Route::get('/admin/login', [AuthController::class, 'showLogin'])->name('admin.lo
 Route::post('/admin/login', [AuthController::class, 'login']);
 Route::post('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
 
-// Admin Forgot Password
+// Admin lupa password
 Route::get('/admin/forgot-password', [AuthController::class, 'showForgotPassword'])->name('admin.forgot-password');
 Route::post('/admin/forgot-password/send', [AuthController::class, 'sendPasswordResetEmail'])->name('admin.forgot-password.send');
 Route::get('/admin/reset-password', [AuthController::class, 'showResetPassword'])->name('admin.reset-password');

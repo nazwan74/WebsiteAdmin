@@ -232,6 +232,60 @@
             font-size: 0.95rem; font-family: inherit; margin-bottom: 6px;
         }
         .edit-buttons { display: flex; gap: 6px; justify-content: flex-end; }
+
+        /* Chat Images */
+        .bubble img.chat-img {
+            max-width: 100%; border-radius: 8px; cursor: pointer;
+            transition: opacity 0.2s; max-height: 300px; object-fit: cover;
+        }
+        .bubble img.chat-img:hover { opacity: 0.9; }
+
+        /* Attachment Button */
+        .btn-attach {
+            width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            background: transparent; color: #6c757d; border: 1px solid #ced4da; transition: all 0.2s; cursor: pointer;
+        }
+        .btn-attach:hover { background: #f8f9fa; color: #4361ee; border-color: #4361ee; }
+
+        /* Image Preview */
+        .image-preview-bar {
+            display: none; padding: 8px 20px; background: #f8f9fa; border-top: 1px solid #e9ecef;
+            align-items: center; gap: 10px;
+        }
+        .image-preview-bar.active { display: flex; }
+        .image-preview-bar img {
+            width: 60px; height: 60px; object-fit: cover; border-radius: 8px;
+            border: 2px solid #4361ee;
+        }
+        .image-preview-bar .preview-name {
+            font-size: 0.85rem; color: #495057; flex: 1; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
+        }
+        .image-preview-bar .btn-remove-preview {
+            background: none; border: none; color: #dc3545; cursor: pointer;
+            font-size: 1.2rem; padding: 4px; display: flex; align-items: center;
+        }
+        .image-preview-bar .btn-remove-preview:hover { color: #a71d2a; }
+
+        /* Lightbox Modal */
+        .lightbox-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center;
+            cursor: pointer;
+        }
+        .lightbox-overlay.active { display: flex; }
+        .lightbox-overlay img {
+            max-width: 90%; max-height: 90%; border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4); cursor: default;
+        }
+        .lightbox-close {
+            position: absolute; top: 20px; right: 30px; color: #fff; font-size: 2rem;
+            cursor: pointer; background: none; border: none; line-height: 1;
+        }
+        .lightbox-close:hover { color: #ccc; }
+
+        /* User message status (mirror admin) */
+        .msg.user .status { font-size: 0.7rem; color: #adb5bd; margin-top: 2px; }
     </style>
 </head>
 
@@ -316,16 +370,35 @@
             <!-- Chat Box (Messages) -->
             <div id="chatBox" class="chat-box"></div>
 
+            <!-- Image Preview Bar -->
+            <div class="image-preview-bar" id="imagePreviewBar">
+                <img id="previewImg" src="" alt="Preview">
+                <span class="preview-name" id="previewName"></span>
+                <button type="button" class="btn-remove-preview" onclick="clearImagePreview()" title="Hapus gambar">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
+            </div>
+
             <!-- Chat Footer (Input) -->
             <div class="chat-footer">
                 <form id="sendForm" class="composer" action="javascript:void(0)" method="post" onsubmit="return false;">
-                    <textarea id="messageInput" class="form-control" placeholder="Tulis pesan..." rows="1" required></textarea>
+                    <input type="file" id="imageFileInput" accept="image/*" style="display:none">
+                    <button type="button" class="btn-attach" onclick="document.getElementById('imageFileInput').click()" title="Lampirkan gambar">
+                        <i class="bi bi-paperclip" style="font-size: 1.2rem;"></i>
+                    </button>
+                    <textarea id="messageInput" class="form-control" placeholder="Tulis pesan..." rows="1"></textarea>
                     <button type="submit" class="btn-send">
                         <i class="bi bi-send-fill" style="margin-left: 2px;"></i>
                     </button>
                 </form>
             </div>
         </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox(event)">
+        <button class="lightbox-close" onclick="closeLightbox(event)">&times;</button>
+        <img id="lightboxImg" src="" alt="Enlarged">
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -435,6 +508,19 @@
             menu.classList.toggle('show');
         }
 
+        // Toast Configuration
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
         function editMessage(msgId, text) {
             const bubble = document.getElementById(`bubble-${msgId}`);
             if (!bubble) return;
@@ -499,24 +585,36 @@
                 },
                 body: JSON.stringify({ textMessage: newText })
             })
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) throw r;
+                return r.json();
+            })
             .then(data => {
                 if (data.status === 'success') {
-                    // Update UI
+                    // Update UI immediately (optimistic)
                     bubble.innerText = newText;
                     bubble.removeAttribute('data-original');
                     
-                    // Show "edited" status if not already
+                    // Show "teredit" status if not already
                     const parent = bubble.parentElement;
                     let stat = parent.querySelector('.status');
                     if (stat) {
-                         if (!stat.innerText.includes('diedit')) stat.innerText += ' (diedit)';
+                         stat.innerText = 'teredit';
                     } else {
-                         // Create status if missing (e.g. user message side, though usually admin edits own)
-                         // For now assume admin side has status
+                         // Create status if missing
+                         stat = document.createElement('div');
+                         stat.className = 'status';
+                         stat.innerText = 'teredit';
+                         parent.appendChild(stat);
                     }
                     
-                    // Also update global/local data store if we had one, but we rely on DOM here
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Pesan berhasil diubah'
+                    });
+
+                    // Force refresh to sync timestamps etc
+                    fetchMessages();
                 } else {
                     Swal.fire('Error', data.message || 'Gagal mengupdate pesan', 'error');
                     cancelEdit(msgId);
@@ -524,7 +622,16 @@
             })
             .catch(err => {
                 console.error(err);
-                Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
+                // Try to parse JSON error if available
+                if (err.json) {
+                    err.json().then(d => {
+                        Swal.fire('Error', d.message || 'Gagal mengupdate pesan', 'error');
+                    }).catch(() => {
+                        Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
+                    });
+                } else {
+                    Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
+                }
                 cancelEdit(msgId);
             });
         }
@@ -554,6 +661,11 @@
                         if (data.status === 'success') {
                             const el = document.getElementById(`msg-${msgId}`);
                             if (el) el.remove();
+                            
+                            Toast.fire({
+                                icon: 'success',
+                                title: 'Pesan berhasil dihapus'
+                            });
                         } else {
                             Swal.fire('Error', data.message || 'Gagal menghapus pesan', 'error');
                         }
@@ -570,6 +682,7 @@
             const isAdmin = (m.chatType === 'ADMIN' || (m.sender||'').toLowerCase() === 'admin');
             const role = isAdmin ? 'admin' : 'user';
             const text = m.textMessage || m.message || m.text || '';
+            const imageUrl = (m.imageMessage && m.imageMessage !== 'null' && m.imageMessage.trim() !== '') ? m.imageMessage : null;
             
             // Prefer createdAt (numeric) over created_at (string)
             const timeVal = m.createdAt || m.created_at || new Date();
@@ -585,7 +698,23 @@
             const avatarHtml = `<div class="avatar"><i class="bi bi-person-fill"></i></div>`;
             const name = role === 'admin' ? 'Admin' : (m.sender_name || 'User');
             
-            // Actions Menu (Only for Admin messages usually, but implemented for Admin role here)
+            let statusText = m.messageStatus || 'terkirim';
+            statusText = statusText.toLowerCase();
+
+            // Build bubble content
+            let bubbleContent = '';
+            if (imageUrl) {
+                bubbleContent += `<img class="chat-img" src="${escapeHtml(imageUrl)}" alt="Gambar" onclick="openLightbox('${escapeHtml(imageUrl)}')" loading="lazy">`;
+            }
+            if (text) {
+                const marginTop = imageUrl ? ' style="margin-top: 6px;"' : '';
+                bubbleContent += `<div${marginTop}>${escapeHtml(String(text))}</div>`;
+            }
+            if (!bubbleContent) {
+                bubbleContent = '&nbsp;'; // fallback
+            }
+
+            // Actions Menu (Only for Admin messages)
             let actionsHtml = '';
             if (role === 'admin' && msgId) { 
                 actionsHtml = `
@@ -594,7 +723,7 @@
                             <i class="bi bi-chevron-down"></i>
                         </button>
                         <div class="msg-menu">
-                            <button class="msg-menu-item" onclick="editMessage('${msgId}', '${escapeHtml(text).replace(/'/g, "\\'")}')">
+                            <button class="msg-menu-item" onclick="editMessage('${msgId}', '${escapeHtml(text).replace(/'/g, "\\'")}')"> 
                                 <i class="bi bi-pencil me-2"></i> Edit
                             </button>
                             <button class="msg-menu-item text-danger" onclick="deleteMessage('${msgId}')">
@@ -612,8 +741,8 @@
                         <span class="name">${escapeHtml(name)}</span>
                         <span class="time">${escapeHtml(timeOnly)}</span>
                     </div>
-                    <div class="bubble" id="bubble-${msgId}">${escapeHtml(String(text))}</div>
-                    ${role === 'admin' ? `<div class="status">Terkirim</div>` : ''}
+                    <div class="bubble" id="bubble-${msgId}">${bubbleContent}</div>
+                    <div class="status">${escapeHtml(statusText)}</div>
                 </div>
                 ${actionsHtml}
             `;
@@ -625,7 +754,10 @@
             box.innerHTML = '';
             let lastDate = '';
             
-            messages.forEach(m => {
+            // Filter deleted messages for initial render
+            const activeMessages = messages.filter(m => !m.isDeleted);
+            
+            activeMessages.forEach(m => {
                 const timeVal = m.createdAt || m.created_at;
                 const dKey = dateKey(timeVal);
                 
@@ -642,17 +774,44 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        function appendMessages(newMessages) {
-            if (!newMessages || !newMessages.length) return;
+        function processUpdates(messages) {
+            if (!messages || !messages.length) return;
             const box = document.getElementById('chatBox');
             const wasAtBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 100;
             
             let lastDate = lastMessageTime ? dateKey(lastMessageTime) : '';
-            if (box.lastElementChild) {
-                // Try to guess last date from DOM or simpler just rely on lastMessageTime check
-            }
 
-            newMessages.forEach(m => {
+            messages.forEach(m => {
+                const msgId = m.chatId || m.id;
+                const existingEl = document.getElementById(`msg-${msgId}`);
+
+                // 1. Handle Deletion
+                if (m.isDeleted) {
+                    if (existingEl) existingEl.remove();
+                    return;
+                }
+
+                // 2. Handle Update (Content or Status)
+                if (existingEl) {
+                    // Update bubble text
+                    const bubble = document.getElementById(`bubble-${msgId}`);
+                    if (bubble) {
+                        const newText = m.textMessage || m.message || '';
+                        // Only update if not currently editing (to avoid overwriting user input)
+                        if (!bubble.querySelector('textarea')) {
+                            bubble.innerText = newText;
+                        }
+                    }
+                    // Update Status
+                    const statusEl = existingEl.querySelector('.status');
+                    if (statusEl) {
+                         const s = m.messageStatus || 'terkirim';
+                         statusEl.innerText = s.toLowerCase();
+                    }
+                    return;
+                }
+
+                // 3. Handle Insertion (New Message)
                 const timeVal = m.createdAt || m.created_at;
                 const dKey = dateKey(timeVal);
                 
@@ -664,10 +823,6 @@
                     lastDate = dKey;
                 }
                 
-                // Avoid duplicates if poller fetches overlap
-                if (m.chatId && document.getElementById(`msg-${m.chatId}`)) return;
-                if (m.id && document.getElementById(`msg-${m.id}`)) return;
-                
                 box.appendChild(createMessageElement(m));
             });
             
@@ -676,10 +831,13 @@
             }
         }
 
+
+
         function fetchMessages() {
             if (isFetching) return;
             isFetching = true;
             
+            // Use lastMessageTime as the synchronization point (now tracks lastActionAt)
             const url = lastMessageTime ? `${messagesUrl}?since=${lastMessageTime}` : messagesUrl;
             
             fetch(url, {
@@ -691,27 +849,23 @@
                     const msgs = data.messages || [];
                     if (msgs.length === 0) return;
 
-                     const lastMsg = msgs[msgs.length - 1];
-                     const thisLastTime = lastMsg.createdAt || 0;
+                    // Calculate the new latest action time from these messages
+                    // We use the MAX of lastActionAt OR createdAt to prevent re-fetching
+                    let maxTime = lastMessageTime;
 
+                    msgs.forEach(m => {
+                        const actionTime = m.lastActionAt || m.createdAt || 0;
+                        if (actionTime > maxTime) maxTime = actionTime;
+                    });
+                    
                     if (!lastMessageTime) {
+                        // First load
                         renderMessages(msgs);
-                        lastMessageTime = thisLastTime;
+                        lastMessageTime = maxTime;
                     } else {
-                        const newMsgs = msgs.filter(m => {
-                            const t = m.createdAt || 0;
-                            // Also check ID to be sure
-                            if (m.chatId && document.getElementById(`msg-${m.chatId}`)) return false;
-                            return t > lastMessageTime;
-                        });
-                        
-                        if (newMsgs.length > 0) {
-                            appendMessages(newMsgs);
-                            // Only update lastMessageTime if new messages actually have newer time
-                            const lastNew = newMsgs[newMsgs.length - 1];
-                            const tLast = lastNew.createdAt || 0;
-                            if (tLast > lastMessageTime) lastMessageTime = tLast;
-                        }
+                        // Updates
+                        processUpdates(msgs);
+                        lastMessageTime = maxTime;
                     }
                 }
             })
@@ -726,36 +880,115 @@
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
 
-        // Send Message
+        // --- Image Preview ---
+        let selectedFile = null;
+        const imageFileInput = document.getElementById('imageFileInput');
+        const previewBar = document.getElementById('imagePreviewBar');
+        const previewImg = document.getElementById('previewImg');
+        const previewName = document.getElementById('previewName');
+
+        imageFileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+
+            // Validate size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire('Error', 'Ukuran gambar maksimal 5MB', 'error');
+                this.value = '';
+                return;
+            }
+
+            selectedFile = file;
+            previewName.textContent = file.name;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewBar.classList.add('active');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function clearImagePreview() {
+            selectedFile = null;
+            imageFileInput.value = '';
+            previewImg.src = '';
+            previewName.textContent = '';
+            previewBar.classList.remove('active');
+        }
+
+        // --- Lightbox ---
+        function openLightbox(url) {
+            document.getElementById('lightboxImg').src = url;
+            document.getElementById('lightboxOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox(e) {
+            // Only close if clicking overlay or close button (not the image itself)
+            if (e && e.target && e.target.tagName === 'IMG') return;
+            document.getElementById('lightboxOverlay').classList.remove('active');
+            document.getElementById('lightboxImg').src = '';
+            document.body.style.overflow = '';
+        }
+
+        // Close lightbox with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeLightbox(e);
+        });
+
+        // --- Send Message ---
         document.getElementById('sendForm').addEventListener('submit', function(e) {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
-            if (!message) return;
+            
+            // Harus ada teks atau gambar
+            if (!message && !selectedFile) return;
             
             const btn = this.querySelector('button[type="submit"]');
             const originalBtnContent = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
+            const formData = new FormData();
+            if (message) formData.append('textMessage', message);
+            if (selectedFile) formData.append('imageFile', selectedFile);
+
             fetch(sendUrl, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({ textMessage: message })
+                body: formData
             })
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) throw r;
+                return r.json();
+            })
             .then(data => {
                 if (data.status === 'success') {
                     input.value = '';
                     input.style.height = 'auto';
+                    clearImagePreview();
                     fetchMessages(); // Refresh
+                } else {
+                    Swal.fire('Error', data.message || 'Gagal mengirim pesan', 'error');
                 }
             })
-            .catch(console.error)
+            .catch(err => {
+                console.error(err);
+                if (err.json) {
+                    err.json().then(d => {
+                        Swal.fire('Error', d.message || 'Gagal mengirim pesan', 'error');
+                    }).catch(() => {
+                        Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
+                    });
+                } else {
+                    Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
+                }
+            })
             .finally(() => {
                 btn.disabled = false;
                 btn.innerHTML = originalBtnContent;
