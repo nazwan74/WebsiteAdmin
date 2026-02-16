@@ -51,6 +51,10 @@ Route::get('/admin/laporan/{id}/chat/messages', [laporancontroller::class, 'chat
 Route::post('/admin/laporan/{id}/chat/send', [laporancontroller::class, 'sendChat'])->name('admin.laporan.chat.send');
 Route::delete('/admin/laporan/{id}/chat/{messageId}', [laporancontroller::class, 'deleteChat'])->name('admin.laporan.chat.delete');
 Route::put('/admin/laporan/{id}/chat/{messageId}', [laporancontroller::class, 'updateChat'])->name('admin.laporan.chat.update');
+Route::post('/admin/laporan/{id}/chat/mark-read', [laporancontroller::class, 'markChatRead'])->name('admin.laporan.chat.markRead');
+
+// Notifications
+Route::get('/admin/notifications/unread-chats', [laporancontroller::class, 'unreadChats'])->name('admin.notifications.unreadChats');
 
 //Pengaturan
 Route::get('/admin/pengaturan', [PengaturanController::class, 'index'])->name('admin.pengaturan');

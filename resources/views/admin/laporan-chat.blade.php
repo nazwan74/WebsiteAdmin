@@ -331,27 +331,8 @@
     </div>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
-        <div class="container-fluid">
-            <button class="hamburger-btn" id="hamburgerBtn" type="button">
-                <i class="bi bi-list"></i>
-            </button>
-            <div class="d-flex align-items-center">
-                <div class="ms-3">
-                    <div class="navbar-dashboard-title">Chat Laporan</div>
-                    <div class="navbar-dashboard-subtitle">ID: #{{ $laporan['id'] }}</div>
-                </div>
-            </div>
-            <div class="ms-auto me-3">
-                <form method="POST" action="{{ route('admin.logout') }}" id="logoutForm">
-                    @csrf
-                    <button type="button" class="btn btn-outline-danger" onclick="confirmLogout()">
-                        <i class="bi bi-box-arrow-right me-2"></i>Logout
-                    </button>
-                </form>
-            </div>
-        </div>
-    </nav>
+    <!-- Navbar -->
+    @include('admin.partials.navbar', ['title' => 'Chat Laporan', 'subtitle' => 'ID: #' . $laporan['id']])
 
     <!-- Main Content -->
     <div class="main-content">
@@ -454,6 +435,37 @@
         let lastMessageTime = 0; 
         let isFetching = false;
         let poller = null;
+        let isFirstLoad = true;
+
+        // Mark chat as read
+        fetch(`/admin/laporan/${laporanId}/chat/mark-read`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).catch(e => console.error('Mark read error:', e));
+
+        // Notification sound using Web Audio API
+        function playNotifSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                // Two-tone chime
+                [0, 0.15].forEach((delay, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.frequency.value = i === 0 ? 587 : 880; // D5, A5
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime + delay);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.3);
+                    osc.start(ctx.currentTime + delay);
+                    osc.stop(ctx.currentTime + delay + 0.3);
+                });
+            } catch(e) { /* Audio not available */ }
+        }
 
         // Close any open menus when clicking outside
         document.addEventListener('click', function(e) {
@@ -528,6 +540,11 @@
             // Save original html to restore if canceled
             if (!bubble.hasAttribute('data-original')) {
                 bubble.setAttribute('data-original', bubble.innerHTML);
+                // Preserve image URL if exists
+                const img = bubble.querySelector('img.chat-img');
+                if (img) {
+                    bubble.setAttribute('data-image-url', img.src);
+                }
             }
             
             const currentText = text || bubble.innerText.trim();
@@ -560,6 +577,7 @@
             if (bubble && bubble.hasAttribute('data-original')) {
                 bubble.innerHTML = bubble.getAttribute('data-original');
                 bubble.removeAttribute('data-original'); // cleanup
+                bubble.removeAttribute('data-image-url'); // cleanup
             }
         }
 
@@ -592,8 +610,21 @@
             .then(data => {
                 if (data.status === 'success') {
                     // Update UI immediately (optimistic)
-                    bubble.innerText = newText;
+                    let newHtml = '';
+                    const imageUrl = bubble.getAttribute('data-image-url');
+                    
+                    if (imageUrl) {
+                         newHtml += `<img class="chat-img" src="${escapeHtml(imageUrl)}" alt="Gambar" onclick="openLightbox('${escapeHtml(imageUrl)}')" loading="lazy">`;
+                    }
+                    if (newText) {
+                        const marginTop = imageUrl ? ' style="margin-top: 6px;"' : '';
+                        newHtml += `<div${marginTop}>${escapeHtml(newText)}</div>`;
+                    }
+                    
+                    bubble.innerHTML = newHtml;
+
                     bubble.removeAttribute('data-original');
+                    bubble.removeAttribute('data-image-url');
                     
                     // Show "teredit" status if not already
                     const parent = bubble.parentElement;
@@ -666,6 +697,9 @@
                                 icon: 'success',
                                 title: 'Pesan berhasil dihapus'
                             });
+                            
+                            // Sync with server
+                            fetchMessages();
                         } else {
                             Swal.fire('Error', data.message || 'Gagal menghapus pesan', 'error');
                         }
@@ -797,9 +831,21 @@
                     const bubble = document.getElementById(`bubble-${msgId}`);
                     if (bubble) {
                         const newText = m.textMessage || m.message || '';
+                        const imageUrl = (m.imageMessage && m.imageMessage !== 'null' && m.imageMessage.trim() !== '') ? m.imageMessage : null;
+
                         // Only update if not currently editing (to avoid overwriting user input)
                         if (!bubble.querySelector('textarea')) {
-                            bubble.innerText = newText;
+                             let newHtml = '';
+                             if (imageUrl) {
+                                 newHtml += `<img class="chat-img" src="${escapeHtml(imageUrl)}" alt="Gambar" onclick="openLightbox('${escapeHtml(imageUrl)}')" loading="lazy">`;
+                             }
+                             if (newText) {
+                                 const marginTop = imageUrl ? ' style="margin-top: 6px;"' : '';
+                                 newHtml += `<div${marginTop}>${escapeHtml(newText)}</div>`;
+                             }
+                             if (!newHtml) newHtml = '&nbsp;';
+                             
+                             bubble.innerHTML = newHtml;
                         }
                     }
                     // Update Status
@@ -824,6 +870,35 @@
                 }
                 
                 box.appendChild(createMessageElement(m));
+
+                // Sound + Toast for new USER messages
+                const chatType = (m.chatType || '').toUpperCase();
+                if (chatType !== 'ADMIN') {
+                    playNotifSound();
+                    const senderName = m.sender_name || 'User';
+                    const msgPreview = m.textMessage || (m.imageMessage ? '📷 Gambar' : 'Pesan baru');
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 4000,
+                        timerProgressBar: true,
+                    });
+                    Toast.fire({
+                        icon: 'info',
+                        title: `${senderName}: ${msgPreview.substring(0, 50)}`
+                    });
+
+                    // Re-mark as read
+                    fetch(`/admin/laporan/${laporanId}/chat/mark-read`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    }).catch(() => {});
+                }
             });
             
             if (wasAtBottom) {
@@ -1022,5 +1097,6 @@
         fetchMessages();
         startPolling();
     </script>
+@include('admin.partials.notifications')
 </body>
 </html>

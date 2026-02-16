@@ -308,14 +308,18 @@ class laporancontroller extends Controller
             ];
         }
 
+        $source = request()->query('source', 'laporan');
+
         return request()->ajax()
             ? view('admin.laporan-detail-partial', [
                 'laporan' => $data,
                 'chatMessages' => $chatMessages,
+                'source' => $source,
             ])
             : view('admin.laporan-detail', [
                 'laporan' => $data,
                 'chatMessages' => $chatMessages,
+                'source' => $source,
             ]);
     }
     
@@ -384,7 +388,13 @@ class laporancontroller extends Controller
             ]);
         }
     
-        return redirect()->route('admin.laporan.detail', ['id' => $id])->with('success', 'Status berhasil diperbarui.');
+        $source = $request->input('source', 'laporan');
+
+        if ($source === 'dashboard') {
+            return redirect()->route('admin.dashboard')->with('success', 'Status berhasil diperbarui.');
+        }
+    
+        return redirect()->route('admin.laporan')->with('success', 'Status berhasil diperbarui.');
     }
 
     public function destroy($id)
@@ -701,6 +711,111 @@ class laporancontroller extends Controller
             ['path' => 'messageStatus', 'value' => 'teredit'],
             ['path' => 'lastActionAt', 'value' => $nowMillis]
         ]);
+
+        return response()->json(['status' => 'success']);
+    }
+
+    /**
+     * Get unread chat notifications across all reports.
+     * Returns reports that have user messages newer than admin's lastReadAt.
+     */
+    public function unreadChats()
+    {
+        try {
+            $laporan = $this->getLaporanList();
+            $unread = [];
+
+            foreach ($laporan as $item) {
+                $reportId = $item['id'] ?? null;
+                if (!$reportId) continue;
+
+                $found = $this->findReportRefById($reportId);
+                if (!$found) continue;
+
+                [, , $docRef] = $found;
+
+                // Get admin's lastReadAt for this report
+                $reportSnap = $docRef->snapshot();
+                $reportData = $reportSnap->data();
+                $lastReadAt = $reportData['adminLastReadAt'] ?? 0;
+
+                // Query user messages (non-ADMIN) created after lastReadAt
+                $chatCollection = $docRef->collection('chat');
+                $query = $chatCollection
+                    ->where('createdAt', '>', $lastReadAt)
+                    ->orderBy('createdAt', 'DESC')
+                    ->limit(50);
+
+                $docs = $query->documents();
+                $unreadCount = 0;
+                $lastUserMessage = null;
+
+                foreach ($docs as $chatDoc) {
+                    if (!$chatDoc->exists()) continue;
+                    $data = $chatDoc->data();
+
+                    // Skip deleted messages
+                    if (!empty($data['isDeleted'])) continue;
+
+                    // Only count non-admin messages
+                    $chatType = $data['chatType'] ?? '';
+                    if (strtoupper($chatType) === 'ADMIN') continue;
+
+                    $unreadCount++;
+                    if (!$lastUserMessage) {
+                        $lastUserMessage = $data['textMessage'] ?? '';
+                        if ($data['imageMessage'] ?? null) {
+                            $lastUserMessage = $lastUserMessage ?: '📷 Gambar';
+                        }
+                    }
+                }
+
+                if ($unreadCount > 0) {
+                    $unread[] = [
+                        'reportId' => $reportId,
+                        'reportTitle' => $item['judul'] ?? 'Laporan',
+                        'userName' => $item['user_name'] ?? ($item['nama'] ?? 'User'),
+                        'lastMessage' => $lastUserMessage,
+                        'unreadCount' => $unreadCount,
+                    ];
+                }
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'unread' => $unread,
+                'totalUnread' => array_sum(array_column($unread, 'unreadCount')),
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('unreadChats error: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'success',
+                'unread' => [],
+                'totalUnread' => 0,
+            ]);
+        }
+    }
+
+    /**
+     * Mark chat as read by updating adminLastReadAt timestamp on the report.
+     */
+    public function markChatRead($id)
+    {
+        $found = $this->findReportRefById($id);
+        if (!$found) {
+            return response()->json(['status' => 'error', 'message' => 'Laporan tidak ditemukan'], 404);
+        }
+
+        [, , $docRef] = $found;
+        $nowMillis = round(microtime(true) * 1000);
+
+        try {
+            $docRef->update([
+                ['path' => 'adminLastReadAt', 'value' => $nowMillis],
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('markChatRead error: ' . $e->getMessage());
+        }
 
         return response()->json(['status' => 'success']);
     }

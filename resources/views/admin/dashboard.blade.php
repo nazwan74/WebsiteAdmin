@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin Dashboard</title>
     
     <!-- CSS Eksternal -->
@@ -290,27 +291,8 @@
     </div>
 
     <!-- Bar Navigasi -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
-        <div class="container-fluid">
-            <button class="hamburger-btn" id="hamburgerBtn" type="button">
-                <i class="bi bi-list"></i>
-            </button>
-            <div class="d-flex align-items-center">
-                <div class="ms-3">
-                    <div class="navbar-dashboard-title">Dashboard Overview</div>
-                    <div class="navbar-dashboard-subtitle">Welcome back, Admin</div>
-                </div>
-            </div>
-            <div class="ms-auto me-3">
-                <form method="POST" action="{{ route('admin.logout') }}" id="logoutForm">
-                    @csrf
-                    <button type="button" class="btn btn-outline-danger" onclick="confirmLogout()">
-                        <i class="bi bi-box-arrow-right me-2"></i>Logout
-                    </button>
-                </form>
-            </div>
-        </div>
-    </nav>
+    <!-- Bar Navigasi -->
+    @include('admin.partials.navbar', ['title' => 'Dashboard Overview', 'subtitle' => 'Welcome back, Admin'])
 
     <!-- Konten Utama -->
     <div class="main-content">
@@ -692,11 +674,108 @@
             });
         });
 
+        /* =========================
+        EVENT DELEGATION (AMAN)
+        ========================= */
+        document.addEventListener('submit', function(e) {
+
+            /* UPDATE STATUS */
+            if (e.target.id === 'statusForm') {
+                e.preventDefault();
+
+                const form = e.target;
+                const url = form.action;
+                const data = new FormData(form);
+
+                // Pastikan source=dashboard terkirim
+                if (!data.has('source')) {
+                    data.append('source', 'dashboard');
+                }
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: data
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        Swal.fire({
+                            title: 'Berhasil',
+                            text: res.message,
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload(); // Muat ulang halaman untuk memperbarui status dan statistik
+                        });
+                    } else {
+                         Swal.fire({
+                            title: 'Gagal',
+                            text: res.message || 'Terjadi kesalahan saat memperbarui status.',
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Terjadi kesalahan sistem.',
+                        icon: 'error'
+                    });
+                });
+            }
+        });
+
+        /* DELETE LAPORAN */
+        document.addEventListener('click', function(e) {
+            const deleteBtn = e.target.closest('#delete-laporan');
+            if (deleteBtn) {
+                const url = deleteBtn.dataset.url;
+
+                Swal.fire({
+                    title: 'Yakin?',
+                    text: 'Laporan akan dihapus permanen',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Hapus',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#d33'
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(res => res.json())
+                        .then(res => {
+                             if (res.status === 'success') {
+                                Swal.fire('Terhapus!', res.message, 'success')
+                                .then(() => location.reload());
+                             } else {
+                                Swal.fire('Gagal!', res.message || 'Gagal menghapus laporan.', 'error');
+                             }
+                        })
+                        .catch(err => {
+                             Swal.fire('Error!', 'Terjadi kesalahan sistem.', 'error');
+                        });
+                    }
+                });
+            }
+        });
+
         function openDetailLaporan(id) {
             const modal = new bootstrap.Modal(document.getElementById('detailLaporanModal'));
             modal.show();
 
-            fetch(`/admin/laporan/${id}`, {
+            fetch(`/admin/laporan/${id}?source=dashboard`, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(res => res.text())
@@ -707,5 +786,6 @@
     </script>
 
     
+@include('admin.partials.notifications')
 </body>
 </html>

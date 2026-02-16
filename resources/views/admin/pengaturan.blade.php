@@ -314,27 +314,8 @@
     </div>
 
     <!-- Bar Navigasi -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
-        <div class="container-fluid">
-            <button class="hamburger-btn" id="hamburgerBtn" type="button">
-                <i class="bi bi-list"></i>
-            </button>
-            <div class="d-flex align-items-center">
-                <div class="ms-3">
-                    <div class="navbar-dashboard-title">Pengaturan</div>
-                    <div class="navbar-dashboard-subtitle">Admin</div>
-                </div>
-            </div>
-            <div class="ms-auto me-3">
-                <form id="logoutForm" method="POST" action="{{ route('admin.logout') }}">
-                    @csrf
-                    <button type="button" class="btn btn-outline-danger" onclick="confirmLogout()">
-                        <i class="bi bi-box-arrow-right me-2"></i>Logout
-                    </button>
-                </form>
-            </div>
-        </div>
-    </nav>
+    <!-- Bar Navigasi -->
+    @include('admin.partials.navbar', ['title' => 'Pengaturan', 'subtitle' => 'Admin'])
 
     <!-- Konten Utama -->
     <div class="main-content">
@@ -546,5 +527,6 @@
             });
         });
     </script>
+@include('admin.partials.notifications')
 </body>
 </html>
