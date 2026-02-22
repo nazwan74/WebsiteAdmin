@@ -178,10 +178,10 @@
         });
     }
 
-    // Polling for unread chats
-    const NOTIF_POLL_INTERVAL = 10000; // 10 seconds
+    // Polling untuk unread chats (30 detik) 
+    const NOTIF_POLL_INTERVAL = 30000; // 30 detik (sesuai cache TTL) 
     let notifPoller = null;
-
+    // Fetch unread chats 
     function fetchUnreadChats() {
         fetch('/admin/notifications/unread-chats', {
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
@@ -194,7 +194,7 @@
         })
         .catch(err => console.error('Notif polling error:', err));
     }
-
+    // Update UI 
     function updateNotifUI(unreadList, totalUnread) {
         // Bell badge
         const bellBadge = document.getElementById('notifBellBadge');
@@ -231,7 +231,7 @@
             `;
             return;
         }
-
+        
         notifList.innerHTML = unreadList.map(item => `
             <a class="notif-item" href="/admin/laporan/${item.reportId}/chat">
                 <div class="notif-item-avatar">

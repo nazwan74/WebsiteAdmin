@@ -88,6 +88,7 @@ class laporancontroller extends Controller
                     $data['create_at'] = $data['created_date'];
                     $data['status'] = $data['report_status'] ?? 'baru';
                     $data['judul'] = $data['report_number'] ?? ($data['case_type'] ?? 'Laporan');
+                    $data['adminLastReadAt'] = $data['adminLastReadAt'] ?? 0;
                     $laporan[] = $data;
                 }
             }
@@ -110,6 +111,7 @@ class laporancontroller extends Controller
                             $data['create_at'] = $data['created_date'];
                             $data['status'] = $data['report_status'] ?? 'baru';
                             $data['judul'] = $data['report_number'] ?? ($data['case_type'] ?? 'Laporan');
+                            $data['adminLastReadAt'] = $data['adminLastReadAt'] ?? 0;
                             $laporan[] = $data;
                         }
                     }
@@ -498,12 +500,8 @@ class laporancontroller extends Controller
 
     public function chatMessages($id)
     {
-        $found = $this->findReportRefById($id);
-        if (!$found) {
-            return response()->json(['status' => 'error', 'message' => 'Laporan tidak ditemukan'], 404);
-        }
-
-        [, , $docRef] = $found;
+        // Langsung buat DocumentReference tanpa findReportRefById (hemat 1-2 query)
+        $docRef = $this->firestore->collection('report')->document($id);
         $since = request()->query('since');
         $collection = $docRef->collection('chat');
 
@@ -588,21 +586,12 @@ class laporancontroller extends Controller
             return response()->json(['status' => 'error', 'message' => 'Pesan atau gambar wajib diisi'], 422);
         }
 
-        $found = $this->findReportRefById($id);
-        if (!$found) {
-            return response()->json(['status' => 'error', 'message' => 'Laporan tidak ditemukan'], 404);
-        }
-
-        [, , $docRef] = $found;
+        // Langsung buat DocumentReference tanpa findReportRefById (hemat 1-2 query)
+        $docRef = $this->firestore->collection('report')->document($id);
         $nowMillis = round(microtime(true) * 1000);
 
-        // Ambil data laporan untuk mendapatkan user_id
-        $reportSnap = $docRef->snapshot();
-        $reportData = $reportSnap ? $reportSnap->data() : [];
-        $reportedUserId = $reportData['user_id'] ?? $reportData['userId'] ?? null;
-
-        // Jika laporan menyertakan user_id, gunakan itu. Jika tidak, fallback ke sesi admin.
-        $userId = $reportedUserId ?? (Session::get('admin.uid') ?? 'admin');
+        // Gunakan admin uid dari session, tidak perlu snapshot report hanya untuk user_id
+        $userId = Session::get('admin.uid') ?? 'admin';
 
         // Tetap pakai nilai 'ADMIN' untuk chatType seperti diminta
         $chatType = 'ADMIN';
@@ -630,7 +619,12 @@ class laporancontroller extends Controller
             }
         }
 
+        // Buat document reference dulu agar chatId langsung tersedia (hemat 1 write)
+        $newDocRef = $docRef->collection('chat')->newDocument();
+        $chatId = $newDocRef->id();
+
         $payload = [
+            'chatId' => $chatId,
             'textMessage' => $request->input('textMessage') ?? '',
             'userId' => $userId,
             'createdAt' => $nowMillis,
@@ -642,24 +636,11 @@ class laporancontroller extends Controller
             'chatType' => $chatType,
         ];
 
-        // Tambah dokumen chat dan kemudian simpan chatId di dalam dokumen itu
-        $newDocRef = $docRef->collection('chat')->add($payload);
-        try {
-            $chatId = null;
-            if (is_object($newDocRef) && method_exists($newDocRef, 'id')) {
-                $chatId = $newDocRef->id();
-            } elseif (is_array($newDocRef) && isset($newDocRef['name'])) {
-                $chatId = basename($newDocRef['name']);
-            }
+        // Satu kali write saja (sebelumnya: add + update chatId = 2 writes)
+        $newDocRef->set($payload);
 
-            if ($chatId) {
-                $newDocRef->update([
-                    ['path' => 'chatId', 'value' => $chatId],
-                ]);
-            }
-        } catch (\Throwable $e) {
-            // Jangan ganggu alur jika update chatId gagal
-        }
+        // Invalidate unread chats cache karena admin mengirim pesan
+        Cache::forget('unread_chats');
 
         return response()->json(['status' => 'success']);
     }
@@ -718,74 +699,77 @@ class laporancontroller extends Controller
     /**
      * Get unread chat notifications across all reports.
      * Returns reports that have user messages newer than admin's lastReadAt.
+     *
+     * OPTIMIZED: Uses Cache::remember (30s) and reuses getLaporanList data
+     * to avoid redundant findReportRefById + snapshot queries per report.
      */
     public function unreadChats()
     {
         try {
-            $laporan = $this->getLaporanList();
-            $unread = [];
+            $result = Cache::remember('unread_chats', 30, function () {
+                $laporan = $this->getLaporanList();
+                $unread = [];
 
-            foreach ($laporan as $item) {
-                $reportId = $item['id'] ?? null;
-                if (!$reportId) continue;
+                foreach ($laporan as $item) {
+                    $reportId = $item['id'] ?? null;
+                    if (!$reportId) continue;
 
-                $found = $this->findReportRefById($reportId);
-                if (!$found) continue;
+                    // adminLastReadAt sudah tersedia dari getLaporanList — tidak perlu query lagi
+                    $lastReadAt = $item['adminLastReadAt'] ?? 0;
 
-                [, , $docRef] = $found;
+                    // Buat DocumentReference langsung tanpa findReportRefById
+                    $docRef = $this->firestore->collection('report')->document($reportId);
 
-                // Get admin's lastReadAt for this report
-                $reportSnap = $docRef->snapshot();
-                $reportData = $reportSnap->data();
-                $lastReadAt = $reportData['adminLastReadAt'] ?? 0;
+                    // Query chat subcollection: pesan setelah lastReadAt
+                    $chatCollection = $docRef->collection('chat');
+                    $query = $chatCollection
+                        ->where('createdAt', '>', $lastReadAt)
+                        ->orderBy('createdAt', 'DESC')
+                        ->limit(50);
 
-                // Query user messages (non-ADMIN) created after lastReadAt
-                $chatCollection = $docRef->collection('chat');
-                $query = $chatCollection
-                    ->where('createdAt', '>', $lastReadAt)
-                    ->orderBy('createdAt', 'DESC')
-                    ->limit(50);
+                    $docs = $query->documents();
+                    $unreadCount = 0;
+                    $lastUserMessage = null;
 
-                $docs = $query->documents();
-                $unreadCount = 0;
-                $lastUserMessage = null;
+                    foreach ($docs as $chatDoc) {
+                        if (!$chatDoc->exists()) continue;
+                        $data = $chatDoc->data();
 
-                foreach ($docs as $chatDoc) {
-                    if (!$chatDoc->exists()) continue;
-                    $data = $chatDoc->data();
+                        // Skip deleted messages
+                        if (!empty($data['isDeleted'])) continue;
 
-                    // Skip deleted messages
-                    if (!empty($data['isDeleted'])) continue;
+                        // Only count non-admin messages
+                        $chatType = $data['chatType'] ?? '';
+                        if (strtoupper($chatType) === 'ADMIN') continue;
 
-                    // Only count non-admin messages
-                    $chatType = $data['chatType'] ?? '';
-                    if (strtoupper($chatType) === 'ADMIN') continue;
-
-                    $unreadCount++;
-                    if (!$lastUserMessage) {
-                        $lastUserMessage = $data['textMessage'] ?? '';
-                        if ($data['imageMessage'] ?? null) {
-                            $lastUserMessage = $lastUserMessage ?: '📷 Gambar';
+                        $unreadCount++;
+                        if (!$lastUserMessage) {
+                            $lastUserMessage = $data['textMessage'] ?? '';
+                            if ($data['imageMessage'] ?? null) {
+                                $lastUserMessage = $lastUserMessage ?: '📷 Gambar';
+                            }
                         }
+                    }
+
+                    if ($unreadCount > 0) {
+                        $unread[] = [
+                            'reportId' => $reportId,
+                            'reportTitle' => $item['judul'] ?? 'Laporan',
+                            'userName' => $item['user_name'] ?? ($item['nama'] ?? 'User'),
+                            'lastMessage' => $lastUserMessage,
+                            'unreadCount' => $unreadCount,
+                        ];
                     }
                 }
 
-                if ($unreadCount > 0) {
-                    $unread[] = [
-                        'reportId' => $reportId,
-                        'reportTitle' => $item['judul'] ?? 'Laporan',
-                        'userName' => $item['user_name'] ?? ($item['nama'] ?? 'User'),
-                        'lastMessage' => $lastUserMessage,
-                        'unreadCount' => $unreadCount,
-                    ];
-                }
-            }
+                return [
+                    'status' => 'success',
+                    'unread' => $unread,
+                    'totalUnread' => array_sum(array_column($unread, 'unreadCount')),
+                ];
+            });
 
-            return response()->json([
-                'status' => 'success',
-                'unread' => $unread,
-                'totalUnread' => array_sum(array_column($unread, 'unreadCount')),
-            ]);
+            return response()->json($result);
         } catch (\Throwable $e) {
             \Log::error('unreadChats error: ' . $e->getMessage());
             return response()->json([
@@ -813,6 +797,9 @@ class laporancontroller extends Controller
             $docRef->update([
                 ['path' => 'adminLastReadAt', 'value' => $nowMillis],
             ]);
+
+            // Invalidate unread chats cache karena admin sudah membaca
+            Cache::forget('unread_chats');
         } catch (\Throwable $e) {
             \Log::error('markChatRead error: ' . $e->getMessage());
         }
