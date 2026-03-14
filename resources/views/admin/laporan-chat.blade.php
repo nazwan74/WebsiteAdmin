@@ -957,6 +957,9 @@
 
         // Prefill template jika datang dari aksi penolakan / selesai
         const fromParam = "{{ request()->query('from') }}";
+        let requireReasonMessage = false;
+        let reasonMessageSent = false;
+
         if (fromParam === 'reject') {
             const templateText = "Halo, terima kasih sudah melaporkan melalui aplikasi GESA.\n\n" +
                 "Setelah kami melakukan penelaahan, laporan ini kami tandai sebagai DITOLAK dengan alasan:\n" +
@@ -972,6 +975,7 @@
             if (messageInput.setSelectionRange) {
                 messageInput.setSelectionRange(len, len);
             }
+            requireReasonMessage = true;
         } else if (fromParam === 'done') {
             const templateText = "Halo, terima kasih sudah melaporkan melalui aplikasi GESA.\n\n" +
                 "Kami informasikan bahwa proses penanganan laporan ini telah SELESAI dengan ringkasan sebagai berikut:\n" +
@@ -987,7 +991,9 @@
             if (messageInput.setSelectionRange) {
                 messageInput.setSelectionRange(len, len);
             }
+            requireReasonMessage = true;
         }
+
         messageInput.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
@@ -1085,6 +1091,9 @@
                     input.value = '';
                     input.style.height = 'auto';
                     clearImagePreview();
+                    if (requireReasonMessage) {
+                        reasonMessageSent = true;
+                    }
                     fetchMessages(); // Refresh
                 } else {
                     Swal.fire('Error', data.message || 'Gagal mengirim pesan', 'error');
@@ -1115,6 +1124,37 @@
                 e.preventDefault();
                 document.getElementById('sendForm').dispatchEvent(new Event('submit'));
             }
+        });
+
+        // Blok navigasi jika pesan alasan belum dikirim
+        function guardNavigationIfNeeded(event) {
+            if (!requireReasonMessage || reasonMessageSent) return;
+            event.preventDefault();
+            Swal.fire({
+                title: 'Belum mengirim pesan',
+                text: 'Harap kirim pesan alasan penolakan / status selesai terlebih dahulu sebelum meninggalkan halaman ini.',
+                icon: 'warning',
+                confirmButtonText: 'Ok'
+            });
+        }
+
+        // Cegah klik pada link navigasi utama jika alasan belum dikirim
+        document.addEventListener('click', function(e) {
+            if (!requireReasonMessage || reasonMessageSent) return;
+            const anchor = e.target.closest('a');
+            if (!anchor) return;
+            const href = anchor.getAttribute('href') || '';
+            // Link dashboard, laporan, pengaturan, profile, dll
+            if (href.startsWith('/admin')) {
+                guardNavigationIfNeeded(e);
+            }
+        });
+
+        // Cegah close/tab back browser jika alasan belum dikirim
+        window.addEventListener('beforeunload', function(e) {
+            if (!requireReasonMessage || reasonMessageSent) return;
+            e.preventDefault();
+            e.returnValue = '';
         });
 
         // Polling dengan interval dinamis (aktif vs background)
