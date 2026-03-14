@@ -38,14 +38,16 @@
                 <small class="text-muted">Status Laporan</small><br>
                 @php
                     $statusVal = $laporan['report_status'] ?? ($laporan['status'] ?? 'baru');
+                    $statusKey = strtolower($statusVal);
                     $statusClass = [
                         'baru' => 'secondary',
                         'diproses' => 'warning',
                         'selesai' => 'success',
                         'ditolak' => 'danger'
-                    ][strtolower($statusVal)] ?? 'secondary';
+                    ][$statusKey] ?? 'secondary';
+                    $statusDisplay = $statusKey === 'baru' ? 'Belum Ditangani' : ucfirst($statusVal);
                 @endphp
-                <span class="badge bg-{{ $statusClass }}">{{ ucfirst($statusVal) }}</span>
+                <span class="badge bg-{{ $statusClass }}">{{ $statusDisplay }}</span>
             </div>
         </div>
 
@@ -177,6 +179,7 @@
 
         <form id="statusForm"
             action="{{ route('admin.laporan.setStatus', $laporan['id']) }}"
+            data-chat-url="{{ route('admin.laporan.chat', $laporan['id']) }}"
             method="POST">
 
             @csrf
@@ -186,7 +189,7 @@
                 <div class="col-md-8">
                     <select name="status" class="form-select" required>
                         <option value="">-- Pilih Status --</option>
-                        <option value="baru" @selected($laporan['status']=='baru')>Baru</option>
+                        <option value="baru" @selected($laporan['status']=='baru')>Belum Ditangani</option>
                         <option value="diproses" @selected($laporan['status']=='diproses')>Diproses</option>
                         <option value="selesai" @selected($laporan['status']=='selesai')>Selesai</option>
                         <option value="ditolak" @selected($laporan['status']=='ditolak')>Ditolak</option>

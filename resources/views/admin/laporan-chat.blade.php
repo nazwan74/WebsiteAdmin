@@ -437,6 +437,10 @@
         let poller = null;
         let isFirstLoad = true;
 
+        // Interval polling dinamis
+        const ACTIVE_INTERVAL = 1000;   // 1 detik saat tab aktif
+        const HIDDEN_INTERVAL = 10000;  // 10 detik saat tab tidak aktif
+
         // Mark chat as read
         fetch(`/admin/laporan/${laporanId}/chat/mark-read`, {
             method: 'POST',
@@ -533,7 +537,7 @@
             }
         });
 
-        function editMessage(msgId, text) {
+        function editMessage(msgId) {
             const bubble = document.getElementById(`bubble-${msgId}`);
             if (!bubble) return;
             
@@ -547,7 +551,7 @@
                 }
             }
             
-            const currentText = text || bubble.innerText.trim();
+            const currentText = bubble.innerText.trim();
             const w = bubble.offsetWidth;
             const h = bubble.offsetHeight;
             
@@ -757,7 +761,7 @@
                             <i class="bi bi-chevron-down"></i>
                         </button>
                         <div class="msg-menu">
-                            <button class="msg-menu-item" onclick="editMessage('${msgId}', '${escapeHtml(text).replace(/'/g, "\\'")}')"> 
+                            <button class="msg-menu-item" onclick="editMessage('${msgId}')"> 
                                 <i class="bi bi-pencil me-2"></i> Edit
                             </button>
                             <button class="msg-menu-item text-danger" onclick="deleteMessage('${msgId}')">
@@ -950,6 +954,40 @@
 
         // Auto-Resize Textarea
         const messageInput = document.getElementById('messageInput');
+
+        // Prefill template jika datang dari aksi penolakan / selesai
+        const fromParam = "{{ request()->query('from') }}";
+        if (fromParam === 'reject') {
+            const templateText = "Halo, terima kasih sudah melaporkan melalui aplikasi GESA.\n\n" +
+                "Setelah kami melakukan penelaahan, laporan ini kami tandai sebagai DITOLAK dengan alasan:\n" +
+                "- (isi alasan penolakan di sini)\n\n" +
+                "Jika ada informasi tambahan atau koreksi, silakan sampaikan kembali melalui aplikasi ini.";
+            messageInput.value = templateText;
+            // Trigger auto-resize
+            messageInput.style.height = 'auto';
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+            messageInput.focus();
+            // Pindahkan kursor ke akhir
+            const len = messageInput.value.length;
+            if (messageInput.setSelectionRange) {
+                messageInput.setSelectionRange(len, len);
+            }
+        } else if (fromParam === 'done') {
+            const templateText = "Halo, terima kasih sudah melaporkan melalui aplikasi GESA.\n\n" +
+                "Kami informasikan bahwa proses penanganan laporan ini telah SELESAI dengan ringkasan sebagai berikut:\n" +
+                "- (isi ringkasan tindak lanjut / hasil penyelesaian di sini)\n\n" +
+                "Jika masih ada hal yang ingin ditanyakan atau ditambahkan, silakan balas pesan ini.";
+            messageInput.value = templateText;
+            // Trigger auto-resize
+            messageInput.style.height = 'auto';
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+            messageInput.focus();
+            // Pindahkan kursor ke akhir
+            const len = messageInput.value.length;
+            if (messageInput.setSelectionRange) {
+                messageInput.setSelectionRange(len, len);
+            }
+        }
         messageInput.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
@@ -1079,10 +1117,11 @@
             }
         });
 
-        // Polling
+        // Polling dengan interval dinamis (aktif vs background)
         function startPolling() {
+            const interval = document.hidden ? HIDDEN_INTERVAL : ACTIVE_INTERVAL;
             if (poller) return;
-            poller = setInterval(fetchMessages, 3000);
+            poller = setInterval(fetchMessages, interval);
         }
         function stopPolling() {
             if (poller) clearInterval(poller);
@@ -1090,8 +1129,15 @@
         }
 
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden) stopPolling();
-            else { fetchMessages(); startPolling(); }
+            // Saat tab disembunyikan, hentikan polling;
+            // saat kembali aktif, langsung fetch sekali dan mulai polling dengan interval cepat.
+            if (document.hidden) {
+                stopPolling();
+            } else {
+                fetchMessages();
+                stopPolling();
+                startPolling();
+            }
         });
 
         fetchMessages();

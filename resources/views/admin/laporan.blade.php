@@ -583,7 +583,13 @@
                                         default => 'bg-secondary',
                                     };
                                     $kategoriDisplay = $item['case_type'] ?? ($item['kategori'] ?? '-');
-                                    $status = strtolower($item['report_status'] ?? ($item['status'] ?? 'baru'));
+
+                                    // Normalisasi status: beberapa data mungkin menyimpan "Belum Ditangani"/variasi lain
+                                    $rawStatus = $item['report_status'] ?? ($item['status'] ?? 'baru');
+                                    $status = strtolower(trim($rawStatus));
+                                    if (in_array($status, ['belum ditangani', 'belum_ditangani', 'pending', ''])) {
+                                        $status = 'baru';
+                                    }
                                     $badgeColor = match($status) {
                                         'selesai' => 'success',
                                         'diproses' => 'warning',
@@ -634,7 +640,10 @@
                                     <td>{{ $item['user_name'] ?? ($item['nama'] ?? '-') }}</td>
                                     <td><span class="badge {{ $kategoriBadgeClass }}">{{ $kategoriDisplay }}</span></td>
                                     <td class="text-nowrap">{{ $parsedKejadian ? $parsedKejadian->locale('id')->translatedFormat('d M Y') : ($tanggalKejadian ?: '-') }}</td>
-                                    <td><span class="badge bg-{{ $badgeColor }}">{{ ucfirst($status) }}</span></td>
+                                    @php
+                                        $displayStatus = $status === 'baru' ? 'Belum Ditangani' : ucfirst($status);
+                                    @endphp
+                                    <td><span class="badge bg-{{ $badgeColor }}">{{ $displayStatus }}</span></td>
                                     <td class="text-nowrap">{{ $parsedBuat ? $parsedBuat->locale('id')->translatedFormat('d M Y, H:i') : ($tanggalBuat ?: '-') }}</td>
                                     <td>
                                         <button
@@ -734,7 +743,7 @@
                             <div class="d-flex flex-wrap gap-2">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="statusBaru" value="baru">
-                                    <label class="form-check-label" for="statusBaru">Baru</label>
+                                    <label class="form-check-label" for="statusBaru">Belum Ditangani</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="statusDiproses" value="diproses">
@@ -969,8 +978,14 @@
                 
                 // Tambah filter status
                 activeFilters.status.forEach(status => {
-                    const statusCapitalized = status.charAt(0).toUpperCase() + status.slice(1);
-                    addFilterBadge('Status: ' + statusCapitalized, () => {
+                    const statusLabelMap = {
+                        'baru': 'Belum Ditangani',
+                        'diproses': 'Diproses',
+                        'selesai': 'Selesai',
+                        'ditolak': 'Ditolak'
+                    };
+                    const statusLabel = statusLabelMap[status] || (status.charAt(0).toUpperCase() + status.slice(1));
+                    addFilterBadge('Status: ' + statusLabel, () => {
                         activeFilters.status = activeFilters.status.filter(s => s !== status);
                         const statusCheckbox = document.getElementById('status' + status.charAt(0).toUpperCase() + status.slice(1));
                         if (statusCheckbox) {
@@ -1174,6 +1189,8 @@
                 const form = e.target;
                 const url = form.action;
                 const data = new FormData(form);
+                const selectedStatus = data.get('status');
+                const chatUrl = form.getAttribute('data-chat-url');
 
                 fetch(url, {
                     method: 'POST',
@@ -1190,7 +1207,17 @@
                         text: res.message,
                         icon: 'success'
                     }).then(() => {
-                        location.reload(); // Muat ulang halaman untuk memperbarui status
+                        if (chatUrl) {
+                            if (selectedStatus === 'ditolak') {
+                                window.location.href = chatUrl + '?from=reject';
+                            } else if (selectedStatus === 'selesai') {
+                                window.location.href = chatUrl + '?from=done';
+                            } else {
+                                location.reload(); // Muat ulang halaman untuk memperbarui status
+                            }
+                        } else {
+                            location.reload();
+                        }
                     });
                 });
             }

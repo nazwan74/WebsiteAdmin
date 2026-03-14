@@ -231,9 +231,10 @@
                                 'ditolak' => 'status-ditolak',
                                 default => 'status-baru'
                             };
+                            $statusDisplay = $status === 'baru' ? 'Belum Ditangani' : ucfirst($status);
                         @endphp
                         <span class="status-badge {{ $statusClass }}">
-                            {{ ucfirst($laporan['status'] ?? 'baru') }}
+                            {{ $statusDisplay }}
                         </span>
                     </td>
                 </tr>

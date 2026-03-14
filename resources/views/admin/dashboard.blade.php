@@ -424,7 +424,10 @@
                                         <td class="text-nowrap">{{ $parsedBuat ? $parsedBuat->locale('id')->translatedFormat('d M Y, H:i') : ($tanggalBuat ?: '-') }}</td>
                                         <td>{{ $item['kategori'] ?? '-' }}</td>
                                         <td>{{ $item['daerah'] ?? '-' }}</td>
-                                        <td><span class="badge bg-{{ $badgeColor }}">{{ ucfirst($status) }}</span></td>
+                                        @php
+                                            $statusDisplay = $status === 'baru' ? 'Belum Ditangani' : ucfirst($status);
+                                        @endphp
+                                        <td><span class="badge bg-{{ $badgeColor }}">{{ $statusDisplay }}</span></td>
                                         <td>
                                         <button
                                             class="btn btn-primary btn-sm"
@@ -686,6 +689,8 @@
                 const form = e.target;
                 const url = form.action;
                 const data = new FormData(form);
+                const selectedStatus = data.get('status');
+                const chatUrl = form.getAttribute('data-chat-url');
 
                 // Pastikan source=dashboard terkirim
                 if (!data.has('source')) {
@@ -710,7 +715,17 @@
                             timer: 1500,
                             showConfirmButton: false
                         }).then(() => {
-                            location.reload(); // Muat ulang halaman untuk memperbarui status dan statistik
+                            if (chatUrl) {
+                                if (selectedStatus === 'ditolak') {
+                                    window.location.href = chatUrl + '?from=reject';
+                                } else if (selectedStatus === 'selesai') {
+                                    window.location.href = chatUrl + '?from=done';
+                                } else {
+                                    location.reload(); // Muat ulang halaman untuk memperbarui status dan statistik
+                                }
+                            } else {
+                                location.reload();
+                            }
                         });
                     } else {
                          Swal.fire({

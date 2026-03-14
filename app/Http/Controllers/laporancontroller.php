@@ -204,9 +204,16 @@ class laporancontroller extends Controller
         if ($status !== null && $status !== '') {
             $statusList = array_map('trim', array_map('strtolower', explode(',', $status)));
             $statusList = array_filter($statusList);
+            // Normalisasi: anggap berbagai bentuk "belum ditangani" sebagai status "baru"
+            $statusList = array_map(function ($s) {
+                return in_array($s, ['belum ditangani', 'belum_ditangani', 'pending', '']) ? 'baru' : $s;
+            }, $statusList);
             if (!empty($statusList)) {
                 $laporan = array_filter($laporan, function ($item) use ($statusList) {
                     $s = strtolower(trim($item['report_status'] ?? ($item['status'] ?? '')));
+                    if (in_array($s, ['belum ditangani', 'belum_ditangani', 'pending', ''])) {
+                        $s = 'baru';
+                    }
                     return in_array($s, $statusList, true);
                 });
                 $laporan = array_values($laporan);
@@ -255,6 +262,11 @@ class laporancontroller extends Controller
                 }
                 $tanggalBuat = $item['created_date'] ?? ($item['create_at'] ?? '-');
 
+                $statusCsv = $item['report_status'] ?? ($item['status'] ?? 'baru');
+                if (strtolower($statusCsv) === 'baru') {
+                    $statusCsv = 'Belum Ditangani';
+                }
+
                 fputcsv($stream, [
                     $i + 1,
                     $item['id'] ?? '-',
@@ -262,7 +274,7 @@ class laporancontroller extends Controller
                     $item['case_type'] ?? ($item['kategori'] ?? '-'),
                     $item['daerah'] ?? '-',
                     $tanggalKejadian,
-                    $item['report_status'] ?? ($item['status'] ?? 'baru'),
+                    $statusCsv,
                     $tanggalBuat,
                 ], ';');
             }
@@ -586,12 +598,14 @@ class laporancontroller extends Controller
             return response()->json(['status' => 'error', 'message' => 'Pesan atau gambar wajib diisi'], 422);
         }
 
-        // Langsung buat DocumentReference tanpa findReportRefById (hemat 1-2 query)
+        // Langsung buat DocumentReference
         $docRef = $this->firestore->collection('report')->document($id);
         $nowMillis = round(microtime(true) * 1000);
 
-        // Gunakan admin uid dari session, tidak perlu snapshot report hanya untuk user_id
-        $userId = Session::get('admin.uid') ?? 'admin';
+        // Ambil userId dari field user_id pada dokumen report (uid pelapor)
+        $reportSnap = $docRef->snapshot();
+        $reportData = $reportSnap->exists() ? $reportSnap->data() : [];
+        $userId = $reportData['user_id'] ?? ($reportData['userId'] ?? 'unknown_user');
 
         // Tetap pakai nilai 'ADMIN' untuk chatType seperti diminta
         $chatType = 'ADMIN';
