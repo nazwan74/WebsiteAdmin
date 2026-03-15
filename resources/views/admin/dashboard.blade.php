@@ -336,10 +336,10 @@
             </div>
         </div>
 
-        <!-- Tren Laporan per Periode + Laporan Terbaru (satu baris) -->
+        <!-- Tren Laporan per Periode + Laporan per Kota + Laporan Terbaru -->
         <div class="row mt-3 g-3">
             <!-- Grafik Tren -->
-            <div class="col-lg-7">
+            <div class="col-lg-6">
                 <div class="bg-white shadow-sm rounded p-3 h-100">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                         <h6 class="fw-bold mb-0">Tren Laporan per Periode</h6>
@@ -372,8 +372,23 @@
                     </div>
                 </div>
             </div>
-            <!-- Tabel Laporan Terbaru -->
-            <div class="col-lg-5">
+            <!-- Bar Chart Laporan per Kota -->
+            <div class="col-lg-6">
+                <div class="bg-white shadow-sm rounded p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0">Laporan per Kota/Daerah</h6>
+                        <span class="text-muted small">Top 4 daerah</span>
+                    </div>
+                    <div style="height: 280px;">
+                        <canvas id="daerahLaporanChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabel Laporan Terbaru -->
+        <div class="row mt-3 g-3">
+            <div class="col-lg-12">
                 <div class="bg-white shadow-sm rounded p-3 h-100">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="fw-bold mb-0">Laporan Terbaru</h6>
@@ -670,6 +685,68 @@
                             },
                             grid: {
                                 drawBorder: false
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        // Script Chart: Bar Laporan per Kota/Daerah
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctxDaerah = document.getElementById('daerahLaporanChart');
+            if (!ctxDaerah) return;
+
+            const labels = @json($daerahBarLabels ?? []);
+            const data = @json($daerahBarData ?? []);
+
+            new Chart(ctxDaerah, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Jumlah Laporan',
+                        data: data,
+                        backgroundColor: 'rgba(52, 152, 219, 0.6)',
+                        borderColor: '#3498db',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + ' laporan';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                font: { size: 11 },
+                                maxRotation: 45,
+                                minRotation: 0,
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0,
+                                font: { size: 11 }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Jumlah Laporan',
+                                font: { size: 11 }
                             }
                         }
                     }

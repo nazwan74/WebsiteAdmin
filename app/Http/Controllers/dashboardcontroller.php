@@ -189,6 +189,10 @@ class DashboardController extends Controller
         arsort($daerahCount);
         $topDaerah = array_slice($daerahCount, 0, 4, true);
 
+        // Data untuk bar chart berdasarkan kota/daerah kejadian (pakai top 10 agar rapi)
+        $daerahBarLabels = array_keys($topDaerah);
+        $daerahBarData   = array_values($topDaerah);
+
         // Ambil kategori terbanyak di tiap top daerah
         $topDaerahKategori = [];
         foreach ($topDaerah as $daerah => $jumlah) {
@@ -220,6 +224,8 @@ class DashboardController extends Controller
             'filterBulan'        => $filterBulan,
             'tahunList'          => $tahunList,
             'laporanTerbaru'     => $laporanTerbaru,
+            'daerahBarLabels'    => $daerahBarLabels,
+            'daerahBarData'      => $daerahBarData,
         ]);
     }
 }
