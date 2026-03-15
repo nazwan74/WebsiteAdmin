@@ -343,7 +343,7 @@
                     <h5 class="mb-0 fw-bold">{{ $laporan['judul'] ?? 'Laporan' }}</h5>
                     <div class="text-muted small">Pelapor: {{ $laporan['user_name'] ?? ($laporan['nama'] ?? 'User') }}</div>
                 </div>
-                <a href="{{ route('admin.laporan', $laporan['id']) }}" class="btn btn-sm btn-light border">
+                <a href="{{ route('admin.laporan') }}" id="backToLaporan" class="btn btn-sm btn-light border">
                     <i class="bi bi-arrow-left me-1"></i> Kembali
                 </a>
             </div>
@@ -1126,35 +1126,27 @@
             }
         });
 
-        // Blok navigasi jika pesan alasan belum dikirim
-        function guardNavigationIfNeeded(event) {
-            if (!requireReasonMessage || reasonMessageSent) return;
-            event.preventDefault();
-            Swal.fire({
-                title: 'Belum mengirim pesan',
-                text: 'Harap kirim pesan alasan penolakan / status selesai terlebih dahulu sebelum meninggalkan halaman ini.',
-                icon: 'warning',
-                confirmButtonText: 'Ok'
-            });
-        }
-
-        // Cegah klik pada link navigasi utama jika alasan belum dikirim
+        // Konfirmasi dengan SweetAlert saat klik tombol Kembali ke daftar laporan jika pesan alasan belum dikirim
         document.addEventListener('click', function(e) {
             if (!requireReasonMessage || reasonMessageSent) return;
-            const anchor = e.target.closest('a');
+            const anchor = e.target.closest('a#backToLaporan');
             if (!anchor) return;
-            const href = anchor.getAttribute('href') || '';
-            // Link dashboard, laporan, pengaturan, profile, dll
-            if (href.startsWith('/admin')) {
-                guardNavigationIfNeeded(e);
-            }
-        });
+            const href = anchor.getAttribute('href') || '{{ route('admin.laporan') }}';
 
-        // Cegah close/tab back browser jika alasan belum dikirim
-        window.addEventListener('beforeunload', function(e) {
-            if (!requireReasonMessage || reasonMessageSent) return;
             e.preventDefault();
-            e.returnValue = '';
+            Swal.fire({
+                title: 'Pesan belum dikirim',
+                text: 'Anda belum mengirim pesan alasan penolakan / status selesai. Tetap tinggalkan halaman tanpa mengirim pesan?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Tetap di halaman',
+                cancelButtonText: 'Tinggalkan halaman'
+            }).then((result) => {
+                if (result.isDismissed) {
+                    // User memilih "Tinggalkan halaman"
+                    window.location.href = href;
+                }
+            });
         });
 
         // Polling dengan interval dinamis (aktif vs background)
