@@ -336,11 +336,25 @@
             </div>
         </div>
 
-        <!-- Tren Laporan per Periode + Laporan per Kota + Laporan Terbaru -->
+        <!-- Bar Chart Laporan per Kota -->
         <div class="row mt-3 g-3">
-            <!-- Grafik Tren -->
-            <div class="col-lg-6">
-                <div class="bg-white shadow-sm rounded p-3 h-100">
+            <div class="col-lg-12">
+                <div class="bg-white shadow-sm rounded p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0">Laporan per Kota/Daerah</h6>
+                        <span class="text-muted small">Kalimantan Barat (14 kab/kota)</span>
+                    </div>
+                    <div style="height: 420px;">
+                        <canvas id="daerahLaporanChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tren Laporan per Periode -->
+        <div class="row mt-3 g-3">
+            <div class="col-lg-12">
+                <div class="bg-white shadow-sm rounded p-3">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                         <h6 class="fw-bold mb-0">Tren Laporan per Periode</h6>
                         <div class="d-flex flex-wrap align-items-center gap-2">
@@ -369,18 +383,6 @@
                     </div>
                     <div style="height: 280px;">
                         <canvas id="trenLaporanChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <!-- Bar Chart Laporan per Kota -->
-            <div class="col-lg-6">
-                <div class="bg-white shadow-sm rounded p-3 h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold mb-0">Laporan per Kota/Daerah</h6>
-                        <span class="text-muted small">Top 4 daerah</span>
-                    </div>
-                    <div style="height: 280px;">
-                        <canvas id="daerahLaporanChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -714,6 +716,7 @@
                     }]
                 },
                 options: {
+                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
@@ -723,20 +726,13 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.parsed.y + ' laporan';
+                                    return context.parsed.x + ' laporan';
                                 }
                             }
                         }
                     },
                     scales: {
                         x: {
-                            ticks: {
-                                font: { size: 11 },
-                                maxRotation: 45,
-                                minRotation: 0,
-                            }
-                        },
-                        y: {
                             beginAtZero: true,
                             ticks: {
                                 stepSize: 1,
@@ -747,6 +743,18 @@
                                 display: true,
                                 text: 'Jumlah Laporan',
                                 font: { size: 11 }
+                            },
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                font: { size: 10 },
+                                autoSkip: false
+                            },
+                            grid: {
+                                display: false
                             }
                         }
                     }

@@ -11,6 +11,88 @@ class DashboardController extends Controller
 {
     protected $firestore;
 
+    /**
+     * Urutan tetap kabupaten/kota Kalimantan Barat untuk grafik dashboard.
+     */
+    protected static function kalbarDaerahList(): array
+    {
+        return [
+            'Kabupaten Bengkayang',
+            'Kabupaten Kapuas Hulu',
+            'Kabupaten Kayong Utara',
+            'Kabupaten Ketapang',
+            'Kabupaten Kubu Raya',
+            'Kabupaten Landak',
+            'Kabupaten Melawi',
+            'Kabupaten Mempawah',
+            'Kabupaten Sambas',
+            'Kabupaten Sanggau',
+            'Kabupaten Sekadau',
+            'Kabupaten Sintang',
+            'Kota Pontianak',
+            'Kota Singkawang',
+        ];
+    }
+
+    /**
+     * Cocokkan teks kota/daerah dari laporan ke salah satu kab/kota Kalbar, atau null.
+     */
+    protected function normalizeToKalbarDaerah(string $raw): ?string
+    {
+        $norm = mb_strtolower(trim(preg_replace('/\s+/u', ' ', $raw)), 'UTF-8');
+        if ($norm === '' || $norm === 'tidak diketahui' || $norm === '-') {
+            return null;
+        }
+
+        $aliases = [
+            'kabupaten bengkayang' => 'Kabupaten Bengkayang',
+            'bengkayang' => 'Kabupaten Bengkayang',
+            'kabupaten kapuas hulu' => 'Kabupaten Kapuas Hulu',
+            'kapuas hulu' => 'Kabupaten Kapuas Hulu',
+            'kabupaten kayong utara' => 'Kabupaten Kayong Utara',
+            'kayong utara' => 'Kabupaten Kayong Utara',
+            'kabupaten ketapang' => 'Kabupaten Ketapang',
+            'ketapang' => 'Kabupaten Ketapang',
+            'kabupaten kubu raya' => 'Kabupaten Kubu Raya',
+            'kubu raya' => 'Kabupaten Kubu Raya',
+            'kabupaten landak' => 'Kabupaten Landak',
+            'landak' => 'Kabupaten Landak',
+            'kabupaten melawi' => 'Kabupaten Melawi',
+            'melawi' => 'Kabupaten Melawi',
+            'kabupaten mempawah' => 'Kabupaten Mempawah',
+            'mempawah' => 'Kabupaten Mempawah',
+            'kabupaten sambas' => 'Kabupaten Sambas',
+            'sambas' => 'Kabupaten Sambas',
+            'kabupaten sanggau' => 'Kabupaten Sanggau',
+            'sanggau' => 'Kabupaten Sanggau',
+            'kabupaten sekadau' => 'Kabupaten Sekadau',
+            'sekadau' => 'Kabupaten Sekadau',
+            'kabupaten sintang' => 'Kabupaten Sintang',
+            'sintang' => 'Kabupaten Sintang',
+            'kota pontianak' => 'Kota Pontianak',
+            'pontianak' => 'Kota Pontianak',
+            'kota singkawang' => 'Kota Singkawang',
+            'singkawang' => 'Kota Singkawang',
+        ];
+
+        if (isset($aliases[$norm])) {
+            return $aliases[$norm];
+        }
+
+        foreach (self::kalbarDaerahList() as $canonical) {
+            $c = mb_strtolower($canonical, 'UTF-8');
+            if ($norm === $c) {
+                return $canonical;
+            }
+            $short = preg_replace('/^(kabupaten|kota)\s+/u', '', $c);
+            if ($short !== '' && $norm === $short) {
+                return $canonical;
+            }
+        }
+
+        return null;
+    }
+
     public function __construct()
     {
         // Inisialisasi koneksi Firebase Firestore
@@ -185,13 +267,21 @@ class DashboardController extends Controller
         arsort($kategoriCount);
         $topKategori = array_slice($kategoriCount, 0, 4, true);
 
-        // Ambil 4 daerah dengan jumlah laporan terbanyak
+        // Ambil 4 daerah dengan jumlah laporan terbanyak (ringkasan)
         arsort($daerahCount);
         $topDaerah = array_slice($daerahCount, 0, 4, true);
 
-        // Data untuk bar chart berdasarkan kota/daerah kejadian (pakai top 10 agar rapi)
-        $daerahBarLabels = array_keys($topDaerah);
-        $daerahBarData   = array_values($topDaerah);
+        // Bar chart: seluruh kab/kota Kalimantan Barat (nilai 0 jika belum ada laporan terpetakan)
+        $kalbarList = self::kalbarDaerahList();
+        $kalbarBarCounts = array_fill_keys($kalbarList, 0);
+        foreach ($daerahCount as $raw => $count) {
+            $canonical = $this->normalizeToKalbarDaerah((string) $raw);
+            if ($canonical !== null) {
+                $kalbarBarCounts[$canonical] += $count;
+            }
+        }
+        $daerahBarLabels = $kalbarList;
+        $daerahBarData = array_values($kalbarBarCounts);
 
         // Ambil kategori terbanyak di tiap top daerah
         $topDaerahKategori = [];
