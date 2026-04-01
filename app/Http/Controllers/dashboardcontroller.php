@@ -128,11 +128,13 @@ class DashboardController extends Controller
         $kategoriPerDaerah = [];
         $trenPerBulan = [];
         $trenPerHari = [];
+        $usiaCount = ['Bayi (0-11 bulan)' => 0, 'Balita (1-5 tahun)' => 0, 'Prasekolah (5-6 tahun)' => 0, 'Anak-anak (5-11 tahun)' => 0, 'Remaja (10-18 tahun)' => 0];
         $laporanTerbaruCollect = [];
 
         $processReportDoc = function ($doc) use (
             &$totalLaporan, &$laporanSelesai, &$laporanDiproses, &$laporanBaru, &$laporanDitolak,
-            &$kategoriCount, &$daerahCount, &$kategoriPerDaerah, &$trenPerBulan, &$trenPerHari, &$laporanTerbaruCollect
+            &$kategoriCount, &$daerahCount, &$kategoriPerDaerah, &$trenPerBulan, &$trenPerHari, &$laporanTerbaruCollect,
+            &$usiaCount
         ) {
             if (!$doc->exists()) return;
             $totalLaporan++;
@@ -182,6 +184,48 @@ class DashboardController extends Controller
                 'daerah' => $daerah,
                 'status' => $status,
             ];
+
+            // Kategorikan usia anak
+            $childAge = $data['child_age'] ?? null;
+            if ($childAge !== null && $childAge !== '') {
+                $ageStr = strtolower(trim((string) $childAge));
+                // Coba parse angka dari string
+                preg_match('/(\d+)/', $ageStr, $matches);
+                $ageNum = isset($matches[1]) ? (int) $matches[1] : null;
+
+                if ($ageNum !== null) {
+                    // Deteksi apakah satuan bulan
+                    $isBulan = (str_contains($ageStr, 'bulan') || str_contains($ageStr, 'bln') || str_contains($ageStr, 'month'));
+
+                    if ($isBulan) {
+                        // Jika dalam bulan, 0-11 = bayi
+                        if ($ageNum >= 0 && $ageNum <= 11) {
+                            $usiaCount['Bayi (0-11 bulan)']++;
+                        } elseif ($ageNum >= 12 && $ageNum <= 60) {
+                            $usiaCount['Balita (1-5 tahun)']++;
+                        } elseif ($ageNum > 60 && $ageNum <= 72) {
+                            $usiaCount['Prasekolah (5-6 tahun)']++;
+                        } elseif ($ageNum > 72 && $ageNum <= 132) {
+                            $usiaCount['Anak-anak (5-11 tahun)']++;
+                        } elseif ($ageNum > 132 && $ageNum <= 216) {
+                            $usiaCount['Remaja (10-18 tahun)']++;
+                        }
+                    } else {
+                        // Asumsi tahun (atau angka saja = tahun)
+                        if ($ageNum == 0) {
+                            $usiaCount['Bayi (0-11 bulan)']++;
+                        } elseif ($ageNum >= 1 && $ageNum <= 4) {
+                            $usiaCount['Balita (1-5 tahun)']++;
+                        } elseif ($ageNum >= 5 && $ageNum <= 6) {
+                            $usiaCount['Prasekolah (5-6 tahun)']++;
+                        } elseif ($ageNum >= 7 && $ageNum <= 11) {
+                            $usiaCount['Anak-anak (5-11 tahun)']++;
+                        } elseif ($ageNum >= 12 && $ageNum <= 18) {
+                            $usiaCount['Remaja (10-18 tahun)']++;
+                        }
+                    }
+                }
+            }
         };
 
         // Coba struktur flat: report/{reportId}
@@ -283,6 +327,10 @@ class DashboardController extends Controller
         $daerahBarLabels = $kalbarList;
         $daerahBarData = array_values($kalbarBarCounts);
 
+        // Data chart usia anak
+        $usiaBarLabels = array_keys($usiaCount);
+        $usiaBarData = array_values($usiaCount);
+
         // Ambil kategori terbanyak di tiap top daerah
         $topDaerahKategori = [];
         foreach ($topDaerah as $daerah => $jumlah) {
@@ -316,6 +364,8 @@ class DashboardController extends Controller
             'laporanTerbaru'     => $laporanTerbaru,
             'daerahBarLabels'    => $daerahBarLabels,
             'daerahBarData'      => $daerahBarData,
+            'usiaBarLabels'      => $usiaBarLabels,
+            'usiaBarData'        => $usiaBarData,
         ]);
     }
 }

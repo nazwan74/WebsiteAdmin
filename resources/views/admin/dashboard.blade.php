@@ -351,9 +351,9 @@
             </div>
         </div>
 
-        <!-- Tren Laporan per Periode -->
+        <!-- Tren Laporan per Periode + Rentang Usia Anak -->
         <div class="row mt-3 g-3">
-            <div class="col-lg-12">
+            <div class="col-lg-8">
                 <div class="bg-white shadow-sm rounded p-3">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                         <h6 class="fw-bold mb-0">Tren Laporan per Periode</h6>
@@ -383,6 +383,16 @@
                     </div>
                     <div style="height: 280px;">
                         <canvas id="trenLaporanChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="bg-white shadow-sm rounded p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0">Rentang Usia Anak</h6>
+                    </div>
+                    <div style="height: 280px;">
+                        <canvas id="usiaChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -716,7 +726,6 @@
                     }]
                 },
                 options: {
-                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
@@ -726,16 +735,27 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.parsed.x + ' laporan';
+                                    return context.parsed.y + ' laporan';
                                 }
                             }
                         }
                     },
                     scales: {
                         x: {
+                            ticks: {
+                                font: { size: 10 },
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 30
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
                             beginAtZero: true,
                             ticks: {
-                                stepSize: 1,
+                                stepSize: 25,
                                 precision: 0,
                                 font: { size: 11 }
                             },
@@ -747,14 +767,85 @@
                             grid: {
                                 drawBorder: false
                             }
+                        }
+                    }
+                }
+            });
+        });
+
+        // Script Chart: Bar Rentang Usia Anak
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctxUsia = document.getElementById('usiaChart');
+            if (!ctxUsia) return;
+
+            const usiaLabels = @json($usiaBarLabels ?? []);
+            const usiaData = @json($usiaBarData ?? []);
+
+            new Chart(ctxUsia, {
+                type: 'bar',
+                data: {
+                    labels: usiaLabels,
+                    datasets: [{
+                        label: 'Jumlah Laporan',
+                        data: usiaData,
+                        backgroundColor: [
+                            'rgba(231, 76, 60, 0.6)',
+                            'rgba(46, 204, 113, 0.6)',
+                            'rgba(52, 152, 219, 0.6)',
+                            'rgba(243, 156, 18, 0.6)',
+                            'rgba(155, 89, 182, 0.6)'
+                        ],
+                        borderColor: [
+                            '#e74c3c',
+                            '#2ecc71',
+                            '#3498db',
+                            '#f39c12',
+                            '#9b59b6'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
                         },
-                        y: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + ' laporan';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
                             ticks: {
-                                font: { size: 10 },
-                                autoSkip: false
+                                font: { size: 9 },
+                                maxRotation: 45,
+                                minRotation: 30
                             },
                             grid: {
                                 display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 25,
+                                precision: 0,
+                                font: { size: 11 }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Jumlah Laporan',
+                                font: { size: 11 }
+                            },
+                            grid: {
+                                drawBorder: false
                             }
                         }
                     }
