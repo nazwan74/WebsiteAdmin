@@ -1,232 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Laporan</title>
-    
-    <!-- CSS Eksternal -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
-    <!-- JavaScript Eksternal -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <!-- Gaya Kustom -->
+@extends('admin.layouts.app', [
+    'activePage' => 'laporan',
+    'navbarTitle' => 'Manajemen Laporan',
+    'navbarSubtitle' => 'Admin'
+])
+
+@section('title', 'Laporan')
+
+@section('head-scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@endsection
+
+@section('styles')
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f4f6f9;
-        }
-        
-        /* Gaya Sidebar */
-        .sidebar {
-            width: 180px;
-            height: 100vh;
-            background-color: white;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-            padding: 15px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-            transition: transform 0.3s ease;
-        }
-
-        /* Sidebar Overlay */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-        }
-
-        .sidebar-overlay.active {
-            display: block;
-        }
-
-        /* Hamburger Button */
-        .hamburger-btn {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: #333;
-            cursor: pointer;
-            padding: 0.5rem;
-            margin-right: 1rem;
-        }
-
-        .hamburger-btn:hover {
-            color: #4361ee;
-        }
-
-        /* Responsive: Mobile */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .navbar {
-                margin-left: 0 !important;
-            }
-
-            .main-content {
-                margin-left: 0 !important;
-            }
-
-            .hamburger-btn {
-                display: block;
-            }
-        }
-        
-        .sidebar-logo {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .sidebar-logo img {
-            max-width: 100px;
-            max-height: 50px;
-            object-fit: contain;
-        }
-        
-        .sidebar-menu {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .sidebar-menu li {
-            margin-bottom: 10px;
-        }
-        
-        .sidebar-menu li a {
-            text-decoration: none;
-            color: #6c757d;
-            display: flex;
-            align-items: center;
-            padding: 8px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-        
-        .sidebar-menu li a:hover {
-            background-color: #f1f3f9;
-            color: #4361ee;
-        }
-        
-        .sidebar-menu li a.active {
-            background-color: #e6edff;
-            color: #4361ee;
-            font-weight: 600;
-        }
-        
-        .sidebar-menu li a i {
-            margin-right: 10px;
-            color: #6c757d;
-            font-size: 1rem;
-        }
-        
-        .sidebar-menu li a.active i {
-            color: #4361ee;
-        }
-        
-        /* Gaya Dropdown */
-        .sidebar-menu .dropdown-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            color: #6c757d;
-            font-size: 0.9rem;
-            text-decoration: none;
-        }
-
-        .sidebar-menu .dropdown-toggle:hover {
-            background-color: #f1f3f9;
-            color: #4361ee;
-        }
-
-        .sidebar-menu .dropdown-toggle i {
-            margin-right: 10px;
-            font-size: 1rem;
-            color: #6c757d;
-        }
-
-        .sidebar-menu .dropdown-toggle:hover i,
-        .sidebar-menu .dropdown.active .dropdown-toggle i {
-            color: #4361ee;
-        }
-
-        .sidebar-menu .submenu {
-            display: none;
-            list-style: none;
-            padding-left: 20px;
-            margin-top: 5px;
-        }
-
-        .sidebar-menu .submenu li a {
-            padding: 6px 8px;
-            font-size: 0.85rem;
-            color: #6c757d;
-            border-radius: 6px;
-            display: block;
-        }
-
-        .sidebar-menu .submenu li a:hover {
-            background-color: #f1f3f9;
-            color: #4361ee;
-        }
-
-        .sidebar-menu .dropdown.active .submenu {
-            display: block;
-        }
-
-        .dropdown-icon {
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
-        
-        /* Gaya Navbar */
-        .navbar {
-            margin-left: 180px;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: margin-left 0.3s ease;
-        }
-        
-        .navbar-dashboard-title {
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .navbar-dashboard-subtitle {
-            font-size: 0.875rem;
-            color: #6c757d;
-        }
-        
-        /* Gaya Konten Utama */
-        .main-content {
-            margin-left: 180px;
-            margin-top: 70px;
-            padding: 20px;
-            transition: margin-left 0.3s ease;
-        }
-        
         /* Gaya Badge Kategori */
         .badge.bg-pernikahan {
             background-color: #ffeef2;
@@ -477,218 +262,147 @@
             padding: 0.4rem 0.75rem;
         }
     </style>
-</head>
+@endsection
 
-<body>
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-logo">
-            <img src="{{ URL::to('Images/Gesa_Logo.png')}}" alt="Logo GESA" style="height: 80px;">
+@section('content')
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h2>Daftar Laporan</h2>
+            <a href="{{ route('admin.laporan.downloadList') }}" id="downloadListBtn" class="btn btn-success">
+                <i class="bi bi-download me-2"></i>Download List
+            </a>
         </div>
-        <ul class="sidebar-menu">
-            <li>
-                <a href="/admin/dashboard">
-                    <i class="bi bi-grid"></i>
-                    Dashboard
-                </a>
-            </li>
-            <li>
-                <a href="/admin/articel">
-                    <i class="bi bi-journal-text"></i>
-                    Artikel
-                </a>
-            </li>
-            <li>
-                <a href="/admin/laporan" class="active">
-                    <i class="bi bi-file-earmark-text"></i>
-                    Laporan
-                </a>
-            </li>
-            
-
-            @if(Session::get('admin.role') === 'super_admin')
-            <li>
-                <a href="/admin/pengaturan">
-                    <i class="bi bi-gear"></i>
-                    Pengaturan
-                </a>
-            </li>
-            @endif
-            <li>
-                <a href="/admin/profile">
-                    <i class="bi bi-person-circle"></i>
-                    Profile
-                </a>
-            </li>
-        </ul>
-    </div>
-
-    <!-- Bar Navigasi -->
-    <!-- Bar Navigasi -->
-    @include('admin.partials.navbar', ['title' => 'Manajemen Laporan', 'subtitle' => 'Admin'])
-
-    <!-- Konten Utama -->
-    <div class="main-content">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h2>Daftar Laporan</h2>
-                <a href="{{ route('admin.laporan.downloadList') }}" id="downloadListBtn" class="btn btn-success">
-                    <i class="bi bi-download me-2"></i>Download List
-                </a>
-            </div>
-            <div class="container mt-4">
-                <!-- Filter dan Pencarian -->
-                <div class="row mb-3">
-                    <div class="col-md-8">
-                        <div class="input-group">
-                            <input type="text" class="form-control" placeholder="Cari laporan..." id="search-input">
-                            <button class="btn btn-outline-secondary" type="button">
-                                <i class="bi bi-search"></i>
-                            </button>
-                            <button class="btn btn-filter ms-2" type="button" data-bs-toggle="modal" data-bs-target="#filterModal">
-                                <i class="bi bi-funnel"></i> Filter <span class="filter-count" id="filterCount">0</span>
-                            </button>
-                        </div>
+        <div class="container mt-4">
+            <!-- Filter dan Pencarian -->
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Cari laporan..." id="search-input">
+                        <button class="btn btn-outline-secondary" type="button">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        <button class="btn btn-filter ms-2" type="button" data-bs-toggle="modal" data-bs-target="#filterModal">
+                            <i class="bi bi-funnel"></i> Filter <span class="filter-count" id="filterCount">0</span>
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Area Filter Aktif -->
-                <div class="active-filters" id="activeFilters"></div>
+            <!-- Area Filter Aktif -->
+            <div class="active-filters" id="activeFilters"></div>
 
-                <!-- Tabel Laporan (field: user_name, case_type, incident_date, report_status, created_date) -->
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Nama Pelapor</th>
-                                <th>Tipe Kasus</th>
-                                <th>Tanggal Kejadian</th>
-                                <th>Status</th>
-                                <th>Tanggal Buat</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($laporan as $item)
+            <!-- Tabel Laporan -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nama Pelapor</th>
+                            <th>Tipe Kasus</th>
+                            <th>Tanggal Kejadian</th>
+                            <th>Status</th>
+                            <th>Tanggal Buat</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($laporan as $item)
+                            @php
+                                $kategori = strtolower($item['case_type'] ?? ($item['kategori'] ?? 'lainnya'));
+                                $kategoriBadgeClass = match($kategori) {
+                                    'pernikahan anak' => 'bg-pernikahan',
+                                    'kekerasan anak' => 'bg-kekerasan',
+                                    'bullying' => 'bg-bullying',
+                                    'stunting' => 'bg-stunting',
+                                    default => 'bg-secondary',
+                                };
+                                $kategoriDisplay = $item['case_type'] ?? ($item['kategori'] ?? '-');
+
+                                $rawStatus = $item['report_status'] ?? ($item['status'] ?? 'baru');
+                                $status = strtolower(trim($rawStatus));
+                                if (in_array($status, ['belum ditangani', 'belum_ditangani', 'pending', ''])) {
+                                    $status = 'baru';
+                                }
+                                $badgeColor = match($status) {
+                                    'selesai' => 'success',
+                                    'diproses' => 'warning',
+                                    'ditolak' => 'danger',
+                                    default => 'secondary',
+                                };
+                                $tanggalKejadian = $item['incident_date'] ?? null;
+                                $tanggalBuat = $item['created_date'] ?? ($item['create_at'] ?? null);
+                                $parsedKejadian = null;
+                                $parsedBuat = null;
+                                if ($tanggalKejadian !== null && $tanggalKejadian !== '') {
+                                    try {
+                                        $parsedKejadian = $tanggalKejadian instanceof \DateTimeInterface
+                                            ? \Carbon\Carbon::instance($tanggalKejadian)
+                                            : \Carbon\Carbon::parse($tanggalKejadian);
+                                    } catch (\Throwable $e) {
+                                        try {
+                                            $parsedKejadian = \Carbon\Carbon::createFromLocaleFormat('d M Y', 'id', $tanggalKejadian);
+                                        } catch (\Throwable $e2) {
+                                            $parsedKejadian = null;
+                                        }
+                                    }
+                                }
+                                if ($tanggalBuat !== null && $tanggalBuat !== '') {
+                                    try {
+                                        $parsedBuat = $tanggalBuat instanceof \DateTimeInterface
+                                            ? \Carbon\Carbon::instance($tanggalBuat)
+                                            : \Carbon\Carbon::parse($tanggalBuat);
+                                    } catch (\Throwable $e) {
+                                        try {
+                                            $parsedBuat = \Carbon\Carbon::createFromLocaleFormat('d M Y H:i', 'id', $tanggalBuat);
+                                        } catch (\Throwable $e2) {
+                                            try {
+                                                $parsedBuat = \Carbon\Carbon::createFromLocaleFormat('d M Y', 'id', $tanggalBuat);
+                                            } catch (\Throwable $e3) {
+                                                $parsedBuat = null;
+                                            }
+                                        }
+                                    }
+                                }
+                            @endphp
+                            <tr class="laporan-row" 
+                                data-report-id="{{ $item['id'] }}"
+                                data-kategori="{{ $kategori }}"
+                                data-daerah="{{ $item['daerah'] ?? '' }}"
+                                data-tanggal="{{ $parsedBuat ? $parsedBuat->format('Y-m-d') : '' }}"
+                                data-status="{{ $status }}">
+                                <td>{{ $item['user_name'] ?? ($item['nama'] ?? '-') }}</td>
+                                <td><span class="badge {{ $kategoriBadgeClass }}">{{ $kategoriDisplay }}</span></td>
+                                <td class="text-nowrap">{{ $parsedKejadian ? $parsedKejadian->locale('id')->translatedFormat('d M Y') : ($tanggalKejadian ?: '-') }}</td>
                                 @php
-                                    $kategori = strtolower($item['case_type'] ?? ($item['kategori'] ?? 'lainnya'));
-                                    $kategoriBadgeClass = match($kategori) {
-                                        'pernikahan anak' => 'bg-pernikahan',
-                                        'kekerasan anak' => 'bg-kekerasan',
-                                        'bullying' => 'bg-bullying',
-                                        'stunting' => 'bg-stunting',
-                                        default => 'bg-secondary',
-                                    };
-                                    $kategoriDisplay = $item['case_type'] ?? ($item['kategori'] ?? '-');
-
-                                    // Normalisasi status: beberapa data mungkin menyimpan "Belum Ditangani"/variasi lain
-                                    $rawStatus = $item['report_status'] ?? ($item['status'] ?? 'baru');
-                                    $status = strtolower(trim($rawStatus));
-                                    if (in_array($status, ['belum ditangani', 'belum_ditangani', 'pending', ''])) {
-                                        $status = 'baru';
-                                    }
-                                    $badgeColor = match($status) {
-                                        'selesai' => 'success',
-                                        'diproses' => 'warning',
-                                        'ditolak' => 'danger',
-                                        default => 'secondary',
-                                    };
-                                    $tanggalKejadian = $item['incident_date'] ?? null;
-                                    $tanggalBuat = $item['created_date'] ?? ($item['create_at'] ?? null);
-                                    $parsedKejadian = null;
-                                    $parsedBuat = null;
-                                    if ($tanggalKejadian !== null && $tanggalKejadian !== '') {
-                                        try {
-                                            $parsedKejadian = $tanggalKejadian instanceof \DateTimeInterface
-                                                ? \Carbon\Carbon::instance($tanggalKejadian)
-                                                : \Carbon\Carbon::parse($tanggalKejadian);
-                                        } catch (\Throwable $e) {
-                                            try {
-                                                $parsedKejadian = \Carbon\Carbon::createFromLocaleFormat('d M Y', 'id', $tanggalKejadian);
-                                            } catch (\Throwable $e2) {
-                                                $parsedKejadian = null;
-                                            }
-                                        }
-                                    }
-                                    if ($tanggalBuat !== null && $tanggalBuat !== '') {
-                                        try {
-                                            $parsedBuat = $tanggalBuat instanceof \DateTimeInterface
-                                                ? \Carbon\Carbon::instance($tanggalBuat)
-                                                : \Carbon\Carbon::parse($tanggalBuat);
-                                        } catch (\Throwable $e) {
-                                            try {
-                                                $parsedBuat = \Carbon\Carbon::createFromLocaleFormat('d M Y H:i', 'id', $tanggalBuat);
-                                            } catch (\Throwable $e2) {
-                                                try {
-                                                    $parsedBuat = \Carbon\Carbon::createFromLocaleFormat('d M Y', 'id', $tanggalBuat);
-                                                } catch (\Throwable $e3) {
-                                                    $parsedBuat = null;
-                                                }
-                                            }
-                                        }
-                                    }
+                                    $displayStatus = $status === 'baru' ? 'Belum Ditangani' : ucfirst($status);
                                 @endphp
-                                <tr class="laporan-row" 
-                                    data-report-id="{{ $item['id'] }}"
-                                    data-kategori="{{ $kategori }}"
-                                    data-daerah="{{ $item['daerah'] ?? '' }}"
-                                    data-tanggal="{{ $parsedBuat ? $parsedBuat->format('Y-m-d') : '' }}"
-                                    data-status="{{ $status }}">
-                                    <td>{{ $item['user_name'] ?? ($item['nama'] ?? '-') }}</td>
-                                    <td><span class="badge {{ $kategoriBadgeClass }}">{{ $kategoriDisplay }}</span></td>
-                                    <td class="text-nowrap">{{ $parsedKejadian ? $parsedKejadian->locale('id')->translatedFormat('d M Y') : ($tanggalKejadian ?: '-') }}</td>
-                                    @php
-                                        $displayStatus = $status === 'baru' ? 'Belum Ditangani' : ucfirst($status);
-                                    @endphp
-                                    <td><span class="badge bg-{{ $badgeColor }}">{{ $displayStatus }}</span></td>
-                                    <td class="text-nowrap">{{ $parsedBuat ? $parsedBuat->locale('id')->translatedFormat('d M Y, H:i') : ($tanggalBuat ?: '-') }}</td>
-                                    <td>
-                                        <button
-                                            class="btn btn-primary btn-sm"
-                                            onclick="openDetailLaporan('{{ $item['id'] }}')">
-                                            Detail
-                                        </button>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <!-- Pagination -->
-                <div id="paginationWrapper" class="pagination-wrapper d-none">
-                    <div class="pagination-info" id="paginationInfo"></div>
-                    <nav aria-label="Navigasi halaman laporan">
-                        <ul class="pagination mb-0" id="paginationNav"></ul>
-                    </nav>
-                </div>
+                                <td><span class="badge bg-{{ $badgeColor }}">{{ $displayStatus }}</span></td>
+                                <td class="text-nowrap">{{ $parsedBuat ? $parsedBuat->locale('id')->translatedFormat('d M Y, H:i') : ($tanggalBuat ?: '-') }}</td>
+                                <td>
+                                    <button
+                                        class="btn btn-primary btn-sm"
+                                        onclick="openDetailLaporan('{{ $item['id'] }}')">
+                                        Detail
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal Detail Laporan -->
-    <div class="modal fade" id="detailLaporanModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-
-                <div class="modal-header">
-                    <h5 class="modal-title">Detail Laporan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body" id="detailLaporanContent">
-                    <div class="text-center py-5">
-                        <div class="spinner-border"></div>
-                    </div>
-                </div>
-
+            <!-- Pagination -->
+            <div id="paginationWrapper" class="pagination-wrapper d-none">
+                <div class="pagination-info" id="paginationInfo"></div>
+                <nav aria-label="Navigasi halaman laporan">
+                    <ul class="pagination mb-0" id="paginationNav"></ul>
+                </nav>
             </div>
         </div>
     </div>
 
 
+@endsection
+
+@section('modals')
     <!-- Modal Filter -->
     <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -716,7 +430,7 @@
                             </div>
                         </div>
 
-                        <!-- Filter Kategori (dinamis, bentuk list) -->
+                        <!-- Filter Kategori -->
                         <div class="mb-3">
                             <label class="form-label fw-bold">Pilih Kategori</label>
                             <ul id="kategoriFilterContainer" class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
@@ -769,72 +483,25 @@
         </div>
     </div>
 
-    <!-- JavaScript Eksternal -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Script Kustom -->
+    <!-- Modal Detail Laporan -->
+    <div class="modal fade" id="detailLaporanModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detail Laporan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detailLaporanContent">
+                    <div class="text-center py-5">
+                        <div class="spinner-border"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+@section('scripts')
     <script>
-        // Fungsi toggle dropdown
-        function toggleDropdown(event) {
-            event.preventDefault();
-            const dropdown = event.currentTarget.parentElement;
-            dropdown.classList.toggle('active');
-        }
-
-        // Fungsi konfirmasi logout
-        function confirmLogout() {
-            Swal.fire({
-                title: 'Konfirmasi Logout',
-                text: 'Apakah Anda yakin ingin keluar?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Logout',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('logoutForm').submit();
-                }
-            });
-        }
-
-        // Hamburger Menu Toggle
-        document.addEventListener('DOMContentLoaded', function() {
-            const hamburgerBtn = document.getElementById('hamburgerBtn');
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-
-            function toggleSidebar() {
-                sidebar.classList.toggle('active');
-                overlay.classList.toggle('active');
-            }
-
-            function closeSidebar() {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-            }
-
-            if (hamburgerBtn) {
-                hamburgerBtn.addEventListener('click', toggleSidebar);
-            }
-
-            if (overlay) {
-                overlay.addEventListener('click', closeSidebar);
-            }
-
-            // Close sidebar when clicking on menu links (mobile)
-            const menuLinks = document.querySelectorAll('.sidebar-menu a');
-            menuLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) {
-                        closeSidebar();
-                    }
-                });
-            });
-        });
-
         // Fungsi saat dokumen siap
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('search-input');
@@ -1039,7 +706,7 @@
                     let matchDate = true;
                     if (activeFilters.dateStart && activeFilters.dateEnd) {
                         matchDate = tanggal >= activeFilters.dateStart && 
-                                tanggal <= activeFilters.dateEnd;
+                                    tanggal <= activeFilters.dateEnd;
                     }
                     
                     // Cek kategori
@@ -1048,7 +715,7 @@
                     
                     // Cek status
                     const matchStatus = activeFilters.status.length === 0 || 
-                                    activeFilters.status.includes(status);
+                                        activeFilters.status.includes(status);
                     
                     // Tampilkan atau sembunyikan row berdasarkan semua filter
                     row.style.display = (matchSearch && matchDaerah && matchDate && 
@@ -1151,7 +818,7 @@
                 document.getElementById('endDate').value = activeFilters.dateEnd;
 
                 // Reset checkbox kategori
-                document.querySelectorAll('input[id^="kategori"]').forEach(checkbox => {
+                document.querySelectorAll('input[name="kategoriFilter"]').forEach(checkbox => {
                     const value = checkbox.value;
                     checkbox.checked = activeFilters.kategori.includes(value);
                 });
@@ -1164,9 +831,22 @@
             });
         });
 
+        let detailModal = null;
         function openDetailLaporan(id) {
-            const modal = new bootstrap.Modal(document.getElementById('detailLaporanModal'));
-            modal.show();
+            const modalEl = document.getElementById('detailLaporanModal');
+            if (!detailModal) {
+                detailModal = new bootstrap.Modal(modalEl);
+            }
+            
+            // Reset content to spinner
+            document.getElementById('detailLaporanContent').innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary"></div>
+                    <div class="mt-2">Memuat data...</div>
+                </div>
+            `;
+            
+            detailModal.show();
 
             fetch(`/admin/laporan/${id}`, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -1174,6 +854,12 @@
             .then(res => res.text())
             .then(html => {
                 document.getElementById('detailLaporanContent').innerHTML = html;
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('detailLaporanContent').innerHTML = `
+                    <div class="alert alert-danger">Gagal memuat data laporan.</div>
+                `;
             });
         }
 
@@ -1181,7 +867,6 @@
         EVENT DELEGATION (AMAN)
         ========================= */
         document.addEventListener('submit', function(e) {
-
             /* UPDATE STATUS */
             if (e.target.id === 'statusForm') {
                 e.preventDefault();
@@ -1213,7 +898,7 @@
                             } else if (selectedStatus === 'selesai') {
                                 window.location.href = chatUrl + '?from=done';
                             } else {
-                                location.reload(); // Muat ulang halaman untuk memperbarui status
+                                location.reload();
                             }
                         } else {
                             location.reload();
@@ -1225,9 +910,9 @@
 
         /* DELETE LAPORAN */
         document.addEventListener('click', function(e) {
-            if (e.target.id === 'delete-laporan') {
-
-                const url = e.target.dataset.url;
+            const deleteBtn = e.target.closest('#delete-laporan');
+            if (deleteBtn) {
+                const url = deleteBtn.dataset.url;
 
                 Swal.fire({
                     title: 'Yakin?',
@@ -1248,40 +933,5 @@
                 });
             }
         });
-
-        // Cek akses untuk link pengaturan
-        document.addEventListener('DOMContentLoaded', function() {
-            const pengaturanLink = document.querySelector('a[href="/admin/pengaturan"]');
-            if (pengaturanLink) {
-                pengaturanLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // Cek apakah user adalah super_admin
-                    fetch('/admin/pengaturan', {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'error') {
-                            Swal.fire({
-                                title: 'Akses Ditolak',
-                                text: data.message,
-                                icon: 'error',
-                                confirmButtonColor: '#3085d6'
-                            });
-                        } else {
-                            window.location.href = '/admin/pengaturan';
-                        }
-                    })
-                    .catch(error => {
-                        window.location.href = '/admin/pengaturan';
-                    });
-                });
-            }
-        });
     </script>
-@include('admin.partials.notifications')
-</body>
-</html>
+@endsection

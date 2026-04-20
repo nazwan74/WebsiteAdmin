@@ -4,9 +4,6 @@
 
 <div class="container-fluid">
 
-    <h5 class="mb-3 fw-bold">
-        <i class="bi bi-file-text"></i> Detail Laporan
-    </h5>
 
     @php
         $kategori = strtolower($laporan['kategori'] ?? ($laporan['case_type'] ?? ''));

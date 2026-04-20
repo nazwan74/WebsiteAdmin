@@ -1,106 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Chat Laporan #{{ $laporan['id'] }}</title>
-    
-    <!-- CSS Eksternal -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
-    <!-- JavaScript Eksternal -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@extends('admin.layouts.app', [
+    'activePage' => 'laporan',
+    'navbarTitle' => 'Chat Laporan',
+    'navbarSubtitle' => 'ID: #' . $laporan['id']
+])
+
+@section('title', 'Chat Laporan #' . $laporan['id'])
+
+@section('head-scripts')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@endsection
 
+@section('styles')
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f4f6f9;
-        }
-        
-        /* Gaya Sidebar */
-        .sidebar {
-            width: 180px;
-            height: 100vh;
-            background-color: white;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-            padding: 15px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1050;
-            transition: transform 0.3s ease;
-        }
-
-        /* Sidebar Overlay */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1040;
-        }
-
-        .sidebar-overlay.active { display: block; }
-        
-        /* Hamburger Button */
-        .hamburger-btn {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: #333;
-            cursor: pointer;
-            padding: 0.5rem;
-            margin-right: 1rem;
-        }
-        .hamburger-btn:hover { color: #4361ee; }
-
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.active { transform: translateX(0); }
-            .navbar { margin-left: 0 !important; }
-            .main-content { margin-left: 0 !important; }
-            .hamburger-btn { display: block; }
-        }
-        
-        .sidebar-logo {
-            display: flex; justify-content: center; align-items: center; margin-bottom: 20px;
-        }
-        .sidebar-logo img {
-            max-width: 100px; max-height: 50px; object-fit: contain;
-        }
-        
-        .sidebar-menu { list-style: none; padding: 0; }
-        .sidebar-menu li { margin-bottom: 10px; }
-        .sidebar-menu li a {
-            text-decoration: none; color: #6c757d; display: flex; align-items: center; padding: 8px;
-            border-radius: 8px; transition: all 0.3s ease; font-size: 0.9rem;
-        }
-        .sidebar-menu li a:hover { background-color: #f1f3f9; color: #4361ee; }
-        .sidebar-menu li a.active { background-color: #e6edff; color: #4361ee; font-weight: 600; }
-        .sidebar-menu li a i { margin-right: 10px; color: #6c757d; font-size: 1rem; }
-        .sidebar-menu li a.active i { color: #4361ee; }
-
-        /* Navbar */
-        .navbar {
-            margin-left: 180px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: margin-left 0.3s ease;
-        }
-        .navbar-dashboard-title { font-weight: 600; color: #333; }
-        .navbar-dashboard-subtitle { font-size: 0.875rem; color: #6c757d; }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 180px; margin-top: 70px; padding: 20px;
-            transition: margin-left 0.3s ease; position: relative; z-index: 1;
-        }
-
         /* --- CHAT SPECIFIC CSS --- */
         .chat-container {
             max-width: 1000px;
@@ -198,6 +109,7 @@
         }
         .btn-send:hover { background: #304ffe; transform: scale(1.05); }
         .btn-send:disabled { background: #e9ecef; color: #adb5bd; cursor: not-allowed; transform: none; box-shadow: none; }
+        
         /* Chat Actions */
         .msg .actions {
             opacity: 0; transition: opacity 0.2s; display: flex; align-items: center; margin: 0 8px;
@@ -284,95 +196,48 @@
         }
         .lightbox-close:hover { color: #ccc; }
 
-        /* User message status (mirror admin) */
+        /* User message status */
         .msg.user .status { font-size: 0.7rem; color: #adb5bd; margin-top: 2px; }
     </style>
-</head>
+@endsection
 
-<body>
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-logo">
-            <img src="{{ URL::to('Images/Gesa_Logo.png')}}" alt="Logo GESA" style="height: 80px;">
+@section('content')
+    <div class="chat-container">
+        <!-- Header Chat -->
+        <div class="chat-header">
+            <div>
+                <h5 class="mb-0 fw-bold">{{ $laporan['judul'] ?? 'Laporan' }}</h5>
+                <div class="text-muted small">Pelapor: {{ $laporan['user_name'] ?? ($laporan['nama'] ?? 'User') }}</div>
+            </div>
+            <a href="{{ route('admin.laporan') }}" id="backToLaporan" class="btn btn-sm btn-light border">
+                <i class="bi bi-arrow-left me-1"></i> Kembali
+            </a>
         </div>
-        <ul class="sidebar-menu">
-            <li>
-                <a href="/admin/dashboard">
-                    <i class="bi bi-grid"></i> Dashboard
-                </a>
-            </li>
-            <li>
-                <a href="/admin/articel">
-                    <i class="bi bi-journal-text"></i> Artikel
-                </a>
-            </li>
-            <li>
-                <a href="/admin/laporan" class="active">
-                    <i class="bi bi-file-earmark-text"></i> Laporan
-                </a>
-            </li>
-            
-            @if(Session::get('admin.role') === 'super_admin')
-            <li>
-                <a href="/admin/pengaturan">
-                    <i class="bi bi-gear"></i> Pengaturan
-                </a>
-            </li>
-            @endif
-            <li>
-                <a href="/admin/profile">
-                    <i class="bi bi-person-circle"></i> Profile
-                </a>
-            </li>
-        </ul>
-    </div>
 
-    <!-- Navbar -->
-    <!-- Navbar -->
-    @include('admin.partials.navbar', ['title' => 'Chat Laporan', 'subtitle' => 'ID: #' . $laporan['id']])
+        <!-- Chat Box (Messages) -->
+        <div id="chatBox" class="chat-box"></div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="chat-container">
-            <!-- Header Chat -->
-            <div class="chat-header">
-                <div>
-                    <h5 class="mb-0 fw-bold">{{ $laporan['judul'] ?? 'Laporan' }}</h5>
-                    <div class="text-muted small">Pelapor: {{ $laporan['user_name'] ?? ($laporan['nama'] ?? 'User') }}</div>
-                </div>
-                <a href="{{ route('admin.laporan') }}" id="backToLaporan" class="btn btn-sm btn-light border">
-                    <i class="bi bi-arrow-left me-1"></i> Kembali
-                </a>
-            </div>
+        <!-- Image Preview Bar -->
+        <div class="image-preview-bar" id="imagePreviewBar">
+            <img id="previewImg" src="" alt="Preview">
+            <span class="preview-name" id="previewName"></span>
+            <button type="button" class="btn-remove-preview" onclick="clearImagePreview()" title="Hapus gambar">
+                <i class="bi bi-x-circle-fill"></i>
+            </button>
+        </div>
 
-            <!-- Chat Box (Messages) -->
-            <div id="chatBox" class="chat-box"></div>
-
-            <!-- Image Preview Bar -->
-            <div class="image-preview-bar" id="imagePreviewBar">
-                <img id="previewImg" src="" alt="Preview">
-                <span class="preview-name" id="previewName"></span>
-                <button type="button" class="btn-remove-preview" onclick="clearImagePreview()" title="Hapus gambar">
-                    <i class="bi bi-x-circle-fill"></i>
+        <!-- Chat Footer (Input) -->
+        <div class="chat-footer">
+            <form id="sendForm" class="composer" action="javascript:void(0)" method="post" onsubmit="return false;">
+                <input type="file" id="imageFileInput" accept="image/*" style="display:none">
+                <button type="button" class="btn-attach" onclick="document.getElementById('imageFileInput').click()" title="Lampirkan gambar">
+                    <i class="bi bi-paperclip" style="font-size: 1.2rem;"></i>
                 </button>
-            </div>
-
-            <!-- Chat Footer (Input) -->
-            <div class="chat-footer">
-                <form id="sendForm" class="composer" action="javascript:void(0)" method="post" onsubmit="return false;">
-                    <input type="file" id="imageFileInput" accept="image/*" style="display:none">
-                    <button type="button" class="btn-attach" onclick="document.getElementById('imageFileInput').click()" title="Lampirkan gambar">
-                        <i class="bi bi-paperclip" style="font-size: 1.2rem;"></i>
-                    </button>
-                    <textarea id="messageInput" class="form-control" placeholder="Tulis pesan..." rows="1"></textarea>
-                    <button type="submit" class="btn-send">
-                        <i class="bi bi-send-fill" style="margin-left: 2px;"></i>
-                    </button>
-                </form>
-            </div>
+                <textarea id="messageInput" class="form-control" placeholder="Tulis pesan..." rows="1"></textarea>
+                <button type="submit" class="btn-send">
+                    <i class="bi bi-send-fill" style="margin-left: 2px;"></i>
+                </button>
+            </form>
         </div>
     </div>
 
@@ -381,61 +246,19 @@
         <button class="lightbox-close" onclick="closeLightbox(event)">&times;</button>
         <img id="lightboxImg" src="" alt="Enlarged">
     </div>
+@endsection
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+@section('scripts')
     <script>
-        // --- SIDEBAR & NAVBAR SCRIPTS ---
-        document.addEventListener('DOMContentLoaded', function() {
-            const hamburgerBtn = document.getElementById('hamburgerBtn');
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-
-            function toggleSidebar() {
-                sidebar.classList.toggle('active');
-                overlay.classList.toggle('active');
-            }
-            function closeSidebar() {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-            }
-
-            if (hamburgerBtn) hamburgerBtn.addEventListener('click', toggleSidebar);
-            if (overlay) overlay.addEventListener('click', closeSidebar);
-            
-            // Close sidebar when clicking menu links on mobile
-            document.querySelectorAll('.sidebar-menu a').forEach(link => {
-                link.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) closeSidebar();
-                });
-            });
-        });
-
-        function confirmLogout() {
-            Swal.fire({
-                title: 'Konfirmasi Logout',
-                text: 'Apakah Anda yakin ingin keluar?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Logout',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) document.getElementById('logoutForm').submit();
-            });
-        }
-
         // --- CHAT LOGIC SCRIPTS ---
         const laporanId = @json($laporan['id']);
         const messagesUrl = @json(route('admin.laporan.chat.messages', $laporan['id']));
         const sendUrl = @json(route('admin.laporan.chat.send', $laporan['id']));
-        // Base URL for update/delete: /admin/laporan/{id}/chat/{messageId}
         const baseUrl = @json(url('/admin/laporan/' . $laporan['id'] . '/chat'));
         
         let lastMessageTime = 0; 
         let isFetching = false;
         let poller = null;
-        let isFirstLoad = true;
 
         // Interval polling dinamis
         const ACTIVE_INTERVAL = 1000;   // 1 detik saat tab aktif
@@ -451,24 +274,23 @@
             }
         }).catch(e => console.error('Mark read error:', e));
 
-        // Notification sound using Web Audio API
+        // Notification sound
         function playNotifSound() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                // Two-tone chime
                 [0, 0.15].forEach((delay, i) => {
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
                     osc.connect(gain);
                     gain.connect(ctx.destination);
-                    osc.frequency.value = i === 0 ? 587 : 880; // D5, A5
+                    osc.frequency.value = i === 0 ? 587 : 880;
                     osc.type = 'sine';
                     gain.gain.setValueAtTime(0.15, ctx.currentTime + delay);
                     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.3);
                     osc.start(ctx.currentTime + delay);
                     osc.stop(ctx.currentTime + delay + 0.3);
                 });
-            } catch(e) { /* Audio not available */ }
+            } catch(e) {}
         }
 
         // Close any open menus when clicking outside
@@ -490,7 +312,7 @@
 
         function getDateObject(val) {
             if (!val) return null;
-            if (typeof val === 'number') return new Date(val); // millis
+            if (typeof val === 'number') return new Date(val);
             const d = new Date(val);
             if (!isNaN(d.getTime())) return d;
             return null;
@@ -516,7 +338,6 @@
         }
 
         function toggleMenu(btn) {
-            // Close others
             document.querySelectorAll('.msg-menu.show').forEach(el => {
                 if (el !== btn.nextElementSibling) el.classList.remove('show');
             });
@@ -524,27 +345,20 @@
             menu.classList.toggle('show');
         }
 
-        // Toast Configuration
         const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
             showConfirmButton: false,
             timer: 3000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-            }
+            timerProgressBar: true
         });
 
         function editMessage(msgId) {
             const bubble = document.getElementById(`bubble-${msgId}`);
             if (!bubble) return;
             
-            // Save original html to restore if canceled
             if (!bubble.hasAttribute('data-original')) {
                 bubble.setAttribute('data-original', bubble.innerHTML);
-                // Preserve image URL if exists
                 const img = bubble.querySelector('img.chat-img');
                 if (img) {
                     bubble.setAttribute('data-image-url', img.src);
@@ -554,9 +368,6 @@
             const currentText = bubble.innerText.trim();
             const w = bubble.offsetWidth;
             const h = bubble.offsetHeight;
-            
-            // Heuristic for height based on content if small, or use current height + padding
-            // We'll trust offsetHeight but add a bit for editing comfort
             const style = `width: ${Math.max(w, 150)}px; height: ${Math.max(h + 20, 60)}px;`;
 
             const formHtml = `
@@ -571,7 +382,6 @@
             bubble.innerHTML = formHtml;
             const ta = bubble.querySelector('textarea');
             ta.focus();
-            // Move cursor to end
             const len = ta.value.length;
             ta.setSelectionRange(len, len);
         }
@@ -580,8 +390,8 @@
             const bubble = document.getElementById(`bubble-${msgId}`);
             if (bubble && bubble.hasAttribute('data-original')) {
                 bubble.innerHTML = bubble.getAttribute('data-original');
-                bubble.removeAttribute('data-original'); // cleanup
-                bubble.removeAttribute('data-image-url'); // cleanup
+                bubble.removeAttribute('data-original');
+                bubble.removeAttribute('data-image-url');
             }
         }
 
@@ -590,10 +400,9 @@
             const textarea = bubble.querySelector('textarea');
             const newText = textarea.value.trim();
             
-            if (!newText) return; // Prevent empty
+            if (!newText) return;
             
             const btn = bubble.querySelector('.btn-primary');
-            const originalBtnContent = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
@@ -607,13 +416,9 @@
                 },
                 body: JSON.stringify({ textMessage: newText })
             })
-            .then(r => {
-                if (!r.ok) throw r;
-                return r.json();
-            })
+            .then(r => r.json())
             .then(data => {
                 if (data.status === 'success') {
-                    // Update UI immediately (optimistic)
                     let newHtml = '';
                     const imageUrl = bubble.getAttribute('data-image-url');
                     
@@ -626,47 +431,24 @@
                     }
                     
                     bubble.innerHTML = newHtml;
-
                     bubble.removeAttribute('data-original');
                     bubble.removeAttribute('data-image-url');
                     
-                    // Show "teredit" status if not already
                     const parent = bubble.parentElement;
                     let stat = parent.querySelector('.status');
                     if (stat) {
                          stat.innerText = 'teredit';
-                    } else {
-                         // Create status if missing
-                         stat = document.createElement('div');
-                         stat.className = 'status';
-                         stat.innerText = 'teredit';
-                         parent.appendChild(stat);
                     }
                     
-                    Toast.fire({
-                        icon: 'success',
-                        title: 'Pesan berhasil diubah'
-                    });
-
-                    // Force refresh to sync timestamps etc
+                    Toast.fire({ icon: 'success', title: 'Pesan berhasil diubah' });
                     fetchMessages();
                 } else {
                     Swal.fire('Error', data.message || 'Gagal mengupdate pesan', 'error');
                     cancelEdit(msgId);
                 }
             })
-            .catch(err => {
-                console.error(err);
-                // Try to parse JSON error if available
-                if (err.json) {
-                    err.json().then(d => {
-                        Swal.fire('Error', d.message || 'Gagal mengupdate pesan', 'error');
-                    }).catch(() => {
-                        Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
-                    });
-                } else {
-                    Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
-                }
+            .catch(() => {
+                Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
                 cancelEdit(msgId);
             });
         }
@@ -696,22 +478,13 @@
                         if (data.status === 'success') {
                             const el = document.getElementById(`msg-${msgId}`);
                             if (el) el.remove();
-                            
-                            Toast.fire({
-                                icon: 'success',
-                                title: 'Pesan berhasil dihapus'
-                            });
-                            
-                            // Sync with server
+                            Toast.fire({ icon: 'success', title: 'Pesan berhasil dihapus' });
                             fetchMessages();
                         } else {
                             Swal.fire('Error', data.message || 'Gagal menghapus pesan', 'error');
                         }
                     })
-                    .catch(e => {
-                        console.error(e);
-                        Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
-                    });
+                    .catch(() => Swal.fire('Error', 'Terjadi kesalahan sistem', 'error'));
                 }
             });
         }
@@ -721,12 +494,8 @@
             const role = isAdmin ? 'admin' : 'user';
             const text = m.textMessage || m.message || m.text || '';
             const imageUrl = (m.imageMessage && m.imageMessage !== 'null' && m.imageMessage.trim() !== '') ? m.imageMessage : null;
-            
-            // Prefer createdAt (numeric) over created_at (string)
             const timeVal = m.createdAt || m.created_at || new Date();
             const timeOnly = formatTimeOnly(timeVal);
-            
-            // ID is essential for edit/delete
             const msgId = m.chatId || m.id; 
             
             const item = document.createElement('div');
@@ -735,11 +504,8 @@
             
             const avatarHtml = `<div class="avatar"><i class="bi bi-person-fill"></i></div>`;
             const name = role === 'admin' ? 'Admin' : (m.sender_name || 'User');
-            
-            let statusText = m.messageStatus || 'terkirim';
-            statusText = statusText.toLowerCase();
+            let statusText = (m.messageStatus || 'terkirim').toLowerCase();
 
-            // Build bubble content
             let bubbleContent = '';
             if (imageUrl) {
                 bubbleContent += `<img class="chat-img" src="${escapeHtml(imageUrl)}" alt="Gambar" onclick="openLightbox('${escapeHtml(imageUrl)}')" loading="lazy">`;
@@ -748,11 +514,8 @@
                 const marginTop = imageUrl ? ' style="margin-top: 6px;"' : '';
                 bubbleContent += `<div${marginTop}>${escapeHtml(String(text))}</div>`;
             }
-            if (!bubbleContent) {
-                bubbleContent = '&nbsp;'; // fallback
-            }
+            if (!bubbleContent) bubbleContent = '&nbsp;';
 
-            // Actions Menu (Only for Admin messages)
             let actionsHtml = '';
             if (role === 'admin' && msgId) { 
                 actionsHtml = `
@@ -791,8 +554,6 @@
             const box = document.getElementById('chatBox');
             box.innerHTML = '';
             let lastDate = '';
-            
-            // Filter deleted messages for initial render
             const activeMessages = messages.filter(m => !m.isDeleted);
             
             activeMessages.forEach(m => {
@@ -808,7 +569,6 @@
                 }
                 box.appendChild(createMessageElement(m));
             });
-            
             box.scrollTop = box.scrollHeight;
         }
 
@@ -816,55 +576,38 @@
             if (!messages || !messages.length) return;
             const box = document.getElementById('chatBox');
             const wasAtBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 100;
-            
             let lastDate = lastMessageTime ? dateKey(lastMessageTime) : '';
 
             messages.forEach(m => {
                 const msgId = m.chatId || m.id;
                 const existingEl = document.getElementById(`msg-${msgId}`);
 
-                // 1. Handle Deletion
                 if (m.isDeleted) {
                     if (existingEl) existingEl.remove();
                     return;
                 }
 
-                // 2. Handle Update (Content or Status)
                 if (existingEl) {
-                    // Update bubble text
                     const bubble = document.getElementById(`bubble-${msgId}`);
-                    if (bubble) {
+                    if (bubble && !bubble.querySelector('textarea')) {
                         const newText = m.textMessage || m.message || '';
                         const imageUrl = (m.imageMessage && m.imageMessage !== 'null' && m.imageMessage.trim() !== '') ? m.imageMessage : null;
-
-                        // Only update if not currently editing (to avoid overwriting user input)
-                        if (!bubble.querySelector('textarea')) {
-                             let newHtml = '';
-                             if (imageUrl) {
-                                 newHtml += `<img class="chat-img" src="${escapeHtml(imageUrl)}" alt="Gambar" onclick="openLightbox('${escapeHtml(imageUrl)}')" loading="lazy">`;
-                             }
-                             if (newText) {
-                                 const marginTop = imageUrl ? ' style="margin-top: 6px;"' : '';
-                                 newHtml += `<div${marginTop}>${escapeHtml(newText)}</div>`;
-                             }
-                             if (!newHtml) newHtml = '&nbsp;';
-                             
-                             bubble.innerHTML = newHtml;
+                        let newHtml = '';
+                        if (imageUrl) newHtml += `<img class="chat-img" src="${escapeHtml(imageUrl)}" alt="Gambar" onclick="openLightbox('${escapeHtml(imageUrl)}')" loading="lazy">`;
+                        if (newText) {
+                            const marginTop = imageUrl ? ' style="margin-top: 6px;"' : '';
+                            newHtml += `<div${marginTop}>${escapeHtml(newText)}</div>`;
                         }
+                        if (!newHtml) newHtml = '&nbsp;';
+                        bubble.innerHTML = newHtml;
                     }
-                    // Update Status
                     const statusEl = existingEl.querySelector('.status');
-                    if (statusEl) {
-                         const s = m.messageStatus || 'terkirim';
-                         statusEl.innerText = s.toLowerCase();
-                    }
+                    if (statusEl) statusEl.innerText = (m.messageStatus || 'terkirim').toLowerCase();
                     return;
                 }
 
-                // 3. Handle Insertion (New Message)
                 const timeVal = m.createdAt || m.created_at;
                 const dKey = dateKey(timeVal);
-                
                 if (dKey && dKey !== lastDate) {
                     const sep = document.createElement('div');
                     sep.className = 'date-separator';
@@ -872,126 +615,63 @@
                     box.appendChild(sep);
                     lastDate = dKey;
                 }
-                
                 box.appendChild(createMessageElement(m));
 
-                // Sound + Toast for new USER messages
-                const chatType = (m.chatType || '').toUpperCase();
-                if (chatType !== 'ADMIN') {
+                if ((m.chatType || '').toUpperCase() !== 'ADMIN') {
                     playNotifSound();
-                    const senderName = m.sender_name || 'User';
-                    const msgPreview = m.textMessage || (m.imageMessage ? '📷 Gambar' : 'Pesan baru');
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 4000,
-                        timerProgressBar: true,
-                    });
                     Toast.fire({
                         icon: 'info',
-                        title: `${senderName}: ${msgPreview.substring(0, 50)}`
+                        title: `${m.sender_name || 'User'}: ${(m.textMessage || (m.imageMessage ? '📷 Gambar' : 'Pesan baru')).substring(0, 50)}`
                     });
-
-                    // Re-mark as read
-                    fetch(`/admin/laporan/${laporanId}/chat/mark-read`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    }).catch(() => {});
                 }
             });
-            
-            if (wasAtBottom) {
-                box.scrollTop = box.scrollHeight;
-            }
+            if (wasAtBottom) box.scrollTop = box.scrollHeight;
         }
-
-
 
         function fetchMessages() {
             if (isFetching) return;
             isFetching = true;
-            
-            // Use lastMessageTime as the synchronization point (now tracks lastActionAt)
             const url = lastMessageTime ? `${messagesUrl}?since=${lastMessageTime}` : messagesUrl;
             
-            fetch(url, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(r => r.json())
             .then(data => {
                 if (data && data.status === 'success') {
                     const msgs = data.messages || [];
                     if (msgs.length === 0) return;
 
-                    // Calculate the new latest action time from these messages
-                    // We use the MAX of lastActionAt OR createdAt to prevent re-fetching
                     let maxTime = lastMessageTime;
-
                     msgs.forEach(m => {
                         const actionTime = m.lastActionAt || m.createdAt || 0;
                         if (actionTime > maxTime) maxTime = actionTime;
                     });
                     
-                    if (!lastMessageTime) {
-                        // First load
-                        renderMessages(msgs);
-                        lastMessageTime = maxTime;
-                    } else {
-                        // Updates
-                        processUpdates(msgs);
-                        lastMessageTime = maxTime;
-                    }
+                    if (!lastMessageTime) renderMessages(msgs);
+                    else processUpdates(msgs);
+                    lastMessageTime = maxTime;
                 }
             })
             .catch(console.error)
             .finally(() => { isFetching = false; });
         }
 
-        // Auto-Resize Textarea
         const messageInput = document.getElementById('messageInput');
-
-        // Prefill template jika datang dari aksi penolakan / selesai
         const fromParam = "{{ request()->query('from') }}";
-        let requireReasonMessage = false;
+        let requireReasonMessage = (fromParam === 'reject' || fromParam === 'done');
         let reasonMessageSent = false;
 
         if (fromParam === 'reject') {
-            const templateText = "Halo, terima kasih sudah melaporkan melalui aplikasi GESA.\n\n" +
-                "Setelah kami melakukan penelaahan, laporan ini kami tandai sebagai DITOLAK dengan alasan:\n" +
-                "- (isi alasan penolakan di sini)\n\n" +
-                "Jika ada informasi tambahan atau koreksi, silakan sampaikan kembali melalui aplikasi ini.";
-            messageInput.value = templateText;
-            // Trigger auto-resize
-            messageInput.style.height = 'auto';
-            messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
-            messageInput.focus();
-            // Pindahkan kursor ke akhir
-            const len = messageInput.value.length;
-            if (messageInput.setSelectionRange) {
-                messageInput.setSelectionRange(len, len);
-            }
-            requireReasonMessage = true;
+            messageInput.value = "Halo, terima kasih sudah melaporkan melalui aplikasi GESA.\n\nSetelah kami melakukan penelaahan, laporan ini kami tandai sebagai DITOLAK dengan alasan:\n- (isi alasan penolakan di sini)\n\nJika ada informasi tambahan atau koreksi, silakan sampaikan kembali melalui aplikasi ini.";
         } else if (fromParam === 'done') {
-            const templateText = "Halo, terima kasih sudah melaporkan melalui aplikasi GESA.\n\n" +
-                "Kami informasikan bahwa proses penanganan laporan ini telah SELESAI dengan ringkasan sebagai berikut:\n" +
-                "- (isi ringkasan tindak lanjut / hasil penyelesaian di sini)\n\n" +
-                "Jika masih ada hal yang ingin ditanyakan atau ditambahkan, silakan balas pesan ini.";
-            messageInput.value = templateText;
-            // Trigger auto-resize
+            messageInput.value = "Halo, terima kasih sudah melaporkan melalui aplikasi GESA.\n\nKami informasikan bahwa proses penanganan laporan ini telah SELESAI dengan ringkasan sebagai berikut:\n- (isi ringkasan tindak lanjut / hasil penyelesaian di sini)\n\nJika masih ada hal yang ingin ditanyakan atau ditambahkan, silakan balas pesan ini.";
+        }
+
+        if (requireReasonMessage) {
             messageInput.style.height = 'auto';
             messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
             messageInput.focus();
-            // Pindahkan kursor ke akhir
             const len = messageInput.value.length;
-            if (messageInput.setSelectionRange) {
-                messageInput.setSelectionRange(len, len);
-            }
-            requireReasonMessage = true;
+            messageInput.setSelectionRange(len, len);
         }
 
         messageInput.addEventListener('input', function() {
@@ -999,7 +679,6 @@
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
 
-        // --- Image Preview ---
         let selectedFile = null;
         const imageFileInput = document.getElementById('imageFileInput');
         const previewBar = document.getElementById('imagePreviewBar');
@@ -1009,22 +688,15 @@
         imageFileInput.addEventListener('change', function() {
             const file = this.files[0];
             if (!file) return;
-
-            // Validate size (5MB)
             if (file.size > 5 * 1024 * 1024) {
                 Swal.fire('Error', 'Ukuran gambar maksimal 5MB', 'error');
                 this.value = '';
                 return;
             }
-
             selectedFile = file;
             previewName.textContent = file.name;
-            
             const reader = new FileReader();
-            reader.onload = function(e) {
-                previewImg.src = e.target.result;
-                previewBar.classList.add('active');
-            };
+            reader.onload = e => { previewImg.src = e.target.result; previewBar.classList.add('active'); };
             reader.readAsDataURL(file);
         });
 
@@ -1036,7 +708,6 @@
             previewBar.classList.remove('active');
         }
 
-        // --- Lightbox ---
         function openLightbox(url) {
             document.getElementById('lightboxImg').src = url;
             document.getElementById('lightboxOverlay').classList.add('active');
@@ -1044,26 +715,17 @@
         }
 
         function closeLightbox(e) {
-            // Only close if clicking overlay or close button (not the image itself)
             if (e && e.target && e.target.tagName === 'IMG') return;
             document.getElementById('lightboxOverlay').classList.remove('active');
             document.getElementById('lightboxImg').src = '';
             document.body.style.overflow = '';
         }
 
-        // Close lightbox with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeLightbox(e);
-        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(e); });
 
-        // --- Send Message ---
-        document.getElementById('sendForm').addEventListener('submit', function(e) {
-            const input = document.getElementById('messageInput');
-            const message = input.value.trim();
-            
-            // Harus ada teks atau gambar
+        document.getElementById('sendForm').addEventListener('submit', function() {
+            const message = messageInput.value.trim();
             if (!message && !selectedFile) return;
-            
             const btn = this.querySelector('button[type="submit"]');
             const originalBtnContent = btn.innerHTML;
             btn.disabled = true;
@@ -1082,57 +744,31 @@
                 },
                 body: formData
             })
-            .then(r => {
-                if (!r.ok) throw r;
-                return r.json();
-            })
+            .then(r => r.json())
             .then(data => {
                 if (data.status === 'success') {
-                    input.value = '';
-                    input.style.height = 'auto';
+                    messageInput.value = '';
+                    messageInput.style.height = 'auto';
                     clearImagePreview();
-                    if (requireReasonMessage) {
-                        reasonMessageSent = true;
-                    }
-                    fetchMessages(); // Refresh
-                } else {
-                    Swal.fire('Error', data.message || 'Gagal mengirim pesan', 'error');
-                }
+                    if (requireReasonMessage) reasonMessageSent = true;
+                    fetchMessages();
+                } else Swal.fire('Error', data.message || 'Gagal mengirim pesan', 'error');
             })
-            .catch(err => {
-                console.error(err);
-                if (err.json) {
-                    err.json().then(d => {
-                        Swal.fire('Error', d.message || 'Gagal mengirim pesan', 'error');
-                    }).catch(() => {
-                        Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
-                    });
-                } else {
-                    Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
-                }
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerHTML = originalBtnContent;
-                input.focus();
-            });
+            .catch(() => Swal.fire('Error', 'Terjadi kesalahan sistem', 'error'))
+            .finally(() => { btn.disabled = false; btn.innerHTML = originalBtnContent; messageInput.focus(); });
         });
 
-        // Enter to send
-        messageInput.addEventListener('keydown', function(e) {
+        messageInput.addEventListener('keydown', e => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 document.getElementById('sendForm').dispatchEvent(new Event('submit'));
             }
         });
 
-        // Konfirmasi dengan SweetAlert saat klik tombol Kembali ke daftar laporan jika pesan alasan belum dikirim
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', e => {
             if (!requireReasonMessage || reasonMessageSent) return;
             const anchor = e.target.closest('a#backToLaporan');
             if (!anchor) return;
-            const href = anchor.getAttribute('href') || '{{ route('admin.laporan') }}';
-
             e.preventDefault();
             Swal.fire({
                 title: 'Pesan belum dikirim',
@@ -1141,40 +777,22 @@
                 showCancelButton: true,
                 confirmButtonText: 'Tetap di halaman',
                 cancelButtonText: 'Tinggalkan halaman'
-            }).then((result) => {
-                if (result.isDismissed) {
-                    // User memilih "Tinggalkan halaman"
-                    window.location.href = href;
-                }
-            });
+            }).then(result => { if (result.isDismissed) window.location.href = anchor.getAttribute('href'); });
         });
 
-        // Polling dengan interval dinamis (aktif vs background)
         function startPolling() {
             const interval = document.hidden ? HIDDEN_INTERVAL : ACTIVE_INTERVAL;
             if (poller) return;
             poller = setInterval(fetchMessages, interval);
         }
-        function stopPolling() {
-            if (poller) clearInterval(poller);
-            poller = null;
-        }
+        function stopPolling() { if (poller) clearInterval(poller); poller = null; }
 
         document.addEventListener('visibilitychange', () => {
-            // Saat tab disembunyikan, hentikan polling;
-            // saat kembali aktif, langsung fetch sekali dan mulai polling dengan interval cepat.
-            if (document.hidden) {
-                stopPolling();
-            } else {
-                fetchMessages();
-                stopPolling();
-                startPolling();
-            }
+            if (document.hidden) stopPolling();
+            else { fetchMessages(); stopPolling(); startPolling(); }
         });
 
         fetchMessages();
         startPolling();
     </script>
-@include('admin.partials.notifications')
-</body>
-</html>
+@endsection
