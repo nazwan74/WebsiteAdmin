@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cache;
 
 class ProfileController extends Controller
 {
@@ -24,11 +25,19 @@ class ProfileController extends Controller
     public function index()
     {
         $adminUid = Session::get('admin.uid');
-        $adminData = $this->firestore->collection('admins')->document($adminUid)->snapshot();
         
-        return view('admin.profile', [
-            'admin' => $adminData->data()
-        ]);
+        // Cache data profil admin ini selama 30 menit
+        $cacheKey = 'admin_profile_' . $adminUid;
+        $admin = Cache::remember($cacheKey, 1800, function () use ($adminUid) {
+            $snapshot = $this->firestore->collection('admins')->document($adminUid)->snapshot();
+            return $snapshot->exists() ? $snapshot->data() : null;
+        });
+        
+        if (!$admin) {
+            return redirect()->route('admin.dashboard')->with('error', 'Data profil tidak ditemukan.');
+        }
+
+        return view('admin.profile', compact('admin'));
     }
 
     public function updatePassword(Request $request)
@@ -62,6 +71,10 @@ class ProfileController extends Controller
             $this->auth->updateUser($adminUid, [
                 'password' => $request->new_password
             ]);
+
+            // Invalidate caches
+            Cache::forget('admin_profile_' . $adminUid);
+            Cache::forget('admin_list_data');
 
             return redirect()->route('admin.profile')->with('success', 'Password berhasil diperbarui.');
         } catch (\Exception $e) {

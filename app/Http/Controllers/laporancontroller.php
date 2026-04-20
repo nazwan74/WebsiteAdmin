@@ -68,53 +68,36 @@ class laporancontroller extends Controller
         return Cache::remember('laporan_list_data', 300, function () {
             $laporan = [];
 
-            // Coba struktur flat dulu: semua dokumen langsung di koleksi report
+            // Fokus hanya pada struktur FLAT (sesuai database terbaru)
             try {
-                $snapshot = $this->firestore->collection('report')->documents();
+                // Safety Limit: Hanya ambil 500 laporan terbaru untuk performa
+                // Menggunakan 'created_date' karena field ini pasti ada di dokumen Anda
+                $snapshot = $this->firestore->collection('report')
+                    ->orderBy('created_date', 'DESC')
+                    ->limit(500)
+                    ->documents();
+
                 foreach ($snapshot as $doc) {
-                    if (!$doc->exists()) {
-                        continue;
-                    }
+                    if (!$doc->exists()) continue;
+                    
                     $data = $doc->data();
+                    // Pastikan ini adalah dokumen laporan (punya status/type)
                     if (isset($data['report_status']) || isset($data['case_type']) || isset($data['user_name'])) {
+                        $formattedDate = $this->createdDateToLocal($data['created_date'] ?? null);
                         $data['id'] = $doc->id();
                         $data['kategori'] = $data['case_type'] ?? '-';
                         $data['daerah'] = $data['incident_city'] ?? ($data['incident_location'] ?? '-');
-                        $data['created_date'] = $this->createdDateToLocal($data['created_date'] ?? null);
-                        $data['create_at'] = $data['created_date'];
+                        $data['created_date'] = $data['created_date'] ?? null; // Tetap simpan aslinya untuk Blade
+                        $data['create_at'] = $formattedDate; // Untuk tampilan fallback
                         $data['status'] = $data['report_status'] ?? 'baru';
                         $data['judul'] = $data['report_number'] ?? ($data['case_type'] ?? 'Laporan');
                         $data['adminLastReadAt'] = $data['adminLastReadAt'] ?? 0;
+                        $data['lastMessageAt'] = $data['lastMessageAt'] ?? 0;
                         $laporan[] = $data;
                     }
                 }
             } catch (\Throwable $e) {
-                //
-            }
-
-            if (empty($laporan)) {
-                foreach ($this->kategoriMap as $kategoriKey => $kategoriDisplay) {
-                    try {
-                        $kategoriDocRef = $this->firestore->collection('report')->document($kategoriKey);
-                        foreach ($kategoriDocRef->collections() as $userCollection) {
-                            foreach ($userCollection->documents() as $doc) {
-                                if (!$doc->exists()) continue;
-                                $data = $doc->data();
-                                $data['id'] = $doc->id();
-                                $data['kategori'] = $data['case_type'] ?? ($kategoriDisplay ?? '-');
-                                $data['daerah'] = $data['incident_city'] ?? ($data['incident_location'] ?? '-');
-                                $data['created_date'] = $this->createdDateToLocal($data['created_date'] ?? null);
-                                $data['create_at'] = $data['created_date'];
-                                $data['status'] = $data['report_status'] ?? 'baru';
-                                $data['judul'] = $data['report_number'] ?? ($data['case_type'] ?? 'Laporan');
-                                $data['adminLastReadAt'] = $data['adminLastReadAt'] ?? 0;
-                                $laporan[] = $data;
-                            }
-                        }
-                    } catch (\Throwable $e) {
-                        continue;
-                    }
-                }
+                \Log::error('getLaporanList Error: ' . $e->getMessage());
             }
 
             // Urutkan default (terbaru di atas)
@@ -477,32 +460,19 @@ class laporancontroller extends Controller
         return redirect()->route('admin.laporan')->with('success', 'Data laporan berhasil diperbarui.');
     }
 
+    /**
+     * Get Firestore Document Reference for a report ID.
+     * Simplified O(1) Lookup for Flat Structure.
+     */
     private function findReportRefById(string $laporanId)
     {
-        // Coba struktur flat dulu: report/{reportId}
         try {
             $docRef = $this->firestore->collection('report')->document($laporanId);
             if ($docRef->snapshot()->exists()) {
                 return [null, null, $docRef];
             }
-        } catch (\Throwable $e) {
-            // lanjut ke nested
-        }
+        } catch (\Throwable $e) {}
 
-        // Struktur nested: report/{kategoriDoc}/{userId}/{reportId}
-        foreach ($this->kategoriMap as $kategoriKey => $kategoriDisplay) {
-            try {
-                $kategoriDocRef = $this->firestore->collection('report')->document($kategoriKey);
-                foreach ($kategoriDocRef->collections() as $userCollection) {
-                    $candidate = $userCollection->document($laporanId)->snapshot();
-                    if ($candidate->exists()) {
-                        return [$kategoriKey, $userCollection->id(), $userCollection->document($laporanId)];
-                    }
-                }
-            } catch (\Throwable $e) {
-                continue;
-            }
-        }
         return null;
     }
 
@@ -610,8 +580,12 @@ class laporancontroller extends Controller
             return response()->json(['status' => 'error', 'message' => 'Pesan atau gambar wajib diisi'], 422);
         }
 
-        // Langsung buat DocumentReference
-        $docRef = $this->firestore->collection('report')->document($id);
+        // 1. Cari referensi laporan (Support Nested & Flat)
+        $found = $this->findReportRefById($id);
+        if (!$found) {
+            return response()->json(['status' => 'error', 'message' => 'Laporan tidak ditemukan'], 404);
+        }
+        [, , $docRef] = $found;
         $nowMillis = round(microtime(true) * 1000);
 
         // Ambil userId dari field user_id pada dokumen report (uid pelapor)
@@ -619,10 +593,9 @@ class laporancontroller extends Controller
         $reportData = $reportSnap->exists() ? $reportSnap->data() : [];
         $userId = $reportData['user_id'] ?? ($reportData['userId'] ?? 'unknown_user');
 
-        // Tetap pakai nilai 'ADMIN' untuk chatType seperti diminta
         $chatType = 'ADMIN';
 
-        // Upload gambar jika ada
+        // 2. Upload gambar jika ada
         $imageUrl = null;
         if ($request->hasFile('imageFile')) {
             try {
@@ -636,7 +609,6 @@ class laporancontroller extends Controller
                     ['name' => $filename]
                 );
 
-                // Generate signed URL (1 tahun)
                 $expiresAt = new \DateTime('now + 1 year');
                 $imageUrl = $object->signedUrl($expiresAt);
             } catch (\Exception $e) {
@@ -645,13 +617,14 @@ class laporancontroller extends Controller
             }
         }
 
-        // Buat document reference dulu agar chatId langsung tersedia (hemat 1 write)
+        // 3. Simpan Pesan Chat
         $newDocRef = $docRef->collection('chat')->newDocument();
         $chatId = $newDocRef->id();
+        $text = $request->input('textMessage') ?? '';
 
         $payload = [
             'chatId' => $chatId,
-            'textMessage' => $request->input('textMessage') ?? '',
+            'textMessage' => $text,
             'userId' => $userId,
             'createdAt' => $nowMillis,
             'lastActionAt' => $nowMillis,
@@ -662,11 +635,21 @@ class laporancontroller extends Controller
             'chatType' => $chatType,
         ];
 
-        // Satu kali write saja (sebelumnya: add + update chatId = 2 writes)
         $newDocRef->set($payload);
 
-        // Invalidate unread chats cache karena admin mengirim pesan
-        Cache::forget('unread_chats');
+        // 4. Update Metadata Laporan (CONSISTENCY & O(1) PREP)
+        // Kita juga menyimpan docPath untuk mempercepat lookup di masa depan
+        $docRef->update([
+            ['path' => 'lastMessageAt', 'value' => $nowMillis],
+            ['path' => 'lastMessageText', 'value' => $imageUrl ? '📷 Gambar' : Str::limit($text, 50)],
+            ['path' => 'adminLastReadAt', 'value' => $nowMillis],
+            ['path' => 'docPath', 'value' => $docRef->path()],
+        ]);
+
+        // 5. Invalidate Caches
+        $adminEmail = Session::get('admin.email', 'default');
+        Cache::forget('unread_chats_' . md5($adminEmail));
+        Cache::forget('laporan_list_data');
 
         return response()->json(['status' => 'success']);
     }
@@ -732,66 +715,46 @@ class laporancontroller extends Controller
     public function unreadChats()
     {
         try {
-            $result = Cache::remember('unread_chats', 30, function () {
-                $laporan = $this->getLaporanList();
+            $adminEmail = Session::get('admin.email', 'default');
+            $cacheKey = 'unread_chats_' . md5($adminEmail);
+
+            // Cache selama 30 detik per admin
+            $result = Cache::remember($cacheKey, 30, function () {
                 $unread = [];
 
-                foreach ($laporan as $item) {
-                    $reportId = $item['id'] ?? null;
-                    if (!$reportId) continue;
+                // O(Limit) Strategy: Ambil 100 laporan terbaru berdasarkan tanggal pembuatan
+                try {
+                    $snapshot = $this->firestore->collection('report')
+                        ->orderBy('created_date', 'DESC')
+                        ->limit(100)
+                        ->documents();
 
-                    // adminLastReadAt sudah tersedia dari getLaporanList — tidak perlu query lagi
-                    $lastReadAt = $item['adminLastReadAt'] ?? 0;
+                    foreach ($snapshot as $doc) {
+                        if (!$doc->exists()) continue;
+                        $item = $doc->data();
+                        $reportId = $doc->id();
 
-                    // Buat DocumentReference langsung tanpa findReportRefById
-                    $docRef = $this->firestore->collection('report')->document($reportId);
+                        $lastMessageAt = $item['lastMessageAt'] ?? 0;
+                        $adminLastReadAt = $item['adminLastReadAt'] ?? 0;
 
-                    // Query chat subcollection: pesan setelah lastReadAt
-                    $chatCollection = $docRef->collection('chat');
-                    $query = $chatCollection
-                        ->where('createdAt', '>', $lastReadAt)
-                        ->orderBy('createdAt', 'DESC')
-                        ->limit(50);
-
-                    $docs = $query->documents();
-                    $unreadCount = 0;
-                    $lastUserMessage = null;
-
-                    foreach ($docs as $chatDoc) {
-                        if (!$chatDoc->exists()) continue;
-                        $data = $chatDoc->data();
-
-                        // Skip deleted messages
-                        if (!empty($data['isDeleted'])) continue;
-
-                        // Only count non-admin messages
-                        $chatType = $data['chatType'] ?? '';
-                        if (strtoupper($chatType) === 'ADMIN') continue;
-
-                        $unreadCount++;
-                        if (!$lastUserMessage) {
-                            $lastUserMessage = $data['textMessage'] ?? '';
-                            if ($data['imageMessage'] ?? null) {
-                                $lastUserMessage = $lastUserMessage ?: '📷 Gambar';
-                            }
+                        if ($lastMessageAt > $adminLastReadAt) {
+                            $unread[] = [
+                                'reportId' => $reportId,
+                                'reportTitle' => $item['report_number'] ?? ($item['case_type'] ?? 'Laporan'),
+                                'userName' => $item['user_name'] ?? '-',
+                                'lastMessage' => $item['lastMessageText'] ?? 'Ada pesan baru...',
+                                'unreadCount' => 1, 
+                            ];
                         }
                     }
-
-                    if ($unreadCount > 0) {
-                        $unread[] = [
-                            'reportId' => $reportId,
-                            'reportTitle' => $item['judul'] ?? 'Laporan',
-                            'userName' => $item['user_name'] ?? ($item['nama'] ?? 'User'),
-                            'lastMessage' => $lastUserMessage,
-                            'unreadCount' => $unreadCount,
-                        ];
-                    }
+                } catch (\Throwable $e) {
+                    \Log::error('unreadChats Firestore Query Error: ' . $e->getMessage());
                 }
 
                 return [
                     'status' => 'success',
                     'unread' => $unread,
-                    'totalUnread' => array_sum(array_column($unread, 'unreadCount')),
+                    'totalUnread' => count($unread),
                 ];
             });
 
@@ -824,8 +787,12 @@ class laporancontroller extends Controller
                 ['path' => 'adminLastReadAt', 'value' => $nowMillis],
             ]);
 
-            // Invalidate unread chats cache karena admin sudah membaca
-            Cache::forget('unread_chats');
+            $adminEmail = Session::get('admin.email', 'default');
+            $cacheKey = 'unread_chats_' . md5($adminEmail);
+
+            // Invalidate cache milik admin ini saja
+            Cache::forget($cacheKey);
+            Cache::forget('laporan_list_data');
         } catch (\Throwable $e) {
             \Log::error('markChatRead error: ' . $e->getMessage());
         }

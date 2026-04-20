@@ -18,6 +18,10 @@ class AuthController extends Controller
 
     public function showLogin()
     {
+        // GUEST REDIRECT: Jika sudah login, jangan biarkan masuk ke halaman login
+        if (Session::has('admin')) {
+            return redirect()->route('admin.dashboard');
+        }
         return view('admin.login');
     }
 

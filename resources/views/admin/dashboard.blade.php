@@ -146,21 +146,19 @@
                                     default => 'secondary',
                                 };
                                 $tanggalBuat = $item['created_date'] ?? ($item['create_at'] ?? null);
-                                $parsedBuat = null;
                                 if ($tanggalBuat !== null && $tanggalBuat !== '') {
                                     try {
-                                        $parsedBuat = $tanggalBuat instanceof \DateTimeInterface
-                                            ? \Carbon\Carbon::instance($tanggalBuat)
-                                            : \Carbon\Carbon::parse($tanggalBuat);
+                                        if (is_numeric($tanggalBuat)) {
+                                            // Handle numeric timestamp (milliseconds)
+                                            $parsedBuat = \Carbon\Carbon::createFromTimestampMs((int)$tanggalBuat);
+                                        } else {
+                                            $parsedBuat = \Carbon\Carbon::parse($tanggalBuat);
+                                        }
                                     } catch (\Throwable $e) {
                                         try {
                                             $parsedBuat = \Carbon\Carbon::createFromLocaleFormat('d M Y H:i', 'id', $tanggalBuat);
                                         } catch (\Throwable $e2) {
-                                            try {
-                                                $parsedBuat = \Carbon\Carbon::createFromLocaleFormat('d M Y', 'id', $tanggalBuat);
-                                            } catch (\Throwable $e3) {
-                                                $parsedBuat = null;
-                                            }
+                                            $parsedBuat = null;
                                         }
                                     }
                                 }

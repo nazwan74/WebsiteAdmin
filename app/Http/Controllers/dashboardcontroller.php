@@ -182,6 +182,8 @@ class DashboardController extends Controller
                 $laporanTerbaruCollect[] = [
                     'id' => $doc->id(),
                     'sort_at' => $dateObj ? $dateObj->format('Y-m-d H:i:s') : '',
+                    'created_date' => $data['created_date'] ?? null,
+                    'create_at' => $dateObj ? $dateObj->format('Y-m-d H:i:s') : '',
                     'kategori' => $kategoriDisplay,
                     'daerah' => $daerah,
                     'status' => $status,
@@ -212,21 +214,12 @@ class DashboardController extends Controller
                 }
             };
 
-            // Fetch Reports
+            // Fetch Reports (Fokus hanya pada struktur FLAT)
             try {
                 $reportSnapshot = $this->firestore->collection('report')->documents();
                 foreach ($reportSnapshot as $doc) { $processReportDoc($doc); }
-            } catch (\Throwable $e) {}
-
-            if ($totalLaporan === 0) {
-                foreach ($kategoriMap as $kategoriKey) {
-                    try {
-                        $kategoriDocRef = $this->firestore->collection('report')->document($kategoriKey);
-                        foreach ($kategoriDocRef->collections() as $userCollection) {
-                            foreach ($userCollection->documents() as $doc) { $processReportDoc($doc); }
-                        }
-                    } catch (\Throwable $e) { continue; }
-                }
+            } catch (\Throwable $e) {
+                \Log::error('Dashboard Report Fetch Error: ' . $e->getMessage());
             }
 
             return [

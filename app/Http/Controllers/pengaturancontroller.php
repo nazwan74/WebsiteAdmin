@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cache;
 
 class PengaturanController extends Controller
 {
@@ -33,16 +34,17 @@ class PengaturanController extends Controller
             return redirect()->route('admin.dashboard')->with('error', 'Anda tidak memiliki akses.');
         }
 
-        // Ambil semua dokumen dari koleksi 'admins' dan urutkan berdasarkan created_at
-        $adminSnapshots = $this->firestore->collection('admins')->orderBy('created_at', 'desc')->documents();
-        $admins = [];
-
-        foreach ($adminSnapshots as $doc) {
-            if ($doc->exists()) {
-                // Tambahkan UID (ID dokumen) ke dalam array admin
-                $admins[] = array_merge($doc->data(), ['uid' => $doc->id()]);
+        // Gunakan Cache untuk daftar admin agar tidak memberatkan Firestore
+        $admins = Cache::remember('admin_list_data', 600, function () {
+            $adminSnapshots = $this->firestore->collection('admins')->orderBy('created_at', 'desc')->documents();
+            $data = [];
+            foreach ($adminSnapshots as $doc) {
+                if ($doc->exists()) {
+                    $data[] = array_merge($doc->data(), ['uid' => $doc->id()]);
+                }
             }
-        }
+            return $data;
+        });
 
         return view('admin.pengaturan', compact('admins'));
     }
@@ -83,6 +85,9 @@ class PengaturanController extends Controller
             // Hapus data user dari Firestore
             $this->firestore->collection('admins')->document($uid)->delete();
 
+            // Invalidate cache
+            Cache::forget('admin_list_data');
+
             return redirect()->route('admin.pengaturan')->with('success', 'Admin berhasil dihapus.');
         } catch (\Exception $e) {
             return redirect()->route('admin.pengaturan')->withErrors(['error' => 'Gagal menghapus admin: ' . $e->getMessage()]);
@@ -114,6 +119,9 @@ class PengaturanController extends Controller
                 'role' => $request->role,
                 'created_at' => now()->toDateTimeString(),
             ]);
+
+            // Invalidate cache
+            Cache::forget('admin_list_data');
 
             return redirect()->route('admin.pengaturan')->with('success', 'Admin berhasil ditambahkan.');
         } catch (\Exception $e) {

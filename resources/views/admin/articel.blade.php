@@ -108,6 +108,9 @@
             <a href="{{ route('admin.articel.downloadList') }}" id="downloadListBtn" class="btn btn-success">
                 <i class="bi bi-download me-1"></i>Download List
             </a>
+            <button type="button" id="bulkDeleteBtn" class="btn btn-danger d-none">
+                <i class="bi bi-trash me-1"></i>Hapus Terpilih (<span id="selectedCount">0</span>)
+            </button>
             <a href="{{ route('admin.articel.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-1"></i>Tambah Artikel
             </a>
@@ -145,6 +148,9 @@
             <table class="table table-hover" id="articles-table">
                 <thead>
                     <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="selectAll" class="form-check-input">
+                        </th>
                         <th>Judul Artikel</th>
                         <th>Kategori</th>
                         <th>Tanggal Rilis</th>
@@ -157,6 +163,9 @@
                         <tr class="article-row"
                         data-kategori="{{ $article['articleType'] }}"
                         data-description="{{ strtolower($article['description']) }}">
+                            <td>
+                                <input type="checkbox" class="form-check-input article-checkbox" value="{{ $article['id'] }}">
+                            </td>
                             <td>{{ $article['title'] }}</td>
                             <td>
                                 @php
@@ -385,6 +394,77 @@
                         form.submit();
                     }
                 });
+            });
+        });
+        
+        // --- LOGIKA BULK DELETE ---
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.article-checkbox');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const selectedCountSpan = document.getElementById('selectedCount');
+
+        function updateBulkDeleteUI() {
+            const checkedCount = document.querySelectorAll('.article-checkbox:checked').length;
+            selectedCountSpan.textContent = checkedCount;
+            if (checkedCount > 0) {
+                bulkDeleteBtn.classList.remove('d-none');
+            } else {
+                bulkDeleteBtn.classList.add('d-none');
+            }
+            // Sync selectAll checkbox
+            selectAll.checked = (checkedCount === checkboxes.length && checkboxes.length > 0);
+        }
+
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(cb => {
+                // Hanya centang yang terlihat (kalau ada filter)
+                if (cb.closest('tr').style.display !== 'none') {
+                    cb.checked = selectAll.checked;
+                }
+            });
+            updateBulkDeleteUI();
+        });
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateBulkDeleteUI);
+        });
+
+        bulkDeleteBtn.addEventListener('click', function() {
+            const selectedIds = Array.from(document.querySelectorAll('.article-checkbox:checked')).map(cb => cb.value);
+            
+            Swal.fire({
+                title: 'Hapus Massal?',
+                text: `Anda akan menghapus ${selectedIds.length} artikel sekaligus. Tindakan ini tidak bisa dibatalkan!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus Semua!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Buat form dinamis untuk submit
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{{ route("admin.articel.bulkDelete") }}';
+                    
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = '_token';
+                    csrfToken.value = '{{ csrf_token() }}';
+                    form.appendChild(csrfToken);
+
+                    selectedIds.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'ids[]';
+                        input.value = id;
+                        form.appendChild(input);
+                    });
+
+                    document.body.appendChild(form);
+                    form.submit();
+                }
             });
         });
     });
