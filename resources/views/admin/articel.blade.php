@@ -8,126 +8,179 @@
 
 @section('styles')
 <style>
-    /* Warna Latar Belakang */
-    .bg-light-pink {
-        background-color: #ffeef2;
+    .category-card {
+        border: none;
+        border-radius: 20px;
+        padding: 24px;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.02);
     }
     
-    .bg-light-red {
-        background-color: #fff0f0;
+    .category-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 45px rgba(0,0,0,0.08);
     }
+
+    .category-icon-wrapper {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+    }
+
+    .category-card .bg-decoration {
+        position: absolute;
+        top: -20px;
+        right: -20px;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: currentColor;
+        opacity: 0.05;
+        z-index: -1;
+    }
+
+    .status-pill-category {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+
+    /* Category Themes */
+    .theme-pernikahan { border-top: 4px solid #fb7185; }
+    .theme-pernikahan .category-icon-wrapper { background: #fff1f2; color: #e11d48; }
     
-    .bg-light-orange {
-        background-color: #fff9e6;
-    }
+    .theme-kekerasan { border-top: 4px solid #f87171; }
+    .theme-kekerasan .category-icon-wrapper { background: #fef2f2; color: #dc2626; }
     
-    .bg-light-green {
-        background-color: #eafaf2;
-    }
+    .theme-bullying { border-top: 4px solid #fbbf24; }
+    .theme-bullying .category-icon-wrapper { background: #fffbeb; color: #d97706; }
     
-    /* Gaya Badge */
-    .badge.bg-pernikahan {
-        background-color: #ffeef2;
-        color: #212529;
-    }
-    
-    .badge.bg-kekerasan {
-        background-color: #fff0f0;
-        color: #212529;
-    }
-    
-    .badge.bg-bullying {
-        background-color: #fff9e6;
-        color: #212529;
-    }
-    
-    .badge.bg-stunting {
-        background-color: #eafaf2;
-        color: #212529;
-    }
-    
-    /* Gaya Tombol */
-    .btn-outline-primary {
-        color: #3498db;
-        border-color: #3498db;
-    }
-    
-    .btn-outline-danger {
-        color: #e74c3c;
-        border-color: #e74c3c;
-    }
+    .theme-stunting { border-top: 4px solid #4ade80; }
+    .theme-stunting .category-icon-wrapper { background: #f0fdf4; color: #16a34a; }
 </style>
 @endsection
 
 @section('content')
 <!-- Bagian Kartu Kategori Konten -->
-<h2>Kategori Konten</h2>
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card bg-light-pink text-dark h-100">
-            <div class="card-body">
-                <h5><span class="text-danger">❤</span> Pernikahan Anak</h5>
-                <p class="text-end mb-0">{{ count(array_filter($articles, function($article) { return $article['articleType'] == 'pernikahan dini'; })) }} Artikel</p>
-            </div>
+<div class="mb-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Eksplorasi Kategori</h4>
+            <p class="text-muted small mb-0">Distribusi konten edukasi berdasarkan topik</p>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-light-red text-dark h-100">
-            <div class="card-body">
-                <h5><span class="text-danger">✋</span> Kekerasan Anak</h5>
-                <p class="text-end mb-0">{{ count(array_filter($articles, function($article) { return $article['articleType'] == 'kekerasan anak'; })) }} Artikel</p>
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="category-card theme-pernikahan">
+                <div class="bg-decoration"></div>
+                <div class="category-icon-wrapper shadow-sm">
+                    <i class="bi bi-heart-fill"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase mb-1">Pernikahan Anak</h6>
+                <div class="d-flex align-items-end gap-2">
+                    <h2 class="fw-bold mb-0 text-dark">{{ count(array_filter($articles, function($article) { return $article['articleType'] == 'pernikahan dini'; })) }}</h2>
+                    <span class="text-muted small mb-1">Artikel</span>
+                </div>
+                <div class="mt-3">
+                    <span class="status-pill-category theme-pernikahan px-0" style="background: transparent; border: none;">Edukasi Dini</span>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-light-orange text-dark h-100">
-            <div class="card-body">
-                <h5><span class="text-warning">😣</span> Bullying</h5>
-                <p class="text-end mb-0">{{ count(array_filter($articles, function($article) { return $article['articleType'] == 'bullying'; })) }} Artikel</p>
+        <div class="col-md-3">
+            <div class="category-card theme-kekerasan">
+                <div class="bg-decoration"></div>
+                <div class="category-icon-wrapper shadow-sm">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase mb-1">Kekerasan Anak</h6>
+                <div class="d-flex align-items-end gap-2">
+                    <h2 class="fw-bold mb-0 text-dark">{{ count(array_filter($articles, function($article) { return $article['articleType'] == 'kekerasan anak'; })) }}</h2>
+                    <span class="text-muted small mb-1">Artikel</span>
+                </div>
+                <div class="mt-3">
+                    <span class="status-pill-category theme-kekerasan px-0" style="background: transparent; border: none;">Perlindungan</span>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-light-green text-dark h-100">
-            <div class="card-body">
-                <h5><span class="text-success">↑</span> Stunting</h5>
-                <p class="text-end mb-0">{{ count(array_filter($articles, function($article) { return $article['articleType'] == 'stunting'; })) }} Artikel</p>
+        <div class="col-md-3">
+            <div class="category-card theme-bullying">
+                <div class="bg-decoration"></div>
+                <div class="category-icon-wrapper shadow-sm">
+                    <i class="bi bi-chat-heart-fill"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase mb-1">Bullying</h6>
+                <div class="d-flex align-items-end gap-2">
+                    <h2 class="fw-bold mb-0 text-dark">{{ count(array_filter($articles, function($article) { return $article['articleType'] == 'bullying'; })) }}</h2>
+                    <span class="text-muted small mb-1">Artikel</span>
+                </div>
+                <div class="mt-3">
+                    <span class="status-pill-category theme-bullying px-0" style="background: transparent; border: none;">Anti-Bullying</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="category-card theme-stunting">
+                <div class="bg-decoration"></div>
+                <div class="category-icon-wrapper shadow-sm">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase mb-1">Stunting</h6>
+                <div class="d-flex align-items-end gap-2">
+                    <h2 class="fw-bold mb-0 text-dark">{{ count(array_filter($articles, function($article) { return $article['articleType'] == 'stunting'; })) }}</h2>
+                    <span class="text-muted small mb-1">Artikel</span>
+                </div>
+                <div class="mt-3">
+                    <span class="status-pill-category theme-stunting px-0" style="background: transparent; border: none;">Kesehatan</span>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Bagian Daftar Artikel -->
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h2>Daftar Artikel</h2>
-        <div class="d-flex gap-2">
-            <a href="{{ route('admin.articel.refresh') }}" class="btn btn-outline-secondary" title="Refresh Data">
-                <i class="bi bi-arrow-clockwise"></i>
+<div class="glass-card overflow-hidden mb-5">
+    <div class="p-4 d-flex justify-content-between align-items-center flex-wrap gap-3 border-bottom bg-white bg-opacity-50">
+        <div>
+            <h4 class="fw-bold mb-0">Daftar Artikel</h4>
+            <p class="text-muted small mb-0">Kelola konten edukasi untuk pengguna</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('admin.articel.refresh') }}" class="btn btn-light shadow-sm" style="border-radius: 10px;" title="Refresh Data">
+                <i class="bi bi-arrow-clockwise text-primary"></i>
             </a>
-            <a href="{{ route('admin.articel.downloadList') }}" id="downloadListBtn" class="btn btn-success">
-                <i class="bi bi-download me-1"></i>Download List
+            <a href="{{ route('admin.articel.downloadList') }}" id="downloadListBtn" class="btn btn-light shadow-sm text-success" style="border-radius: 10px; border: 1px solid rgba(40, 167, 69, 0.1);">
+                <i class="bi bi-download me-1"></i>Ekspor CSV
             </a>
-            <button type="button" id="bulkDeleteBtn" class="btn btn-danger d-none">
-                <i class="bi bi-trash me-1"></i>Hapus Terpilih (<span id="selectedCount">0</span>)
+            <button type="button" id="bulkDeleteBtn" class="btn btn-danger shadow-sm d-none" style="border-radius: 10px;">
+                <i class="bi bi-trash me-1"></i>Hapus (<span id="selectedCount">0</span>)
             </button>
-            <a href="{{ route('admin.articel.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-1"></i>Tambah Artikel
+            <a href="{{ route('admin.articel.create') }}" class="btn btn-primary shadow-sm px-4" style="border-radius: 10px;">
+                <i class="bi bi-plus-lg me-1"></i>Tambah Artikel
             </a>
         </div>
     </div>
-    <div class="card-body">
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Cari artikel..." id="search-input">
-                    <button class="btn btn-outline-secondary" type="button">
-                        <i class="bi bi-search"></i>
-                    </button>
+    <div class="p-4">
+        <div class="row g-3 mb-4">
+            <div class="col-md-8">
+                <div class="input-group shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                    <span class="input-group-text border-0 bg-white ps-3"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" class="form-control border-0 py-2" placeholder="Cari judul atau isi artikel..." id="search-input">
                 </div>
             </div>
-            <div class="col-md-6 text-end">
-                <select class="form-select float-end" style="width: auto;" id="category-filter">
+            <div class="col-md-4">
+                <select class="form-select border-0 shadow-sm py-2" style="border-radius: 12px;" id="category-filter">
                     <option selected value="all">Semua Kategori</option>
                     <option value="pernikahan dini">Pernikahan Anak</option>
                     <option value="kekerasan anak">Kekerasan Anak</option>
@@ -137,113 +190,109 @@
             </div>
         </div>
 
-        @if(session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
-            </div>
-        @endif
-
         <!-- Tata Letak Tabel Untuk Artikel -->
         <div class="table-responsive">
-            <table class="table table-hover" id="articles-table">
+            <table class="table table-hover align-middle" id="articles-table">
                 <thead>
                     <tr>
-                        <th style="width: 40px;">
+                        <th class="ps-4" style="width: 50px;">
                             <input type="checkbox" id="selectAll" class="form-check-input">
                         </th>
                         <th>Judul Artikel</th>
                         <th>Kategori</th>
-                        <th>Tanggal Rilis</th>
-                        <th>Tanggal Edit</th>
-                        <th>Aksi</th>
+                        <th>Rilis</th>
+                        <th>Update Terakhir</th>
+                        <th class="pe-4 text-end">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($articles as $article)
                         <tr class="article-row"
                         data-kategori="{{ $article['articleType'] }}"
-                        data-description="{{ strtolower($article['description']) }}">
-                            <td>
+                        data-description="{{ strtolower($article['description'] ?? '') }}">
+                            <td class="ps-4">
                                 <input type="checkbox" class="form-check-input article-checkbox" value="{{ $article['id'] }}">
                             </td>
-                            <td>{{ $article['title'] }}</td>
                             <td>
-                                @php
-                                    $badgeClass = '';
-                                    switch($article['articleType']) {
-                                        case 'pernikahan dini':
-                                            $badgeClass = 'bg-pernikahan';
-                                            $displayText = 'Pernikahan Anak';
-                                            break;
-                                        case 'kekerasan anak':
-                                            $badgeClass = 'bg-kekerasan';
-                                            $displayText = 'Kekerasan Anak';
-                                            break;
-                                        case 'bullying':
-                                            $badgeClass = 'bg-bullying';
-                                            $displayText = 'Bullying';
-                                            break;
-                                        case 'stunting':
-                                            $badgeClass = 'bg-stunting';
-                                            $displayText = 'Stunting';
-                                            break;
-                                        default:
-                                            $badgeClass = 'bg-secondary';
-                                            $displayText = ucfirst($article['articleType']);
-                                    }
-                                @endphp
-                                <span class="badge {{ $badgeClass }}">{{ $displayText }}</span>
+                                <div class="fw-bold text-dark">{{ $article['title'] }}</div>
+                                <div class="text-muted small text-truncate" style="max-width: 250px;">{{ strip_tags($article['description']) }}</div>
                             </td>
                             <td>
+                                @php
+                                    $pillClass = match($article['articleType']) {
+                                        'pernikahan dini' => 'theme-pernikahan',
+                                        'kekerasan anak' => 'theme-kekerasan',
+                                        'bullying' => 'theme-bullying',
+                                        'stunting' => 'theme-stunting',
+                                        default => 'bg-light text-dark border',
+                                    };
+                                    $displayText = match($article['articleType']) {
+                                        'pernikahan dini' => 'Pernikahan Anak',
+                                        'kekerasan anak' => 'Kekerasan Anak',
+                                        'bullying' => 'Bullying',
+                                        'stunting' => 'Stunting',
+                                        default => ucfirst($article['articleType']),
+                                    };
+                                @endphp
+                                <span class="status-pill-category {{ $pillClass }}" style="border-radius: 8px; font-size: 0.65rem;">{{ $displayText }}</span>
+                            </td>
+                            <td>
+                                <span class="text-muted small"><i class="bi bi-calendar3 me-1"></i>
                                 @if(isset($article['releasedDate']))
                                     @php
-                                        if ($article['releasedDate'] instanceof Illuminate\Support\Carbon) {
-                                            $date = $article['releasedDate']->format('d M Y');
-                                        } elseif (is_string($article['releasedDate'])) {
-                                            $date = date('d M Y', strtotime($article['releasedDate']));
+                                        $val = $article['releasedDate'];
+                                        if ($val instanceof \Google\Cloud\Core\Timestamp) {
+                                            $relDate = \Carbon\Carbon::instance($val->get());
+                                        } elseif (is_string($val)) {
+                                            $relDate = \Carbon\Carbon::parse($val);
                                         } else {
-                                            $date = $article['releasedDate']->get()->format('d M Y');
+                                            $relDate = \Carbon\Carbon::instance($val);
                                         }
                                     @endphp
-                                    {{ $date }}
-                                @else
-                                    -
-                                @endif
+                                    {{ $relDate->format('d/m/y') }}
+                                @else - @endif
+                                </span>
                             </td>
                             <td>
                                 @if(isset($article['updateDate']))
                                     @php
-                                        if ($article['updateDate'] instanceof Illuminate\Support\Carbon) {
-                                            $updateDate = $article['updateDate']->format('d M Y');
-                                        } elseif (is_string($article['updateDate'])) {
-                                            $updateDate = date('d M Y', strtotime($article['updateDate']));
+                                        $valUpd = $article['updateDate'];
+                                        if ($valUpd instanceof \Google\Cloud\Core\Timestamp) {
+                                            $updDate = \Carbon\Carbon::instance($valUpd->get());
+                                        } elseif (is_string($valUpd)) {
+                                            $updDate = \Carbon\Carbon::parse($valUpd);
                                         } else {
-                                            $updateDate = $article['updateDate']->get()->format('d M Y');
+                                            $updDate = \Carbon\Carbon::instance($valUpd);
                                         }
                                     @endphp
-                                    <span class="text-info">
-                                        <i class="bi bi-pencil-square"></i> {{ $updateDate }}
-                                    </span>
+                                    <div class="text-primary small fw-semibold">
+                                        <i class="bi bi-clock-history me-1"></i> {{ $updDate->diffForHumans() }}
+                                    </div>
                                 @else
-                                    -
+                                    <span class="text-muted small">-</span>
                                 @endif
                             </td>
-                            <td>
-                                <a href="{{ route('admin.articel.edit', $article['id']) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <form action="{{ route('admin.articel.destroy', $article['id']) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" class="btn btn-sm btn-outline-danger delete-article-btn" data-title="{{ $article['title'] }}">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                            <td class="pe-4 text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ route('admin.articel.edit', $article['id']) }}" class="btn btn-light btn-sm shadow-sm border" style="border-radius: 8px;" title="Edit">
+                                        <i class="bi bi-pencil-fill text-primary"></i>
+                                    </a>
+                                    <form action="{{ route('admin.articel.destroy', $article['id']) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="btn btn-light btn-sm shadow-sm border delete-article-btn" data-title="{{ $article['title'] }}" style="border-radius: 8px;" title="Hapus">
+                                            <i class="bi bi-trash-fill text-danger"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="text-center">Tidak ada artikel yang tersedia.</td>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-journal-x fs-1 d-block mb-2 opacity-25"></i>
+                                Tidak ada artikel yang tersedia.
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

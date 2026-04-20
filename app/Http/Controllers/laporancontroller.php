@@ -117,15 +117,21 @@ class laporancontroller extends Controller
         $laporan = $this->getLaporanList();
 
         $kategoriList = [];
+        $daerahList = [];
         foreach ($laporan as $item) {
             $k = $item['case_type'] ?? ($item['kategori'] ?? null);
             if ($k !== null && $k !== '' && $k !== '-' && !in_array($k, $kategoriList, true)) {
                 $kategoriList[] = $k;
             }
+            $d = $item['daerah'] ?? null;
+            if ($d !== null && $d !== '' && $d !== '-' && !in_array($d, $daerahList, true)) {
+                $daerahList[] = $d;
+            }
         }
         sort($kategoriList, SORT_STRING);
+        sort($daerahList, SORT_STRING);
 
-        return view('admin.laporan', compact('laporan', 'kategoriList'));
+        return view('admin.laporan', compact('laporan', 'kategoriList', 'daerahList'));
     }
 
     /**

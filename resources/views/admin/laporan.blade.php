@@ -12,93 +12,69 @@
 
 @section('styles')
     <style>
-        /* Gaya Badge Kategori */
-        .badge.bg-pernikahan {
-            background-color: #ffeef2;
-            color: #212529;
+        .status-pill {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
         }
         
-        .badge.bg-kekerasan {
-            background-color: #fff0f0;
-            color: #212529;
-        }
-        
-        .badge.bg-bullying {
-            background-color: #fff9e6;
-            color: #212529;
-        }
-        
-        .badge.bg-stunting {
-            background-color: #eafaf2;
-            color: #212529;
-        }
-        
-        /* Gaya Filter Badge */
-        .filter-badge {
-            background-color: #e6edff;
-            color: #4361ee;
-            padding: 5px 10px;
-            margin: 5px 3px;
-            border-radius: 15px;
+        .status-baru { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .status-diproses { background: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
+        .status-selesai { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
+        .status-ditolak { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+
+        .badge-category {
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
             display: inline-flex;
             align-items: center;
-            font-size: 0.85rem;
+            gap: 6px;
+            transition: all 0.2s;
+            border: 1.5px solid transparent; /* Dipertebal */
+        }
+
+        .badge-category i {
+            font-size: 0.9rem;
+        }
+
+        .theme-pernikahan { background: #fff1f2; color: #e11d48; border-color: rgba(225, 29, 72, 0.2) !important; }
+        .theme-kekerasan { background: #fef2f2; color: #dc2626; border-color: rgba(220, 38, 38, 0.2) !important; }
+        .theme-bullying { background: #fffbeb; color: #d97706; border-color: rgba(217, 119, 6, 0.2) !important; }
+        .theme-stunting { background: #f0fdf4; color: #16a34a; border-color: rgba(22, 163, 74, 0.2) !important; }
+        .theme-default { background: #f8fafc; color: #64748b; border-color: rgba(100, 116, 139, 0.2) !important; }
+
+        .filter-badge {
+            background: #ffffff;
+            color: #1e293b;
+            padding: 6px 12px;
+            margin: 4px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
         }
         
         .filter-badge i {
-            margin-left: 5px;
+            margin-left: 8px;
             cursor: pointer;
+            color: #ef4444;
+            transition: transform 0.2s;
         }
+
+        .filter-badge i:hover { transform: scale(1.2); }
         
-        .filter-count {
-            background-color: #6c757d;
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            font-size: 0.75rem;
-            margin-left: 5px;
-        }
-        
-        /* Gaya Tombol Filter */
-        .btn-filter {
-            border: 1px solid #dee2e6;
-            background-color: #f8f9fa;
-            color: #6c757d;
-            padding: 0.375rem 0.75rem;
-            border-radius: 0.375rem;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-filter:hover {
-            background-color: #e9ecef;
-            border-color: #ced4da;
-            color: #495057;
-        }
-        
-        .btn-filter i {
-            font-size: 1rem;
-        }
-        
-        .active-filters {
-            margin-top: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .date-range-inputs {
-            display: flex;
-            gap: 10px;
-        }
-        
-        /* Gaya Modal Filter */
         #filterModal .modal-header {
-            background: linear-gradient(135deg, #3b6efb, #5a8dfb);
+            background: #0f172a;
             color: white;
-            border-top-left-radius: 1rem;
-            border-top-right-radius: 1rem;
-            padding: 1.25rem 1.5rem;
+            border-bottom: none;
         }
 
         #filterModal .modal-title {
@@ -117,93 +93,95 @@
         }
 
         #filterModal .mb-3 {
-            background: #f8faff;
-            padding: 1rem;
-            border-radius: 0.75rem;
-            margin-bottom: 1.25rem;
+            background: #ffffff;
+            padding: 1.25rem;
+            border-radius: 1.25rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .quick-date-btn {
+            padding: 5px 12px;
+            font-size: 0.75rem;
+            border-radius: 8px;
             border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        #filterModal .form-label {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .quick-date-btn:hover {
+            background: #e2e8f0;
+            color: #1e293b;
         }
 
-        #filterModal input[type="date"] {
-            border-radius: 0.5rem;
+        .quick-date-btn.active {
+            background: #4361ee;
+            color: #ffffff;
+            border-color: #4361ee;
         }
 
-        /* Gaya Checkbox Filter */
-        #filterModal .form-check {
-            position: relative;
-            display: inline-block;
+        .date-range-divider {
+            color: #94a3b8;
+            font-weight: bold;
         }
 
-        #filterModal .form-check-input {
-            display: none;
+        /* Gaya Checkbox Kategori Premium */
+        .filter-scroll-container {
+            max-height: 180px;
+            overflow-y: auto;
+            padding: 4px;
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+            background: #fbfcfd;
+        }
+
+        .filter-search-input {
+            font-size: 0.8rem;
+            border-radius: 10px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border: 1.5px solid #f1f5f9;
+            background: #fff;
         }
 
         #filterModal .form-check-label {
-            display: inline-block;
-            padding: 0.4rem 0.9rem;
-            border-radius: 2rem;
-            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.5rem 0.75rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 500;
             cursor: pointer;
-            border: none;
-            transition: all 0.3s ease-in-out;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            width: 100%;
+            background-color: #ffffff;
+            color: #475569;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
         }
 
-        /* Warna Kategori Checkbox */
-        #kategoriPernikahan + .form-check-label { 
-            background-color: #fde2e4; 
-            color: #b12c2c; 
-        }
-        
-        #kategoriKekerasan + .form-check-label { 
-            background-color: #ffe2e2; 
-            color: #c0392b; 
-        }
-        
-        #kategoriBullying + .form-check-label { 
-            background-color: #fff3cd; 
-            color: #8a6d3b; 
-        }
-        
-        #kategoriStunting + .form-check-label { 
-            background-color: #d4edda; 
-            color: #2e7d32; 
-        }
-
-        /* Warna Status Checkbox */
-        #statusBaru + .form-check-label {
-            background-color: #e2e3e5;
-            color: #383d41;
-        }
-
-        #statusDiproses + .form-check-label {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-
-        #statusSelesai + .form-check-label {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        #statusDitolak + .form-check-label {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        /* Saat Checkbox Dipilih */
         #filterModal .form-check-input:checked + .form-check-label {
-            box-shadow: 0 0 0 2px #1e88e5 inset;
-            font-weight: bold;
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            font-weight: 700;
         }
+
+        /* Specific Theme Colors for Filter */
+        .filter-pernikahan:checked + .form-check-label { background: #fff1f2 !important; color: #e11d48 !important; border-color: #fda4af !important; }
+        .filter-kekerasan:checked + .form-check-label { background: #fef2f2 !important; color: #dc2626 !important; border-color: #fecaca !important; }
+        .filter-bullying:checked + .form-check-label { background: #fffbeb !important; color: #d97706 !important; border-color: #fde68a !important; }
+        .filter-stunting:checked + .form-check-label { background: #f0fdf4 !important; color: #16a34a !important; border-color: #bbf7d0 !important; }
+        .filter-default:checked + .form-check-label { background: #f8fafc !important; color: #475569 !important; border-color: #e2e8f0 !important; }
+
+        /* Status Filter Colors */
+        .filter-baru:checked + .form-check-label { background: #f1f5f9 !important; color: #475569 !important; border-color: #cbd5e1 !important; }
+        .filter-diproses:checked + .form-check-label { background: #fffbeb !important; color: #d97706 !important; border-color: #fde68a !important; }
+        .filter-selesai:checked + .form-check-label { background: #f0fdf4 !important; color: #16a34a !important; border-color: #bbf7d0 !important; }
+        .filter-ditolak:checked + .form-check-label { background: #fef2f2 !important; color: #dc2626 !important; border-color: #fecaca !important; }
 
         /* Gaya Footer Modal */
         #filterModal .modal-footer {
@@ -265,48 +243,49 @@
 @endsection
 
 @section('content')
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h2>Daftar Laporan</h2>
-            <div class="d-flex gap-2">
-                <a href="{{ route('admin.laporan.refresh') }}" class="btn btn-outline-secondary" title="Refresh Data">
-                    <i class="bi bi-arrow-clockwise"></i>
+    <div class="glass-card overflow-hidden mb-5">
+        <div class="p-4 bg-white bg-opacity-50 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h4 class="fw-bold mb-0 text-dark">Daftar Laporan</h4>
+                <p class="text-muted small mb-0">Kelola dan tindak lanjuti laporan dari masyarakat</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('admin.laporan.refresh') }}" class="btn btn-light shadow-sm" style="border-radius: 10px;" title="Refresh Data">
+                    <i class="bi bi-arrow-clockwise text-primary"></i>
                 </a>
-                <a href="{{ route('admin.laporan.downloadList') }}" id="downloadListBtn" class="btn btn-success">
-                    <i class="bi bi-download me-2"></i>Download List
+                <a href="{{ route('admin.laporan.downloadList') }}" id="downloadListBtn" class="btn btn-light shadow-sm text-success" style="border-radius: 10px; border: 1px solid rgba(40, 167, 69, 0.1);">
+                    <i class="bi bi-download me-2"></i>Ekspor CSV
                 </a>
             </div>
         </div>
-        <div class="container mt-4">
+        <div class="p-4">
             <!-- Filter dan Pencarian -->
-            <div class="row mb-3">
-                <div class="col-md-8">
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Cari laporan..." id="search-input">
-                        <button class="btn btn-outline-secondary" type="button">
-                            <i class="bi bi-search"></i>
-                        </button>
-                        <button class="btn btn-filter ms-2" type="button" data-bs-toggle="modal" data-bs-target="#filterModal">
-                            <i class="bi bi-funnel"></i> Filter <span class="filter-count" id="filterCount">0</span>
+            <div class="row g-3 mb-4">
+                <div class="col-md-9">
+                    <div class="input-group shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                        <span class="input-group-text border-0 bg-white ps-3"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" class="form-control border-0 py-2" placeholder="Cari nama pelapor atau detail kejadian..." id="search-input">
+                        <button class="btn btn-light border-start px-4 fw-bold text-primary" type="button" data-bs-toggle="modal" data-bs-target="#filterModal" style="background: #f8faff;">
+                            <i class="bi bi-funnel me-2"></i>Filter <span class="badge bg-primary ms-1" id="filterCount" style="display:none;">0</span>
                         </button>
                     </div>
                 </div>
             </div>
 
             <!-- Area Filter Aktif -->
-            <div class="active-filters" id="activeFilters"></div>
+            <div class="active-filters d-flex flex-wrap gap-2 mb-3" id="activeFilters"></div>
 
             <!-- Tabel Laporan -->
             <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-light">
+                <table class="table table-hover align-middle">
+                    <thead>
                         <tr>
-                            <th>Nama Pelapor</th>
+                            <th class="ps-3">Nama Pelapor</th>
                             <th>Tipe Kasus</th>
                             <th>Tanggal Kejadian</th>
                             <th>Status</th>
-                            <th>Tanggal Buat</th>
-                            <th>Aksi</th>
+                            <th>Waktu Lapor</th>
+                            <th class="text-end pe-3">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -352,19 +331,17 @@
                                 }
                                 if ($tanggalBuat !== null && $tanggalBuat !== '') {
                                     try {
-                                        $parsedBuat = $tanggalBuat instanceof \DateTimeInterface
-                                            ? \Carbon\Carbon::instance($tanggalBuat)
-                                            : \Carbon\Carbon::parse($tanggalBuat);
-                                    } catch (\Throwable $e) {
-                                        try {
-                                            $parsedBuat = \Carbon\Carbon::createFromLocaleFormat('d M Y H:i', 'id', $tanggalBuat);
-                                        } catch (\Throwable $e2) {
-                                            try {
-                                                $parsedBuat = \Carbon\Carbon::createFromLocaleFormat('d M Y', 'id', $tanggalBuat);
-                                            } catch (\Throwable $e3) {
-                                                $parsedBuat = null;
-                                            }
+                                        if ($tanggalBuat instanceof \Google\Cloud\Core\Timestamp) {
+                                            $parsedBuat = \Carbon\Carbon::instance($tanggalBuat->get());
+                                        } elseif (is_numeric($tanggalBuat)) {
+                                            $parsedBuat = \Carbon\Carbon::createFromTimestampMs((int)$tanggalBuat);
+                                        } elseif ($tanggalBuat instanceof \DateTimeInterface) {
+                                            $parsedBuat = \Carbon\Carbon::instance($tanggalBuat);
+                                        } else {
+                                            $parsedBuat = \Carbon\Carbon::parse($tanggalBuat);
                                         }
+                                    } catch (\Throwable $e) {
+                                        $parsedBuat = null;
                                     }
                                 }
                             @endphp
@@ -374,18 +351,51 @@
                                 data-daerah="{{ $item['daerah'] ?? '' }}"
                                 data-tanggal="{{ $parsedBuat ? $parsedBuat->format('Y-m-d') : '' }}"
                                 data-status="{{ $status }}">
-                                <td>{{ $item['user_name'] ?? ($item['nama'] ?? '-') }}</td>
-                                <td><span class="badge {{ $kategoriBadgeClass }}">{{ $kategoriDisplay }}</span></td>
-                                <td class="text-nowrap">{{ $parsedKejadian ? $parsedKejadian->locale('id')->translatedFormat('d M Y') : ($tanggalKejadian ?: '-') }}</td>
+                                <td class="ps-3">
+                                    <div class="fw-bold text-dark">{{ $item['user_name'] ?? ($item['nama'] ?? '-') }}</div>
+                                    <div class="text-muted small">{{ $item['daerah'] ?? '-' }}</div>
+                                </td>
+                                <td>
+                                    @php
+                                        $categoryIcon = match($kategori) {
+                                            'pernikahan anak' => 'bi-heart-break-fill',
+                                            'kekerasan anak' => 'bi-exclamation-triangle-fill',
+                                            'bullying' => 'bi-megaphone-fill',
+                                            'stunting' => 'bi-hospital-fill',
+                                            default => 'bi-tag-fill',
+                                        };
+                                        $kategoriTheme = match($kategori) {
+                                            'pernikahan anak' => 'theme-pernikahan',
+                                            'kekerasan anak' => 'theme-kekerasan',
+                                            'bullying' => 'theme-bullying',
+                                            'stunting' => 'theme-stunting',
+                                            default => 'theme-default',
+                                        };
+                                    @endphp
+                                    <span class="badge-category {{ $kategoriTheme }}">
+                                        <i class="bi {{ $categoryIcon }}"></i>
+                                        {{ $kategoriDisplay }}
+                                    </span>
+                                </td>
+                                <td class="text-nowrap small text-muted">
+                                    <i class="bi bi-calendar-event me-1"></i>
+                                    {{ $parsedKejadian ? $parsedKejadian->locale('id')->translatedFormat('d M Y') : ($tanggalKejadian ?: '-') }}
+                                </td>
                                 @php
                                     $displayStatus = $status === 'baru' ? 'Belum Ditangani' : ucfirst($status);
+                                    $statusPillClass = 'status-' . $status;
                                 @endphp
-                                <td><span class="badge bg-{{ $badgeColor }}">{{ $displayStatus }}</span></td>
-                                <td class="text-nowrap">{{ $parsedBuat ? $parsedBuat->locale('id')->translatedFormat('d M Y, H:i') : ($tanggalBuat ?: '-') }}</td>
-                                <td>
-                                    <button
-                                        class="btn btn-primary btn-sm"
-                                        onclick="openDetailLaporan('{{ $item['id'] }}')">
+                                <td><span class="status-pill {{ $statusPillClass }}">{{ $displayStatus }}</span></td>
+                                <td class="text-nowrap">
+                                    <div class="small fw-semibold {{ $status === 'baru' ? 'text-primary' : 'text-muted' }}">
+                                        {{ $parsedBuat ? $parsedBuat->locale('id')->translatedFormat('d M Y') : ($tanggalBuat ?: '-') }}
+                                    </div>
+                                    <div class="text-muted small" style="font-size: 0.7rem;">
+                                        {{ $parsedBuat ? $parsedBuat->format('H:i') . ' WIB' : '' }}
+                                    </div>
+                                </td>
+                                <td class="pe-3 text-end">
+                                    <button class="btn btn-primary btn-sm px-3 shadow-sm" style="border-radius: 8px;" onclick="openDetailLaporan('{{ $item['id'] }}')">
                                         Detail
                                     </button>
                                 </td>
@@ -418,64 +428,103 @@
                 </div>
                 <div class="modal-body">
                     <form id="filterForm">
-                        <!-- Filter Daerah -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Pilih Daerah</label>
-                            <select class="form-select" id="daerahFilter" multiple size="3">
-                                <!-- Opsi akan diisi secara dinamis dengan JavaScript -->
-                            </select>
-                        </div>
-
-                        <!-- Filter Waktu -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Pilih Waktu Lapor</label>
-                            <div class="date-range-inputs">
-                                <input type="date" class="form-control" id="startDate" placeholder="Tanggal Awal">
-                                <input type="date" class="form-control" id="endDate" placeholder="Tanggal Akhir">
+                        <!-- Filter Daerah (Searchable) -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-2">Daerah Kejadian</label>
+                            <input type="text" class="form-control filter-search-input" id="searchDaerah" placeholder="Cari kota/daerah...">
+                            <div class="filter-scroll-container" id="daerahChecklistContainer">
+                                @forelse($daerahList ?? [] as $daerah)
+                                    <div class="px-3 py-1 daerah-item">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="daerah-{{ \Illuminate\Support\Str::slug($daerah) }}" name="daerahFilter" value="{{ $daerah }}">
+                                            <label class="form-check-label border-0 shadow-none bg-transparent p-0" for="daerah-{{ \Illuminate\Support\Str::slug($daerah) }}">
+                                                {{ $daerah }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="p-3 text-center text-muted small">Tidak ada data daerah.</div>
+                                @endforelse
                             </div>
                         </div>
 
-                        <!-- Filter Kategori -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Pilih Kategori</label>
-                            <ul id="kategoriFilterContainer" class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
-                                @forelse($kategoriList ?? [] as $kategori)
-                                    @php
-                                        $kategoriValue = is_string($kategori) ? strtolower($kategori) : $kategori;
-                                        $kategoriId = 'kategori-' . \Illuminate\Support\Str::slug($kategoriValue);
-                                    @endphp
-                                    <li class="list-group-item py-2 px-3 border-0">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="{{ $kategoriId }}" name="kategoriFilter" value="{{ $kategoriValue }}">
-                                            <label class="form-check-label" for="{{ $kategoriId }}">{{ $kategori }}</label>
-                                        </div>
-                                    </li>
-                                @empty
-                                    <li class="list-group-item text-muted small border-0">Tidak ada kategori dalam data laporan.</li>
-                                @endforelse
-                            </ul>
+                        <div class="row">
+                            <!-- Filter Kategori -->
+                            <div class="col-md-7 mb-4">
+                                <label class="form-label fw-bold mb-2">Kategori Kasus</label>
+                                <div class="filter-scroll-container">
+                                    <div id="kategoriFilterContainer" class="row g-2 m-0 p-0">
+                                        @forelse($kategoriList ?? [] as $kategori)
+                                            @php
+                                                $kategoriValue = is_string($kategori) ? strtolower($kategori) : $kategori;
+                                                $kategoriId = 'kategori-' . \Illuminate\Support\Str::slug($kategoriValue);
+                                                $themeClass = match($kategoriValue) {
+                                                    'pernikahan anak' => 'filter-pernikahan',
+                                                    'kekerasan anak' => 'filter-kekerasan',
+                                                    'bullying' => 'filter-bullying',
+                                                    'stunting' => 'filter-stunting',
+                                                    default => 'filter-default',
+                                                };
+                                            @endphp
+                                            <div class="col-12">
+                                                <input class="form-check-input d-none {{ $themeClass }}" type="checkbox" id="{{ $kategoriId }}" name="kategoriFilter" value="{{ $kategoriValue }}">
+                                                <label class="form-check-label" for="{{ $kategoriId }}">
+                                                    {{ $kategori }}
+                                                </label>
+                                            </div>
+                                        @empty
+                                            <div class="col-12 text-muted small p-2 text-center">Tidak ada kategori.</div>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Filter Status -->
+                            <div class="col-md-5 mb-4">
+                                <label class="form-label fw-bold mb-2">Status</label>
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="form-check p-0 m-0">
+                                        <input class="form-check-input d-none filter-baru" type="checkbox" id="statusBaru" value="baru">
+                                        <label class="form-check-label" for="statusBaru">
+                                            <i class="bi bi-clock"></i> Baru
+                                        </label>
+                                    </div>
+                                    <div class="form-check p-0 m-0">
+                                        <input class="form-check-input d-none filter-diproses" type="checkbox" id="statusDiproses" value="diproses">
+                                        <label class="form-check-label" for="statusDiproses">
+                                            <i class="bi bi-arrow-repeat"></i> Proses
+                                        </label>
+                                    </div>
+                                    <div class="form-check p-0 m-0">
+                                        <input class="form-check-input d-none filter-selesai" type="checkbox" id="statusSelesai" value="selesai">
+                                        <label class="form-check-label" for="statusSelesai">
+                                            <i class="bi bi-check-circle"></i> Selesai
+                                        </label>
+                                    </div>
+                                    <div class="form-check p-0 m-0">
+                                        <input class="form-check-input d-none filter-ditolak" type="checkbox" id="statusDitolak" value="ditolak">
+                                        <label class="form-check-label" for="statusDitolak">
+                                            <i class="bi bi-x-circle"></i> Tolak
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Filter Status -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Pilih Status</label>
-                            <div class="d-flex flex-wrap gap-2">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="statusBaru" value="baru">
-                                    <label class="form-check-label" for="statusBaru">Belum Ditangani</label>
+                        <!-- Filter Waktu (Bottom) -->
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold mb-0">Waktu Lapor</label>
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="quick-date-btn" onclick="setQuickDate('today', this)">Hari</button>
+                                    <button type="button" class="quick-date-btn" onclick="setQuickDate('week', this)">Minggu</button>
+                                    <button type="button" class="quick-date-btn" onclick="setQuickDate('month', this)">Bulan</button>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="statusDiproses" value="diproses">
-                                    <label class="form-check-label" for="statusDiproses">Diproses</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="statusSelesai" value="selesai">
-                                    <label class="form-check-label" for="statusSelesai">Selesai</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="statusDitolak" value="ditolak">
-                                    <label class="form-check-label" for="statusDitolak">Ditolak</label>
-                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="date" class="form-control form-control-sm border-light bg-light" id="startDate" style="border-radius: 10px;">
+                                <span class="date-range-divider">-</span>
+                                <input type="date" class="form-control form-control-sm border-light bg-light" id="endDate" style="border-radius: 10px;">
                             </div>
                         </div>
                     </form>
@@ -511,25 +560,18 @@
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('search-input');
             const rows = document.querySelectorAll('table tbody tr.laporan-row');
-            const daerahFilter = document.getElementById('daerahFilter');
             const activeFiltersContainer = document.getElementById('activeFilters');
             const filterCountBadge = document.getElementById('filterCount');
             
-            // Populate daerah options secara dinamis
-            const daerahSet = new Set();
-            rows.forEach(row => {
-                const daerah = row.getAttribute('data-daerah');
-                if (daerah && daerah !== '-' && daerah !== '') {
-                    daerahSet.add(daerah);
-                }
+            // Pencarian Daerah (client-side filter)
+            document.getElementById('searchDaerah').addEventListener('input', function(e) {
+                const term = e.target.value.toLowerCase();
+                document.querySelectorAll('.daerah-item').forEach(item => {
+                    const text = item.innerText.toLowerCase();
+                    item.style.display = text.includes(term) ? 'block' : 'none';
+                });
             });
-            
-            daerahSet.forEach(daerah => {
-                const option = document.createElement('option');
-                option.value = daerah;
-                option.textContent = daerah;
-                daerahFilter.appendChild(option);
-            });
+
 
             // Inisialisasi state filter
             let activeFilters = {
@@ -553,7 +595,10 @@
             // Tombol terapkan filter
             document.getElementById('applyFilters').addEventListener('click', function() {
                 // Ambil filter daerah
-                activeFilters.daerah = Array.from(daerahFilter.selectedOptions).map(option => option.value);
+                activeFilters.daerah = [];
+                document.querySelectorAll('input[name="daerahFilter"]:checked').forEach(checkbox => {
+                    activeFilters.daerah.push(checkbox.value);
+                });
                 
                 // Ambil filter range tanggal
                 activeFilters.dateStart = document.getElementById('startDate').value;
@@ -576,6 +621,41 @@
                 currentPage = 1;
                 applyFilters();
             });
+
+            // Fungsi Tombol Cepat Tanggal
+            window.setQuickDate = function(type, btn) {
+                const startInput = document.getElementById('startDate');
+                const endInput = document.getElementById('endDate');
+                const today = new Date();
+                let start = new Date();
+                
+                // Reset active state
+                document.querySelectorAll('.quick-date-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                if (type === 'today') {
+                    start = today;
+                } else if (type === 'week') {
+                    start.setDate(today.getDate() - 7);
+                } else if (type === 'month') {
+                    start.setMonth(today.getMonth() - 1);
+                }
+
+                const formatDate = (date) => {
+                    let d = new Date(date),
+                        month = '' + (d.getMonth() + 1),
+                        day = '' + d.getDate(),
+                        year = d.getFullYear();
+
+                    if (month.length < 2) month = '0' + month;
+                    if (day.length < 2) day = '0' + day;
+
+                    return [year, month, day].join('-');
+                };
+
+                startInput.value = formatDate(start);
+                endInput.value = formatDate(today);
+            };
             
             // Reset filter
             document.getElementById('resetFilters').addEventListener('click', function() {
@@ -606,10 +686,9 @@
                 activeFilters.daerah.forEach(daerah => {
                     addFilterBadge('Daerah: ' + daerah, () => {
                         activeFilters.daerah = activeFilters.daerah.filter(d => d !== daerah);
-                        // Reset dropdown filter daerah
-                        Array.from(daerahFilter.options).forEach(option => {
-                            option.selected = false;
-                        });
+                        // Uncheck checkbox
+                        const cb = document.getElementById('daerah-' + daerah.replace(/\s+/g, '-').toLowerCase());
+                        if (cb) cb.checked = false;
                         updateActiveFiltersUI();
                         applyFilters();
                     });
@@ -813,9 +892,9 @@
 
             // Event listener untuk modal show
             document.getElementById('filterModal').addEventListener('show.bs.modal', function () {
-                // Reset dropdown filter daerah berdasarkan active filters
-                Array.from(daerahFilter.options).forEach(option => {
-                    option.selected = activeFilters.daerah.includes(option.value);
+                // Check checkboxes daerah
+                document.querySelectorAll('input[name="daerahFilter"]').forEach(cb => {
+                    cb.checked = activeFilters.daerah.includes(cb.value);
                 });
 
                 // Reset input tanggal

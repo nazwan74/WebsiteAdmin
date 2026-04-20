@@ -101,5 +101,53 @@
 
     <!-- Page-specific scripts -->
     @yield('scripts')
+
+    <!-- Global SweetAlert Handler -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            @if(session('success'))
+                Toast.fire({
+                    icon: 'success',
+                    title: '{{ session('success') }}'
+                });
+            @endif
+
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: '{{ session('error') }}',
+                    confirmButtonColor: '#4361ee',
+                    customClass: {
+                        popup: 'rounded-4'
+                    }
+                });
+            @endif
+
+            @if($errors->any())
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kesalahan Validasi',
+                    text: '{{ $errors->first() }}',
+                    confirmButtonColor: '#4361ee',
+                    customClass: {
+                        popup: 'rounded-4'
+                    }
+                });
+            @endif
+        });
+    </script>
 </body>
 </html>

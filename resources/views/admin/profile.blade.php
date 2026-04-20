@@ -1,152 +1,157 @@
 @extends('admin.layouts.app', [
     'activePage' => 'profile',
-    'navbarTitle' => 'Profile Admin',
-    'navbarSubtitle' => 'Pengaturan Akun'
+    'navbarTitle' => 'Profil Saya',
+    'navbarSubtitle' => 'Kelola Informasi Akun'
 ])
 
 @section('title', 'Profile Admin')
 
 @section('styles')
 <style>
-    /* Gaya Container Profile */
-    .profile-container {
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        padding: 20px;
+    .profile-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 24px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        overflow: hidden;
     }
     
-    /* Gaya Header Profile */
-    .profile-header {
-        text-align: center;
-        margin-bottom: 30px;
+    .profile-banner {
+        height: 120px;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
     }
     
-    .profile-avatar {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        background-color: #e6edff;
+    .avatar-wrapper {
+        margin-top: -60px;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .profile-avatar-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 30px;
+        background: white;
+        padding: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 15px;
+        margin: 0 auto;
     }
     
-    .profile-avatar i {
-        font-size: 40px;
-        color: #4361ee;
+    .avatar-icon-box {
+        width: 100%;
+        height: 100%;
+        background: #f1f5f9;
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #6366f1;
     }
     
-    /* Gaya Informasi Profile */
-    .profile-info {
-        margin-bottom: 30px;
+    .info-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        margin-bottom: 4px;
     }
     
-    .profile-info-item {
-        margin-bottom: 15px;
-    }
-    
-    .profile-info-label {
+    .info-value {
+        font-size: 1rem;
         font-weight: 600;
-        color: #6c757d;
-        margin-bottom: 5px;
+        color: #1e293b;
     }
     
-    .profile-info-value {
-        color: #333;
+    .password-section {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 24px;
+        border: 1px solid #e2e8f0;
     }
     
-    /* Gaya Form Password */
-    .password-form {
-        background-color: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
+    .form-control {
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s;
+    }
+    
+    .form-control:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
     }
 </style>
 @endsection
 
 @section('content')
-<div class="profile-container">
-    <!-- Header Profile -->
-    <div class="profile-header">
-        <div class="profile-avatar">
-            <i class="bi bi-person-circle"></i>
+<div class="container-fluid pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="profile-card">
+                <div class="profile-banner"></div>
+                
+                <div class="px-4 pb-4">
+                    <div class="avatar-wrapper text-center mb-4">
+                        <div class="profile-avatar-large">
+                            <div class="avatar-icon-box">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                        </div>
+                        <h4 class="fw-bold text-dark mt-3 mb-1">{{ Session::get('admin.nama', 'Administrator') }}</h4>
+                        <span class="badge rounded-pill px-3 py-2 bg-primary bg-opacity-10 text-primary fw-bold" style="font-size: 0.75rem;">
+                            {{ strtoupper(str_replace('_', ' ', $admin['role'] ?? 'admin')) }}
+                        </span>
+                    </div>
+
+                    <div class="row g-4 mb-5 justify-content-center text-center">
+                        <div class="col-md-5">
+                            <div class="info-label">Alamat Email</div>
+                            <div class="info-value">{{ $admin['email'] }}</div>
+                        </div>
+                        <div class="col-md-5 border-start">
+                            <div class="info-label">Level Akses</div>
+                            <div class="info-value">{{ ucfirst($admin['role'] ?? 'admin') }} System</div>
+                        </div>
+                    </div>
+
+                    <div class="password-section">
+                        <h6 class="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
+                            <i class="bi bi-shield-lock text-primary"></i> Keamanan Akun
+                        </h6>
+                        
+                        <form action="{{ route('admin.profile.update-password') }}" method="POST">
+                            @csrf
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted">Password Saat Ini</label>
+                                    <input type="password" class="form-control" name="current_password" placeholder="Masukkan password lama Anda" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted">Password Baru</label>
+                                    <input type="password" class="form-control" name="new_password" placeholder="Minimal 6 karakter" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted">Konfirmasi Password</label>
+                                    <input type="password" class="form-control" name="new_password_confirmation" placeholder="Ulangi password baru" required>
+                                </div>
+                                <div class="col-12 mt-4 text-end">
+                                    <button type="submit" class="btn btn-primary px-4 py-2 shadow-sm" style="border-radius: 12px;">
+                                        <i class="bi bi-key-fill me-2"></i>Perbarui Kata Sandi
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
-        <h3>{{ $admin['name'] ?? 'Admin' }}</h3>
-        <span class="badge bg-primary">{{ ucfirst($admin['role'] ?? 'admin') }}</span>
-    </div>
-
-    <!-- Informasi Profile -->
-    <div class="profile-info">
-        <div class="profile-info-item">
-            <div class="profile-info-label">Email</div>
-            <div class="profile-info-value">{{ $admin['email'] }}</div>
-        </div>
-        <div class="profile-info-item">
-            <div class="profile-info-label">Role</div>
-            <div class="profile-info-value">{{ ucfirst($admin['role'] ?? 'admin') }}</div>
-        </div>
-    </div>
-
-    <!-- Form Ubah Password -->
-    <div class="password-form">
-        <h4 class="mb-4">Ubah Password</h4>
-        
-        <!-- Pesan Sukses -->
-        @if(session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        <!-- Pesan Error -->
-        @if($errors->any())
-            <div class="alert alert-danger">
-                <ul class="mb-0">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <!-- Form Password -->
-        <form action="{{ route('admin.profile.update-password') }}" method="POST">
-            @csrf
-            
-            <!-- Field Password Saat Ini -->
-            <div class="mb-3">
-                <label for="current_password" class="form-label">Password Saat Ini</label>
-                <input type="password" class="form-control @error('current_password') is-invalid @enderror" id="current_password" name="current_password" required>
-                @error('current_password')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-            
-            <!-- Field Password Baru -->
-            <div class="mb-3">
-                <label for="new_password" class="form-label">Password Baru</label>
-                <input type="password" class="form-control @error('new_password') is-invalid @enderror" id="new_password" name="new_password" required>
-                @error('new_password')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-            
-            <!-- Field Konfirmasi Password -->
-            <div class="mb-3">
-                <label for="new_password_confirmation" class="form-label">Konfirmasi Password Baru</label>
-                <input type="password" class="form-control @error('new_password_confirmation') is-invalid @enderror" id="new_password_confirmation" name="new_password_confirmation" required>
-                @error('new_password_confirmation')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-            
-            <!-- Tombol Submit -->
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-key me-2"></i>Ubah Password
-            </button>
-        </form>
     </div>
 </div>
 @endsection

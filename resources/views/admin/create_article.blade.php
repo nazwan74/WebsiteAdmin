@@ -46,98 +46,85 @@
 @endsection
 
 @section('content')
-<div class="container-fluid">
-    <div class="card shadow">
-        <div class="card-body">
-            <h3 class="card-title text-center mb-4">Tambah Artikel Baru</h3>
-            
-            <!-- Form Tambah Artikel -->
-            <form action="{{ route('admin.articel.store') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-    
-                <!-- Thumbnail -->
-                <div class="mb-3">
-                    <label for="photoUrl" class="form-label fw-semibold">Tambah Thumbnail Artikel</label>
-                    <input class="form-control @error('photoUrl') is-invalid @enderror" type="file" id="photoUrl" name="photoUrl" accept="image/*" required>
-                    <small class="text-muted">Ukuran Maximum File: 2MB</small>
-                    @error('photoUrl')
-                        <div class="invalid-feedback">
-                            @if($message == 'The photo url field is required.')
-                                Thumbnail artikel harus diisi
-                            @elseif($message == 'The photo url must be an image.')
-                                File yang diunggah harus berupa gambar
-                            @elseif($message == 'The photo url must not be greater than 2048 kilobytes.')
-                                Ukuran file tidak boleh lebih dari 2MB
-                            @else
-                                {{ $message }}
-                            @endif
-                        </div>
-                    @enderror
-                </div>
-    
-                <!-- Kategori -->
-                <div class="mb-3">
-                    <label for="articleType" class="form-label fw-semibold">Pilih Kategori Artikel</label>
-                    <select class="form-select @error('articleType') is-invalid @enderror" id="articleType" name="articleType" required>
-                        <option value="">-- Pilih Kategori --</option>
-                        <option value="stunting">Stunting</option>
-                        <option value="bullying">Bullying</option>
-                        <option value="pernikahan dini">Pernikahan Anak</option>
-                        <option value="kekerasan anak">Kekerasan Anak</option>
-                    </select>
-                    @error('articleType')
-                        <div class="invalid-feedback">
-                            @if($message == 'The article type field is required.')
-                                Kategori artikel harus dipilih
-                            @else
-                                {{ $message }}
-                            @endif
-                        </div>
-                    @enderror
-                </div>
-    
-                <!-- Judul -->
-                <div class="mb-3">
-                    <label for="title" class="form-label fw-semibold">Tambah Judul Artikel</label>
-                    <input type="text" class="form-control @error('title') is-invalid @enderror" id="title" name="title" placeholder="Tulis Judul Artikel Disini" required>
-                    @error('title')
-                        <div class="invalid-feedback">
-                            @if($message == 'The title field is required.')
-                                Judul artikel harus diisi
-                            @else
-                                {{ $message }}
-                            @endif
-                        </div>
-                    @enderror
-                </div>
-    
-    
-    
-                <!-- Konten -->
-                <div class="mb-4">
-                    <label for="description" class="form-label fw-semibold">Tambah Konten Artikel</label>
-                    <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="5" placeholder="Tulis Isi Artikel Disini..." required></textarea>
-                    @error('description')
-                        <div class="invalid-feedback">
-                            @if($message == 'The description field is required.')
-                                Konten artikel harus diisi
-                            @else
-                                {{ $message }}
-                            @endif
-                        </div>
-                    @enderror
-                </div>
-    
-                <!-- Tombol Aksi -->
-                <div class="d-flex justify-content-between">
-                    <a href="{{ route('admin.articel.index') }}" class="btn btn-danger">
-                        <i class="bi bi-arrow-left"></i> Batal
+<div class="container-fluid pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="glass-card overflow-hidden">
+                <div class="p-4 bg-white bg-opacity-50 border-bottom d-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark">Tambah Artikel Baru</h4>
+                        <p class="text-muted small mb-0">Publikasikan konten edukasi berkualitas untuk masyarakat</p>
+                    </div>
+                    <a href="{{ route('admin.articel.index') }}" class="btn btn-light btn-sm px-3 shadow-sm border" style="border-radius: 8px;">
+                        <i class="bi bi-arrow-left me-1 text-primary"></i> Kembali
                     </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> Simpan Artikel
-                    </button>
                 </div>
-            </form>
+                
+                <div class="p-4">
+                    <form action="{{ route('admin.articel.store') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+            
+                        <div class="row g-4">
+                            <!-- Left Column: Title & Content -->
+                            <div class="col-lg-8">
+                                <div class="mb-4">
+                                    <label for="title" class="form-label fw-bold small text-uppercase" style="letter-spacing: 0.05em; color: #64748b;">Judul Artikel</label>
+                                    <input type="text" class="form-control border-0 shadow-sm py-2 px-3 @error('title') is-invalid @enderror" id="title" name="title" placeholder="Tulis judul yang menarik..." style="border-radius: 12px; font-size: 1.1rem; font-weight: 600;" value="{{ old('title') }}" required>
+                                    @error('title')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                    
+                                <div class="mb-3">
+                                    <label for="description" class="form-label fw-bold small text-uppercase" style="letter-spacing: 0.05em; color: #64748b;">Isi Konten</label>
+                                    <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" required>{{ old('description') }}</textarea>
+                                    @error('description')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Thumbnail & Category -->
+                            <div class="col-lg-4">
+                                <div class="glass-card p-4 bg-light bg-opacity-50" style="border-radius: 16px;">
+                                    <div class="mb-4">
+                                        <label for="photoUrl" class="form-label fw-bold small text-uppercase" style="letter-spacing: 0.05em; color: #64748b;">Thumbnail</label>
+                                        <div class="mb-3 p-3 text-center border-2 border-dashed rounded-4 bg-white" style="border-style: dashed !important; border-color: #cbd5e1 !important;">
+                                            <i class="bi bi-cloud-arrow-up fs-1 text-primary opacity-50"></i>
+                                            <p class="small text-muted mt-2">Format: JPG, PNG, WEBP (Max 2MB)</p>
+                                            <input class="form-control form-control-sm @error('photoUrl') is-invalid @enderror" type="file" id="photoUrl" name="photoUrl" accept="image/*" required>
+                                        </div>
+                                        @error('photoUrl')
+                                            <div class="text-danger small">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                        
+                                    <div class="mb-4">
+                                        <label for="articleType" class="form-label fw-bold small text-uppercase" style="letter-spacing: 0.05em; color: #64748b;">Kategori</label>
+                                        <select class="form-select border-0 shadow-sm py-2 px-3 @error('articleType') is-invalid @enderror" id="articleType" name="articleType" style="border-radius: 12px;" required>
+                                            <option value="">Pilih Kategori</option>
+                                            <option value="stunting" {{ old('articleType') == 'stunting' ? 'selected' : '' }}>Stunting</option>
+                                            <option value="bullying" {{ old('articleType') == 'bullying' ? 'selected' : '' }}>Bullying</option>
+                                            <option value="pernikahan dini" {{ old('articleType') == 'pernikahan dini' ? 'selected' : '' }}>Pernikahan Anak</option>
+                                            <option value="kekerasan anak" {{ old('articleType') == 'kekerasan anak' ? 'selected' : '' }}>Kekerasan Anak</option>
+                                        </select>
+                                        @error('articleType')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <hr class="my-4 opacity-10">
+
+                                    <button type="submit" class="btn btn-primary w-100 py-3 shadow-sm d-flex align-items-center justify-content-center gap-2" style="border-radius: 14px;">
+                                        <i class="bi bi-send-fill"></i>
+                                        <span class="fw-bold">Publikasikan Artikel</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>

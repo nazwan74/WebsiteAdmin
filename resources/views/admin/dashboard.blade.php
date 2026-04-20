@@ -8,58 +8,193 @@
 
 @section('head-scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+@endsection
+
+@section('styles')
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #4361ee 0%, #304ffe 100%);
+        --success-gradient: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        --warning-gradient: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        --info-gradient: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        --purple-gradient: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%);
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8fafc;
+    }
+
+    h1, h2, h3, h4, h5, h6, .fw-bold {
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: -20px;
+        right: -20px;
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        z-index: -1;
+    }
+
+    .icon-box {
+        width: 54px;
+        height: 54px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.04);
+    }
+
+    .table thead th {
+        background-color: #f8fafc;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        border-top: none;
+        padding: 12px 16px;
+    }
+
+    .status-pill {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .chart-container {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    /* Category Badges */
+    .badge-category {
+        padding: 6px 12px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1.5px solid transparent; /* Dipertebal */
+    }
+    .theme-pernikahan { background: #fff1f2; color: #e11d48; border-color: rgba(225, 29, 72, 0.2) !important; }
+    .theme-kekerasan { background: #fef2f2; color: #dc2626; border-color: rgba(220, 38, 38, 0.2) !important; }
+    .theme-bullying { background: #fffbeb; color: #d97706; border-color: rgba(217, 119, 6, 0.2) !important; }
+    .theme-stunting { background: #f0fdf4; color: #16a34a; border-color: rgba(22, 163, 74, 0.2) !important; }
+    .theme-default { background: #f8fafc; color: #64748b; border-color: rgba(100, 116, 139, 0.2) !important; }
+</style>
 @endsection
 
 @section('content')
+<!-- Header Dashboard dengan Tombol Refresh -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-0">Overview Real-time</h4>
+        <p class="text-muted small mb-0">Pantau statistik dan laporan terbaru hari ini</p>
+    </div>
+    <a href="{{ route('admin.dashboard.refresh') }}" class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm" style="border-radius: 12px; transition: all 0.3s ease;">
+        <i class="bi bi-arrow-clockwise fs-5"></i>
+        <span class="fw-semibold">Perbarui Data</span>
+    </a>
+</div>
+
 <!-- Bagian Statistik -->
-<div class="row">
-    <div class="col-md-3 mb-4">
-        <div class="bg-white shadow-sm rounded p-3">
-            <div class="d-flex align-items-center mb-2">
-                <i class="bi bi-people-fill text-primary me-2" style="font-size: 1.5rem;"></i>
-                <h6 class="mb-0 text-muted">Pengguna Aplikasi</h6>
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="stat-card glass-card p-4 h-100">
+            <div class="icon-box bg-primary text-white" style="background: var(--primary-gradient) !important;">
+                <i class="bi bi-people-fill" style="font-size: 1.5rem;"></i>
             </div>
-            <h3 class="fw-bold" id="totalUsers">1</h3>
+            <h6 class="text-muted small fw-medium mb-1">Pengguna Aplikasi</h6>
+            <h2 class="fw-bold mb-0" id="totalUsers">{{ $totalUsers }}</h2>
+            <div class="mt-2">
+                <span class="text-success small fw-semibold"><i class="bi bi-arrow-up"></i> Terverifikasi</span>
+            </div>
         </div>
     </div>
-    <div class="col-md-3 mb-4">
-        <div class="bg-white shadow-sm rounded p-3">
-            <div class="d-flex align-items-center mb-2">
-                <i class="bi bi-file-earmark-text-fill text-warning me-2" style="font-size: 1.5rem;"></i>
-                <h6 class="mb-0 text-muted">Laporan Masuk</h6>
+    <div class="col-md-3">
+        <div class="stat-card glass-card p-4 h-100">
+            <div class="icon-box bg-warning text-white" style="background: var(--warning-gradient) !important;">
+                <i class="bi bi-file-earmark-text-fill" style="font-size: 1.5rem;"></i>
             </div>
-            <h3 class="fw-bold" id="totalLaporan">1</h3>
+            <h6 class="text-muted small fw-medium mb-1">Laporan Masuk</h6>
+            <h2 class="fw-bold mb-0" id="totalLaporan">{{ $totalLaporan }}</h2>
+            <div class="mt-2">
+                <span class="text-warning small fw-semibold"><i class="bi bi-clock-history"></i> Butuh Respon</span>
+            </div>
         </div>
     </div>
-    <div class="col-md-3 mb-4">
-        <div class="bg-white shadow-sm rounded p-3">
-            <div class="d-flex align-items-center mb-2">
-                <i class="bi bi-check-circle-fill text-success me-2" style="font-size: 1.5rem;"></i>
-                <h6 class="mb-0 text-muted">Kasus Selesai</h6>
+    <div class="col-md-3">
+        <div class="stat-card glass-card p-4 h-100">
+            <div class="icon-box bg-success text-white" style="background: var(--success-gradient) !important;">
+                <i class="bi bi-check-circle-fill" style="font-size: 1.5rem;"></i>
             </div>
-            <h3 class="fw-bold" id="totalSelesai">1</h3>
+            <h6 class="text-muted small fw-medium mb-1">Kasus Selesai</h6>
+            <h2 class="fw-bold mb-0" id="totalSelesai">{{ $totalSelesai }}</h2>
+            <div class="mt-2">
+                <span class="text-success small fw-semibold"><i class="bi bi-shield-check"></i> Tertangani</span>
+            </div>
         </div>
     </div>
-    <div class="col-md-3 mb-4">
-        <div class="bg-white shadow-sm rounded p-3">
-            <div class="d-flex align-items-center mb-2">
-                <i class="bi bi-book-fill me-2" style="font-size: 1.5rem; color: #8e44ad;"></i>
-                <h6 class="mb-0 text-muted">Artikel Edukasi</h6>
+    <div class="col-md-3">
+        <div class="stat-card glass-card p-4 h-100">
+            <div class="icon-box text-white" style="background: var(--purple-gradient) !important;">
+                <i class="bi bi-book-fill" style="font-size: 1.5rem;"></i>
             </div>
-            <h3 class="fw-bold" id="totalArticles">1</h3>
+            <h6 class="text-muted small fw-medium mb-1">Artikel Edukasi</h6>
+            <h2 class="fw-bold mb-0" id="totalArticles">{{ $totalArticles }}</h2>
+            <div class="mt-2">
+                <span class="text-info small fw-semibold"><i class="bi bi-lightbulb"></i> Literasi Aktif</span>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Bar Chart Laporan per Kota -->
-<div class="row mt-3 g-3">
+<div class="row mt-4 g-4">
     <div class="col-lg-12">
-        <div class="bg-white shadow-sm rounded p-3">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-bold mb-0">Laporan per Kota/Daerah</h6>
-                <span class="text-muted small">Kalimantan Barat (14 kab/kota)</span>
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h5 class="fw-bold mb-0">Laporan per Kota/Daerah</h5>
+                    <p class="text-muted small mb-0">Sebaran data di 14 Kabupaten/Kota Kalimantan Barat</p>
+                </div>
+                <div class="icon-box bg-light text-primary mb-0">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
             </div>
-            <div style="height: 420px;">
+            <div style="height: 400px;" class="chart-container">
                 <canvas id="daerahLaporanChart"></canvas>
             </div>
         </div>
@@ -67,49 +202,43 @@
 </div>
 
 <!-- Tren Laporan per Periode + Rentang Usia Anak -->
-<div class="row mt-3 g-3">
+<div class="row mt-4 g-4">
     <div class="col-lg-8">
-        <div class="bg-white shadow-sm rounded p-3">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                <h6 class="fw-bold mb-0">Tren Laporan per Periode</h6>
+        <div class="glass-card p-4 h-100">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                <div>
+                    <h5 class="fw-bold mb-0">Tren Laporan per Periode</h5>
+                    <p class="text-muted small mb-0">Fluktuasi jumlah laporan masuk</p>
+                </div>
                 <div class="d-flex flex-wrap align-items-center gap-2">
                     <form method="GET" action="{{ route('admin.dashboard') }}" id="filterTrenForm" class="d-flex flex-wrap align-items-center gap-2">
-                        <label class="form-label mb-0 small text-muted">Tahun:</label>
-                        <select name="tahun" class="form-select form-select-sm" style="width: auto; min-width: 120px;" onchange="document.getElementById('filterTrenForm').submit();">
+                        <select name="tahun" class="form-select form-select-sm border-0 bg-light" style="width: auto; border-radius: 8px;" onchange="document.getElementById('filterTrenForm').submit();">
                             <option value="">12 bulan terakhir</option>
                             @foreach($tahunList ?? [] as $y)
                                 <option value="{{ $y }}" {{ (request('tahun') == $y || ($filterTahun ?? '') == $y) ? 'selected' : '' }}>{{ $y }}</option>
                             @endforeach
                         </select>
-                        <label class="form-label mb-0 small text-muted ms-1">Bulan:</label>
-                        <select name="bulan" class="form-select form-select-sm" style="width: auto; min-width: 140px;" onchange="document.getElementById('filterTrenForm').submit();" {{ empty($filterTahun) ? 'disabled' : '' }}>
+                        <select name="bulan" class="form-select form-select-sm border-0 bg-light" style="width: auto; border-radius: 8px;" onchange="document.getElementById('filterTrenForm').submit();" {{ empty($filterTahun) ? 'disabled' : '' }}>
                             <option value="">Semua bulan</option>
-                            @php
-                                $bulanNama = ['1' => 'Januari', '2' => 'Februari', '3' => 'Maret', '4' => 'April', '5' => 'Mei', '6' => 'Juni', '7' => 'Juli', '8' => 'Agustus', '9' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'];
-                            @endphp
-                            @foreach($bulanNama as $num => $nama)
+                            @foreach($bulanNama ?? ['1' => 'Januari', '2' => 'Februari', '3' => 'Maret', '4' => 'April', '5' => 'Mei', '6' => 'Juni', '7' => 'Juli', '8' => 'Agustus', '9' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'] as $num => $nama)
                                 <option value="{{ $num }}" {{ (request('bulan') == $num || ($filterBulan ?? '') == $num) ? 'selected' : '' }}>{{ $nama }}</option>
                             @endforeach
                         </select>
-                        <button type="submit" class="btn btn-sm btn-primary">Terapkan</button>
                     </form>
-                    <span class="badge bg-primary">{{ $trenPeriodLabel ?? '12 bulan terakhir' }}</span>
-                    <a href="{{ route('admin.dashboard.refresh') }}" class="btn btn-sm btn-outline-secondary" title="Refresh Data">
-                        <i class="bi bi-arrow-clockwise"></i>
-                    </a>
                 </div>
             </div>
-            <div style="height: 280px;">
+            <div style="height: 300px;" class="chart-container">
                 <canvas id="trenLaporanChart"></canvas>
             </div>
         </div>
     </div>
     <div class="col-lg-4">
-        <div class="bg-white shadow-sm rounded p-3 h-100">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-bold mb-0">Rentang Usia Anak</h6>
+        <div class="glass-card p-4 h-100">
+            <div class="mb-4">
+                <h5 class="fw-bold mb-0">Rentang Usia Anak</h5>
+                <p class="text-muted small mb-0">Demografi korban</p>
             </div>
-            <div style="height: 280px;">
+            <div style="height: 300px;" class="chart-container">
                 <canvas id="usiaChart"></canvas>
             </div>
         </div>
@@ -117,71 +246,103 @@
 </div>
 
 <!-- Tabel Laporan Terbaru -->
-<div class="row mt-3 g-3">
+<div class="row mt-4 mb-5 g-4">
     <div class="col-lg-12">
-        <div class="bg-white shadow-sm rounded p-3 h-100">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-bold mb-0">Laporan Terbaru</h6>
-                <a href="{{ route('admin.laporan') }}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
+        <div class="glass-card p-0 overflow-hidden">
+            <div class="p-4 d-flex justify-content-between align-items-center border-bottom">
+                <div>
+                    <h5 class="fw-bold mb-0">Laporan Terbaru</h5>
+                    <p class="text-muted small mb-0">Daftar kasus yang masuk sistem</p>
+                </div>
+                <a href="{{ route('admin.laporan') }}" class="btn btn-sm btn-primary px-3" style="border-radius: 8px;">Lihat Semua</a>
             </div>
-            <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
-                <table class="table table-hover table-sm align-middle mb-0">
-                    <thead class="table-light sticky-top">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
                         <tr>
-                            <th>Tanggal</th>
-                            <th>Kategori</th>
-                            <th>Daerah</th>
-                            <th>Status</th>
-                            <th>Aksi</th>
+                            <th class="ps-4">Tanggal & Waktu</th>
+                            <th>Kategori Kasus</th>
+                            <th>Daerah Kejadian</th>
+                            <th>Status Penanganan</th>
+                            <th class="pe-4 text-end">Tindakan</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($laporanTerbaru ?? [] as $item)
                             @php
                                 $status = strtolower($item['status'] ?? 'baru');
-                                $badgeColor = match($status) {
-                                    'selesai' => 'success',
-                                    'diproses' => 'warning',
-                                    'ditolak' => 'danger',
-                                    default => 'secondary',
+                                $pillStyle = match($status) {
+                                    'selesai' => 'background: #eafaf2; color: #27ae60; border: 1px solid #c3f3db;',
+                                    'diproses' => 'background: #fff9e6; color: #d68910; border: 1px solid #fdebd0;',
+                                    'ditolak' => 'background: #fff0f0; color: #e74c3c; border: 1px solid #fadbd8;',
+                                    default => 'background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;',
                                 };
+
+                                $kategori = strtolower($item['kategori'] ?? '');
+                                $categoryIcon = match($kategori) {
+                                    'pernikahan anak' => 'bi-heart-break-fill',
+                                    'kekerasan anak' => 'bi-exclamation-triangle-fill',
+                                    'bullying' => 'bi-megaphone-fill',
+                                    'stunting' => 'bi-hospital-fill',
+                                    default => 'bi-tag-fill',
+                                };
+                                $kategoriTheme = match($kategori) {
+                                    'pernikahan anak' => 'theme-pernikahan',
+                                    'kekerasan anak' => 'theme-kekerasan',
+                                    'bullying' => 'theme-bullying',
+                                    'stunting' => 'theme-stunting',
+                                    default => 'theme-default',
+                                };
+                                
                                 $tanggalBuat = $item['created_date'] ?? ($item['create_at'] ?? null);
-                                if ($tanggalBuat !== null && $tanggalBuat !== '') {
+                                $parsedBuat = null;
+                                if ($tanggalBuat) {
                                     try {
-                                        if (is_numeric($tanggalBuat)) {
-                                            // Handle numeric timestamp (milliseconds)
+                                        if ($tanggalBuat instanceof \Google\Cloud\Core\Timestamp) {
+                                            $parsedBuat = \Carbon\Carbon::instance($tanggalBuat->get());
+                                        } elseif (is_numeric($tanggalBuat)) {
                                             $parsedBuat = \Carbon\Carbon::createFromTimestampMs((int)$tanggalBuat);
                                         } else {
                                             $parsedBuat = \Carbon\Carbon::parse($tanggalBuat);
                                         }
-                                    } catch (\Throwable $e) {
-                                        try {
-                                            $parsedBuat = \Carbon\Carbon::createFromLocaleFormat('d M Y H:i', 'id', $tanggalBuat);
-                                        } catch (\Throwable $e2) {
-                                            $parsedBuat = null;
-                                        }
-                                    }
+                                    } catch (\Exception $e) {}
                                 }
                             @endphp
                             <tr>
-                                <td class="text-nowrap">{{ $parsedBuat ? $parsedBuat->locale('id')->translatedFormat('d M Y, H:i') : ($tanggalBuat ?: '-') }}</td>
-                                <td>{{ $item['kategori'] ?? '-' }}</td>
-                                <td>{{ $item['daerah'] ?? '-' }}</td>
-                                @php
-                                    $statusDisplay = $status === 'baru' ? 'Belum Ditangani' : ucfirst($status);
-                                @endphp
-                                <td><span class="badge bg-{{ $badgeColor }}">{{ $statusDisplay }}</span></td>
+                                <td class="ps-4">
+                                    <div class="fw-medium text-dark">{{ $parsedBuat ? $parsedBuat->locale('id')->translatedFormat('d M Y') : '-' }}</div>
+                                    <div class="text-muted small">{{ $parsedBuat ? $parsedBuat->format('H:i') . ' WIB' : '' }}</div>
+                                </td>
                                 <td>
-                                <button
-                                    class="btn btn-primary btn-sm"
-                                    onclick="openDetailLaporan('{{ $item['id'] }}')">
-                                    Detail
-                                </button>
-                            </td>
+                                    <span class="badge-category {{ $kategoriTheme }}">
+                                        <i class="bi {{ $categoryIcon }}"></i>
+                                        {{ $item['kategori'] ?? '-' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-geo-alt text-muted me-2"></i>
+                                        <span>{{ $item['daerah'] ?? '-' }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-pill" style="{{ $pillStyle }}">
+                                        <i class="bi bi-circle-fill me-1" style="font-size: 0.4rem; vertical-align: middle;"></i>
+                                        {{ $status === 'baru' ? 'Belum Ditangani' : ucfirst($status) }}
+                                    </span>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <button class="btn btn-light btn-sm fw-semibold px-3 border" style="border-radius: 6px;" onclick="openDetailLaporan('{{ $item['id'] }}')">
+                                        Detail
+                                    </button>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center text-muted py-4">Belum ada laporan.</td>
+                                <td colspan="5" class="text-center text-muted py-5">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
+                                    Belum ada laporan masuk.
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -263,62 +424,50 @@
                     label: 'Jumlah Laporan',
                     data: data,
                     borderColor: '#4361ee',
-                    backgroundColor: 'rgba(67, 97, 238, 0.15)',
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) return null;
+                        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                        gradient.addColorStop(0, 'rgba(67, 97, 238, 0)');
+                        gradient.addColorStop(1, 'rgba(67, 97, 238, 0.1)');
+                        return gradient;
+                    },
                     fill: true,
-                    tension: 0.3,
-                    borderWidth: 2,
-                    pointBackgroundColor: '#4361ee',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 1,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#4361ee',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointHoverBackgroundColor: '#4361ee',
+                    pointHoverBorderColor: '#fff',
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                },
                 plugins: {
-                    legend: {
-                        display: false
-                    },
+                    legend: { display: false },
                     tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'Laporan: ' + context.parsed.y + ' kasus';
-                            }
-                        }
+                        backgroundColor: '#1e293b',
+                        padding: 12,
+                        titleFont: { family: 'Outfit', size: 13 },
+                        bodyFont: { family: 'Inter', size: 12 },
+                        cornerRadius: 8,
+                        displayColors: false
                     }
                 },
                 scales: {
                     x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 0,
-                            font: { size: 11 }
-                        }
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 11 } }
                     },
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            stepSize: 1,
-                            precision: 0,
-                            font: { size: 11 }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Jumlah Laporan',
-                            font: { size: 11 }
-                        },
-                        grid: {
-                            drawBorder: false
-                        }
+                        grid: { borderDash: [5, 5], color: '#e2e8f0', drawBorder: false },
+                        ticks: { color: '#64748b', font: { size: 11 }, stepSize: 1 }
                     }
                 }
             }
@@ -340,54 +489,28 @@
                 datasets: [{
                     label: 'Jumlah Laporan',
                     data: data,
-                    backgroundColor: 'rgba(52, 152, 219, 0.6)',
-                    borderColor: '#3498db',
-                    borderWidth: 1,
-                    borderRadius: 4,
+                    backgroundColor: '#4361ee',
+                    hoverBackgroundColor: '#304ffe',
+                    borderRadius: 6,
+                    barThickness: 15,
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.parsed.y + ' laporan';
-                            }
-                        }
-                    }
+                    legend: { display: false },
+                    tooltip: { backgroundColor: '#1e293b', padding: 12 }
                 },
                 scales: {
                     x: {
-                        ticks: {
-                            font: { size: 10 },
-                            autoSkip: false,
-                            maxRotation: 45,
-                            minRotation: 30
-                        },
-                        grid: {
-                            display: false
-                        }
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 10 }, maxRotation: 45 }
                     },
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            stepSize: 25,
-                            precision: 0,
-                            font: { size: 11 }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Jumlah Laporan',
-                            font: { size: 11 }
-                        },
-                        grid: {
-                            drawBorder: false
-                        }
+                        grid: { borderDash: [5, 5], color: '#e2e8f0', drawBorder: false },
+                        ticks: { color: '#64748b', font: { size: 11 }, stepSize: 25 }
                     }
                 }
             }
@@ -410,64 +533,28 @@
                     label: 'Jumlah Laporan',
                     data: usiaData,
                     backgroundColor: [
-                        'rgba(231, 76, 60, 0.6)',
-                        'rgba(46, 204, 113, 0.6)',
-                        'rgba(52, 152, 219, 0.6)',
-                        'rgba(243, 156, 18, 0.6)',
-                        'rgba(155, 89, 182, 0.6)'
+                        '#4361ee', '#3f37c9', '#4895ef', '#4cc9f0', '#b517ad'
                     ],
-                    borderColor: [
-                        '#e74c3c',
-                        '#2ecc71',
-                        '#3498db',
-                        '#f39c12',
-                        '#9b59b6'
-                    ],
-                    borderWidth: 1,
-                    borderRadius: 4,
+                    borderRadius: 6,
+                    barThickness: 20,
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.parsed.y + ' laporan';
-                            }
-                        }
-                    }
+                    legend: { display: false },
+                    tooltip: { backgroundColor: '#1e293b', padding: 10 }
                 },
                 scales: {
                     x: {
-                        ticks: {
-                            font: { size: 9 },
-                            maxRotation: 45,
-                            minRotation: 30
-                        },
-                        grid: {
-                            display: false
-                        }
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 9 } }
                     },
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            stepSize: 25,
-                            precision: 0,
-                            font: { size: 11 }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Jumlah Laporan',
-                            font: { size: 11 }
-                        },
-                        grid: {
-                            drawBorder: false
-                        }
+                        grid: { borderDash: [5, 5], color: '#e2e8f0', drawBorder: false },
+                        ticks: { color: '#64748b', font: { size: 11 }, stepSize: 25 }
                     }
                 }
             }

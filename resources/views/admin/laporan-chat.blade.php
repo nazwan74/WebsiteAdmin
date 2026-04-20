@@ -14,24 +14,27 @@
     <style>
         /* --- CHAT SPECIFIC CSS --- */
         .chat-container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 120px); /* Fill remaining height */
+            height: calc(100vh - 140px);
             overflow: hidden;
         }
         
         .chat-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid #e9ecef;
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #fff;
+            background: rgba(255, 255, 255, 0.4);
         }
         
         .chat-box {
@@ -67,8 +70,9 @@
         
         /* User Message (Left) */
         .msg.user .bubble { 
-            background: #fff; color: #212529; border-top-left-radius: 2px;
-            border: 1px solid #e9ecef;
+            background: #fff; color: #1e293b; border-top-left-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
         
         /* Admin Message (Right) */
@@ -76,10 +80,17 @@
         .msg.admin .header { flex-direction: row-reverse; }
         .msg.admin .content { align-items: flex-end; }
         .msg.admin .bubble { 
-            background: #4361ee; color: #fff; border-top-right-radius: 2px;
-            box-shadow: 0 2px 4px rgba(67, 97, 238, 0.2);
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #fff; border-top-right-radius: 4px;
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.15);
         }
-        .msg.admin .status { font-size: 0.7rem; color: #adb5bd; margin-top: 2px; text-align: right; }
+        .msg .status { font-size: 0.7rem; color: #adb5bd; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+        .msg.admin .status { justify-content: flex-end; }
+        
+        .badge-edited {
+            font-size: 0.65rem; background: #f1f3f5; color: #868e96; padding: 1px 6px; border-radius: 10px; font-weight: 500;
+        }
+        .msg.admin .badge-edited { background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.9); }
 
         .date-separator { text-align: center; margin: 20px 0; position: relative; }
         .date-separator::before {
@@ -110,6 +121,15 @@
         .btn-send:hover { background: #304ffe; transform: scale(1.05); }
         .btn-send:disabled { background: #e9ecef; color: #adb5bd; cursor: not-allowed; transform: none; box-shadow: none; }
         
+        /* Edit Mode Bar */
+        .edit-mode-bar {
+            display: none; padding: 8px 20px; background: #fff9db; border-top: 1px solid #ffec99;
+            align-items: center; gap: 10px; border-bottom: 1px solid #ffec99;
+        }
+        .edit-mode-bar.active { display: flex; }
+        .edit-mode-bar .edit-info { font-size: 0.85rem; color: #856404; flex: 1; }
+        .edit-mode-bar .btn-cancel-edit { background: none; border: none; color: #856404; cursor: pointer; font-size: 1.1rem; }
+        
         /* Chat Actions */
         .msg .actions {
             opacity: 0; transition: opacity 0.2s; display: flex; align-items: center; margin: 0 8px;
@@ -138,12 +158,20 @@
         .msg-menu-item.text-danger:hover { background-color: #fff5f5; }
         
         /* Inline Edit Form */
-        .edit-form { width: 100%; }
-        .edit-textarea {
-            width: 100%; resize: none; border: 1px solid #ced4da; border-radius: 8px; padding: 8px;
-            font-size: 0.95rem; font-family: inherit; margin-bottom: 6px;
+        .edit-form { 
+            width: 100%; animation: fadeIn 0.2s ease-out; background: rgba(255,255,255,0.1); padding: 5px; border-radius: 8px;
         }
-        .edit-buttons { display: flex; gap: 6px; justify-content: flex-end; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .edit-textarea {
+            width: 100%; resize: none; border: 2px solid #4361ee; border-radius: 10px; padding: 10px;
+            font-size: 0.95rem; font-family: inherit; margin-bottom: 8px; outline: none;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.1);
+        }
+        .msg.admin .edit-textarea { background: #fff; color: #212529; }
+        .edit-buttons { display: flex; gap: 8px; justify-content: flex-end; }
+        .btn-edit-save { background: #4361ee; color: white; border: none; padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
+        .btn-edit-cancel { background: #f1f3f5; color: #495057; border: none; padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; }
 
         /* Chat Images */
         .bubble img.chat-img {
@@ -198,6 +226,23 @@
 
         /* User message status */
         .msg.user .status { font-size: 0.7rem; color: #adb5bd; margin-top: 2px; }
+
+        /* Category Badges */
+        .badge-category {
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1.5px solid transparent; /* Dipertebal */
+        }
+        .theme-pernikahan { background: #fff1f2; color: #e11d48; border-color: rgba(225, 29, 72, 0.2) !important; }
+        .theme-kekerasan { background: #fef2f2; color: #dc2626; border-color: rgba(220, 38, 38, 0.2) !important; }
+        .theme-bullying { background: #fffbeb; color: #d97706; border-color: rgba(217, 119, 6, 0.2) !important; }
+        .theme-stunting { background: #f0fdf4; color: #16a34a; border-color: rgba(22, 163, 74, 0.2) !important; }
+        .theme-default { background: #f8fafc; color: #64748b; border-color: rgba(100, 116, 139, 0.2) !important; }
     </style>
 @endsection
 
@@ -205,17 +250,55 @@
     <div class="chat-container">
         <!-- Header Chat -->
         <div class="chat-header">
-            <div>
-                <h5 class="mb-0 fw-bold">{{ $laporan['judul'] ?? 'Laporan' }}</h5>
-                <div class="text-muted small">Pelapor: {{ $laporan['user_name'] ?? ($laporan['nama'] ?? 'User') }}</div>
+            <div class="d-flex align-items-center gap-3">
+                @php
+                    $kategori = strtolower($laporan['case_type'] ?? ($laporan['kategori'] ?? ''));
+                    $categoryIcon = match($kategori) {
+                        'pernikahan anak' => 'bi-heart-break-fill',
+                        'kekerasan anak' => 'bi-exclamation-triangle-fill',
+                        'bullying' => 'bi-megaphone-fill',
+                        'stunting' => 'bi-hospital-fill',
+                        default => 'bi-tag-fill',
+                    };
+                    $kategoriTheme = match($kategori) {
+                        'pernikahan anak' => 'theme-pernikahan',
+                        'kekerasan anak' => 'theme-kekerasan',
+                        'bullying' => 'theme-bullying',
+                        'stunting' => 'theme-stunting',
+                        default => 'theme-default',
+                    };
+                @endphp
+                <div class="badge-category {{ $kategoriTheme }} p-0 shadow-sm" style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="bi {{ $categoryIcon }}" style="font-size: 1.3rem;"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold text-dark">{{ $laporan['judul'] ?? 'Laporan' }}</h6>
+                    <div class="text-muted small" style="font-size: 0.75rem;">
+                        <span class="fw-semibold">{{ $laporan['user_name'] ?? ($laporan['nama'] ?? 'User') }}</span> 
+                        <span class="mx-1">•</span> 
+                        ID: #{{ $laporan['id'] }}
+                    </div>
+                </div>
             </div>
-            <a href="{{ route('admin.laporan') }}" id="backToLaporan" class="btn btn-sm btn-light border">
-                <i class="bi bi-arrow-left me-1"></i> Kembali
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.laporan') }}" id="backToLaporan" class="btn btn-light shadow-sm text-muted px-3" style="border-radius: 12px; font-size: 0.85rem; border: 1px solid rgba(0,0,0,0.05);">
+                    <i class="bi bi-arrow-left me-2"></i>Kembali
+                </a>
+            </div>
         </div>
 
         <!-- Chat Box (Messages) -->
         <div id="chatBox" class="chat-box"></div>
+
+        <!-- Edit Mode Bar -->
+        <div class="edit-mode-bar" id="editModeBar">
+            <div class="edit-info">
+                <i class="bi bi-pencil-square me-1"></i> Mengedit pesan...
+            </div>
+            <button type="button" class="btn-cancel-edit" onclick="cancelEditMode()" title="Batal edit">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
 
         <!-- Image Preview Bar -->
         <div class="image-preview-bar" id="imagePreviewBar">
@@ -353,60 +436,57 @@
             timerProgressBar: true
         });
 
+        let editingMessageId = null;
+
         function editMessage(msgId) {
             const bubble = document.getElementById(`bubble-${msgId}`);
             if (!bubble) return;
             
-            if (!bubble.hasAttribute('data-original')) {
-                bubble.setAttribute('data-original', bubble.innerHTML);
-                const img = bubble.querySelector('img.chat-img');
-                if (img) {
-                    bubble.setAttribute('data-image-url', img.src);
-                }
-            }
+            // Ambil teks pesan (abaikan gambar jika ada)
+            const textNode = bubble.querySelector('div') || bubble;
+            const currentText = textNode.innerText.trim();
             
-            const currentText = bubble.innerText.trim();
-            const w = bubble.offsetWidth;
-            const h = bubble.offsetHeight;
-            const style = `width: ${Math.max(w, 150)}px; height: ${Math.max(h + 20, 60)}px;`;
-
-            const formHtml = `
-                <div class="edit-form">
-                    <textarea class="edit-textarea" style="${style}">${escapeHtml(currentText)}</textarea>
-                    <div class="edit-buttons">
-                        <button type="button" class="btn btn-sm btn-light border" onclick="cancelEdit('${msgId}')">Batal</button>
-                        <button type="button" class="btn btn-sm btn-primary" onclick="saveEdit('${msgId}')">Simpan</button>
-                    </div>
-                </div>
-            `;
-            bubble.innerHTML = formHtml;
-            const ta = bubble.querySelector('textarea');
-            ta.focus();
-            const len = ta.value.length;
-            ta.setSelectionRange(len, len);
+            editingMessageId = msgId;
+            messageInput.value = currentText;
+            
+            // UI Feedback
+            document.getElementById('editModeBar').classList.add('active');
+            const btnSend = document.querySelector('.btn-send');
+            btnSend.innerHTML = '<i class="bi bi-check-lg" style="font-size: 1.2rem;"></i>';
+            btnSend.style.background = '#28a745';
+            
+            messageInput.style.height = 'auto';
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+            messageInput.focus();
+            const len = messageInput.value.length;
+            messageInput.setSelectionRange(len, len);
         }
 
-        function cancelEdit(msgId) {
-            const bubble = document.getElementById(`bubble-${msgId}`);
-            if (bubble && bubble.hasAttribute('data-original')) {
-                bubble.innerHTML = bubble.getAttribute('data-original');
-                bubble.removeAttribute('data-original');
-                bubble.removeAttribute('data-image-url');
-            }
+        function cancelEditMode() {
+            editingMessageId = null;
+            messageInput.value = '';
+            document.getElementById('editModeBar').classList.remove('active');
+            
+            const btnSend = document.querySelector('.btn-send');
+            btnSend.innerHTML = '<i class="bi bi-send-fill" style="margin-left: 2px;"></i>';
+            btnSend.style.background = '#4361ee';
+            
+            messageInput.style.height = 'auto';
+            messageInput.focus();
         }
 
-        function saveEdit(msgId) {
-            const bubble = document.getElementById(`bubble-${msgId}`);
-            const textarea = bubble.querySelector('textarea');
-            const newText = textarea.value.trim();
+        function saveEdit() {
+            if (!editingMessageId) return;
             
+            const newText = messageInput.value.trim();
             if (!newText) return;
             
-            const btn = bubble.querySelector('.btn-primary');
+            const btn = document.querySelector('.btn-send');
+            const originalContent = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
-            fetch(`${baseUrl}/${msgId}`, {
+            fetch(`${baseUrl}/${editingMessageId}`, {
                 method: 'PUT',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -419,37 +499,19 @@
             .then(r => r.json())
             .then(data => {
                 if (data.status === 'success') {
-                    let newHtml = '';
-                    const imageUrl = bubble.getAttribute('data-image-url');
-                    
-                    if (imageUrl) {
-                         newHtml += `<img class="chat-img" src="${escapeHtml(imageUrl)}" alt="Gambar" onclick="openLightbox('${escapeHtml(imageUrl)}')" loading="lazy">`;
-                    }
-                    if (newText) {
-                        const marginTop = imageUrl ? ' style="margin-top: 6px;"' : '';
-                        newHtml += `<div${marginTop}>${escapeHtml(newText)}</div>`;
-                    }
-                    
-                    bubble.innerHTML = newHtml;
-                    bubble.removeAttribute('data-original');
-                    bubble.removeAttribute('data-image-url');
-                    
-                    const parent = bubble.parentElement;
-                    let stat = parent.querySelector('.status');
-                    if (stat) {
-                         stat.innerText = 'teredit';
-                    }
-                    
                     Toast.fire({ icon: 'success', title: 'Pesan berhasil diubah' });
+                    cancelEditMode();
                     fetchMessages();
                 } else {
                     Swal.fire('Error', data.message || 'Gagal mengupdate pesan', 'error');
-                    cancelEdit(msgId);
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
                 }
             })
             .catch(() => {
                 Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
-                cancelEdit(msgId);
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
             });
         }
 
@@ -543,7 +605,10 @@
                         <span class="time">${escapeHtml(timeOnly)}</span>
                     </div>
                     <div class="bubble" id="bubble-${msgId}">${bubbleContent}</div>
-                    <div class="status">${escapeHtml(statusText)}</div>
+                    <div class="status">
+                        ${statusText.includes('teredit') ? '<span class="badge-edited">teredit</span>' : ''}
+                        ${escapeHtml(statusText.replace('teredit', '').trim())}
+                    </div>
                 </div>
                 ${actionsHtml}
             `;
@@ -726,6 +791,13 @@
         document.getElementById('sendForm').addEventListener('submit', function() {
             const message = messageInput.value.trim();
             if (!message && !selectedFile) return;
+
+            // Jika sedang dalam mode edit, panggil fungsi saveEdit
+            if (editingMessageId) {
+                saveEdit();
+                return;
+            }
+
             const btn = this.querySelector('button[type="submit"]');
             const originalBtnContent = btn.innerHTML;
             btn.disabled = true;

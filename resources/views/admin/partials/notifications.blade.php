@@ -47,15 +47,22 @@
         position: absolute;
         top: 100%;
         right: 0;
-        width: 340px;
-        max-height: 400px;
+        width: 380px;
+        max-height: 480px;
         overflow-y: auto;
-        background: white;
-        border: 1px solid #e9ecef;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         z-index: 1050;
-        margin-top: 8px;
+        margin-top: 12px;
+        animation: slideInNotif 0.3s ease;
+    }
+    @keyframes slideInNotif {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     .notif-dropdown.show { display: block; }
     .notif-dropdown-header {
@@ -71,42 +78,42 @@
     .notif-dropdown-header i { color: #4361ee; }
     .notif-item {
         display: flex;
-        padding: 12px 16px;
-        gap: 10px;
-        border-bottom: 1px solid #f1f3f5;
+        padding: 16px;
+        gap: 12px;
+        border-bottom: 1px solid rgba(0,0,0,0.03);
         text-decoration: none;
         color: inherit;
-        transition: background 0.15s;
+        transition: all 0.2s;
         cursor: pointer;
     }
-    .notif-item:hover { background: #f8f9fa; }
+    .notif-item:hover { background: rgba(67, 97, 238, 0.04); }
     .notif-item-avatar {
-        width: 36px; height: 36px;
-        border-radius: 50%;
-        background: #e6edff;
+        width: 42px; height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #e6edff 0%, #dbeafe 100%);
         color: #4361ee;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1rem;
+        font-size: 1.1rem;
         flex-shrink: 0;
     }
     .notif-item-body { flex: 1; overflow: hidden; }
     .notif-item-title {
-        font-weight: 600;
+        font-weight: 700;
         font-size: 0.85rem;
-        color: #333;
+        color: #1e293b;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
     .notif-item-msg {
         font-size: 0.8rem;
-        color: #6c757d;
+        color: #64748b;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        margin-top: 2px;
+        margin-top: 4px;
     }
     .notif-item-badge {
         background: #dc3545;
