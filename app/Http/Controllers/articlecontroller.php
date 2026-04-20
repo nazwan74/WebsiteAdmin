@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Kreait\Firebase\Factory;
 use Google\Cloud\Core\Timestamp;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class articlecontroller extends Controller
@@ -19,13 +19,10 @@ class articlecontroller extends Controller
         if (!Session::has('admin')) {
             redirect()->route('admin.login')->send(); 
         }
-        $factory = (new Factory)
-            ->withServiceAccount(config('firebase.credentials'))
-            ->withDefaultStorageBucket(config('firebase.storage_bucket')); // ambil dari config
-
-        $this->firestore = $factory->createFirestore()->database();
-        $this->storage = $factory->createStorage();
-        $bucket = $this->storage->getBucket();
+        
+        // Menggunakan singleton dari FirebaseServiceProvider
+        $this->firestore = app('firebase.firestore');
+        $this->storage = app('firebase.storage');
     }
 
     /**
@@ -34,23 +31,30 @@ class articlecontroller extends Controller
      */
     private function getArticlesList()
     {
-        $documents = $this->firestore->collection('articles')->orderBy('releasedDate', 'DESC')->documents();
-        $articles = [];
-        foreach ($documents as $doc) {
-            if ($doc->exists()) {
-                $data = $doc->data();
-                $data['id'] = $doc->id();
-                $articles[] = $data;
+        return Cache::remember('articles_list_data', 300, function () {
+            $documents = $this->firestore->collection('articles')->orderBy('releasedDate', 'DESC')->documents();
+            $articles = [];
+            foreach ($documents as $doc) {
+                if ($doc->exists()) {
+                    $data = $doc->data();
+                    $data['id'] = $doc->id();
+                    $articles[] = $data;
+                }
             }
-        }
-        return $articles;
+            return $articles;
+        });
     }
 
-    // fungsi untuk menampilkan semua artikel dengan urutan terbaru
     public function index()
     {
         $articles = $this->getArticlesList();
         return view('admin.articel', compact('articles'));
+    }
+
+    public function refresh()
+    {
+        Cache::forget('articles_list_data');
+        return redirect()->route('admin.articel.index')->with('success', 'Data artikel berhasil diperbarui.');
     }
 
     /**
@@ -273,6 +277,10 @@ class articlecontroller extends Controller
 
         $articleRef->set($updateData, ['merge' => true]);
 
+        // Invalidate caches
+        Cache::forget('dashboard_base_data');
+        Cache::forget('articles_list_data');
+
         return redirect()->route('admin.articel.index')->with('success', 'Artikel berhasil diperbarui!');
     }
 
@@ -303,6 +311,10 @@ class articlecontroller extends Controller
     
                 // Hapus dokumen Firestore
                 $articleRef->delete();
+
+                // Invalidate caches
+                Cache::forget('dashboard_base_data');
+                Cache::forget('articles_list_data');
             }
     
             return redirect()->route('admin.articel.index')->with('success', 'Artikel dan gambar berhasil dihapus!');
@@ -358,6 +370,10 @@ class articlecontroller extends Controller
                 'gsUrl' => $gsUrl,
                 'releasedDate' => now()->toDateTimeString(),
             ]);
+
+            // Invalidate caches
+            Cache::forget('dashboard_base_data');
+            Cache::forget('articles_list_data');
 
             return redirect()->route('admin.articel.index')->with('success', 'Artikel berhasil disimpan!');
         } catch (\Exception $e) {

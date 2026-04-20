@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
-use Kreait\Firebase\Factory;
 
 class DashboardController extends Controller
 {
@@ -95,9 +95,8 @@ class DashboardController extends Controller
 
     public function __construct()
     {
-        // Inisialisasi koneksi Firebase Firestore
-        $factory = (new Factory)->withServiceAccount(config('firebase.credentials'));
-        $this->firestore = $factory->createFirestore()->database();
+        // Menggunakan singleton dari FirebaseServiceProvider
+        $this->firestore = app('firebase.firestore');
     }
 
     public function index(Request $request)
@@ -107,150 +106,162 @@ class DashboardController extends Controller
             return redirect()->route('admin.login');
         }
 
-        // Ambil data dari koleksi Firestore
-        $usersSnapshots    = $this->firestore->collection('users')->documents();
-        $articlesSnapshots = $this->firestore->collection('articles')->documents();
+        // Gunakan Cache untuk menyimpan data dasar dashboard selama 5 menit (300 detik)
+        $cachedData = Cache::remember('dashboard_base_data', 300, function () {
+            $kategoriMap = ['kekerasan_anak', 'bullying', 'pernikahan_anak', 'stunting'];
+            $usersSnapshots    = $this->firestore->collection('users')->documents();
+            $articlesSnapshots = $this->firestore->collection('articles')->documents();
 
-        // Dukung 2 struktur: flat report/{reportId} atau nested report/{kategoriDoc}/{userId}/{reportId}
-        $kategoriMap = [
-            'kekerasan_anak', 'bullying', 'pernikahan_anak', 'stunting'
-        ];
+            $totalUsers    = $usersSnapshots->size();
+            $totalArticles = $articlesSnapshots->size();
+            
+            $totalLaporan  = 0;
+            $laporanSelesai = 0;
+            $laporanDiproses = 0;
+            $laporanBaru = 0;
+            $laporanDitolak = 0;
+            $kategoriCount = [];
+            $daerahCount = [];
+            $kategoriPerDaerah = [];
+            $trenPerBulan = [];
+            $trenPerHari = [];
+            $usiaCount = ['Bayi (0-11 bulan)' => 0, 'Balita (1-5 tahun)' => 0, 'Prasekolah (5-6 tahun)' => 0, 'Anak-anak (5-11 tahun)' => 0, 'Remaja (10-18 tahun)' => 0];
+            $laporanTerbaruCollect = [];
 
-        $totalUsers    = $usersSnapshots->size();
-        $totalLaporan  = 0;
-        $totalArticles = $articlesSnapshots->size();
-        $laporanSelesai = 0;
-        $laporanDiproses = 0;
-        $laporanBaru = 0;
-        $laporanDitolak = 0;
-        $kategoriCount = [];
-        $daerahCount = [];
-        $kategoriPerDaerah = [];
-        $trenPerBulan = [];
-        $trenPerHari = [];
-        $usiaCount = ['Bayi (0-11 bulan)' => 0, 'Balita (1-5 tahun)' => 0, 'Prasekolah (5-6 tahun)' => 0, 'Anak-anak (5-11 tahun)' => 0, 'Remaja (10-18 tahun)' => 0];
-        $laporanTerbaruCollect = [];
+            $processReportDoc = function ($doc) use (
+                &$totalLaporan, &$laporanSelesai, &$laporanDiproses, &$laporanBaru, &$laporanDitolak,
+                &$kategoriCount, &$daerahCount, &$kategoriPerDaerah, &$trenPerBulan, &$trenPerHari, &$laporanTerbaruCollect,
+                &$usiaCount
+            ) {
+                if (!$doc->exists()) return;
+                $data = $doc->data();
+                if (!isset($data['report_status']) && !isset($data['case_type']) && !isset($data['user_name'])) {
+                    return; 
+                }
+                
+                $totalLaporan++;
+                $status = strtolower($data['report_status'] ?? ($data['status'] ?? 'baru'));
+                switch ($status) {
+                    case 'selesai': $laporanSelesai++; break;
+                    case 'diproses': $laporanDiproses++; break;
+                    case 'ditolak': $laporanDitolak++; break;
+                    default: $laporanBaru++; break;
+                }
 
-        $processReportDoc = function ($doc) use (
-            &$totalLaporan, &$laporanSelesai, &$laporanDiproses, &$laporanBaru, &$laporanDitolak,
-            &$kategoriCount, &$daerahCount, &$kategoriPerDaerah, &$trenPerBulan, &$trenPerHari, &$laporanTerbaruCollect,
-            &$usiaCount
-        ) {
-            if (!$doc->exists()) return;
-            $totalLaporan++;
-            $data = $doc->data();
-            if (!isset($data['report_status']) && !isset($data['case_type']) && !isset($data['user_name'])) {
-                return; // bukan dokumen laporan
-            }
-            $status = strtolower($data['report_status'] ?? ($data['status'] ?? 'baru'));
-            switch ($status) {
-                case 'selesai': $laporanSelesai++; break;
-                case 'diproses': $laporanDiproses++; break;
-                case 'ditolak': $laporanDitolak++; break;
-                default: $laporanBaru++; break;
-            }
-            $kategoriDisplay = $data['case_type'] ?? 'Tidak diketahui';
-            $daerah = $data['incident_city'] ?? ($data['incident_location'] ?? 'Tidak diketahui');
-            $kategoriCount[$kategoriDisplay] = ($kategoriCount[$kategoriDisplay] ?? 0) + 1;
-            $daerahCount[$daerah] = ($daerahCount[$daerah] ?? 0) + 1;
-            $kategoriPerDaerah[$daerah] = $kategoriPerDaerah[$daerah] ?? [];
-            $kategoriPerDaerah[$daerah][$kategoriDisplay] = ($kategoriPerDaerah[$daerah][$kategoriDisplay] ?? 0) + 1;
-            $tz = config('app.timezone', 'Asia/Jakarta');
-            $dateObj = null;
-            $created = $data['created_date'] ?? null;
-            if ($created !== null && $created !== '') {
-                try {
-                    if (is_numeric($created)) {
-                        $dateObj = Carbon::createFromTimestampMs((int) $created)->setTimezone($tz);
-                    } elseif ($created instanceof \DateTimeInterface) {
-                        $dateObj = Carbon::instance($created)->setTimezone($tz);
-                    } elseif (is_array($created) && isset($created['seconds'])) {
-                        $dateObj = Carbon::createFromTimestamp($created['seconds'])->setTimezone($tz);
-                    } else {
-                        $dateObj = Carbon::parse($created)->setTimezone($tz);
+                $kategoriDisplay = $data['case_type'] ?? 'Tidak diketahui';
+                $daerah = $data['incident_city'] ?? ($data['incident_location'] ?? 'Tidak diketahui');
+                $kategoriCount[$kategoriDisplay] = ($kategoriCount[$kategoriDisplay] ?? 0) + 1;
+                $daerahCount[$daerah] = ($daerahCount[$daerah] ?? 0) + 1;
+                
+                $kategoriPerDaerah[$daerah] = $kategoriPerDaerah[$daerah] ?? [];
+                $kategoriPerDaerah[$daerah][$kategoriDisplay] = ($kategoriPerDaerah[$daerah][$kategoriDisplay] ?? 0) + 1;
+
+                $tz = config('app.timezone', 'Asia/Jakarta');
+                $dateObj = null;
+                $created = $data['created_date'] ?? null;
+                
+                if ($created !== null && $created !== '') {
+                    try {
+                        if (is_numeric($created)) {
+                            $dateObj = Carbon::createFromTimestampMs((int) $created)->setTimezone($tz);
+                        } elseif ($created instanceof \DateTimeInterface) {
+                            $dateObj = Carbon::instance($created)->setTimezone($tz);
+                        } elseif (is_array($created) && isset($created['seconds'])) {
+                            $dateObj = Carbon::createFromTimestamp($created['seconds'])->setTimezone($tz);
+                        } else {
+                            $dateObj = Carbon::parse($created)->setTimezone($tz);
+                        }
+                    } catch (\Throwable $e) {}
+                }
+
+                if ($dateObj !== null) {
+                    $trenPerBulan[$dateObj->format('Y-m')] = ($trenPerBulan[$dateObj->format('Y-m')] ?? 0) + 1;
+                    $trenPerHari[$dateObj->format('Y-m-d')] = ($trenPerHari[$dateObj->format('Y-m-d')] ?? 0) + 1;
+                }
+
+                $laporanTerbaruCollect[] = [
+                    'id' => $doc->id(),
+                    'sort_at' => $dateObj ? $dateObj->format('Y-m-d H:i:s') : '',
+                    'kategori' => $kategoriDisplay,
+                    'daerah' => $daerah,
+                    'status' => $status,
+                ];
+
+                $childAge = $data['child_age'] ?? null;
+                if ($childAge !== null && $childAge !== '') {
+                    $ageStr = strtolower(trim((string) $childAge));
+                    preg_match('/(\d+)/', $ageStr, $matches);
+                    $ageNum = isset($matches[1]) ? (int) $matches[1] : null;
+
+                    if ($ageNum !== null) {
+                        $isBulan = (str_contains($ageStr, 'bulan') || str_contains($ageStr, 'bln') || str_contains($ageStr, 'month'));
+                        if ($isBulan) {
+                            if ($ageNum >= 0 && $ageNum <= 11) $usiaCount['Bayi (0-11 bulan)']++;
+                            elseif ($ageNum >= 12 && $ageNum <= 60) $usiaCount['Balita (1-5 tahun)']++;
+                            elseif ($ageNum > 60 && $ageNum <= 72) $usiaCount['Prasekolah (5-6 tahun)']++;
+                            elseif ($ageNum > 72 && $ageNum <= 132) $usiaCount['Anak-anak (5-11 tahun)']++;
+                            elseif ($ageNum > 132 && $ageNum <= 216) $usiaCount['Remaja (10-18 tahun)']++;
+                        } else {
+                            if ($ageNum == 0) $usiaCount['Bayi (0-11 bulan)']++;
+                            elseif ($ageNum >= 1 && $ageNum <= 4) $usiaCount['Balita (1-5 tahun)']++;
+                            elseif ($ageNum >= 5 && $ageNum <= 6) $usiaCount['Prasekolah (5-6 tahun)']++;
+                            elseif ($ageNum >= 7 && $ageNum <= 11) $usiaCount['Anak-anak (5-11 tahun)']++;
+                            elseif ($ageNum >= 12 && $ageNum <= 18) $usiaCount['Remaja (10-18 tahun)']++;
+                        }
                     }
-                } catch (\Throwable $e) {}
+                }
+            };
+
+            // Fetch Reports
+            try {
+                $reportSnapshot = $this->firestore->collection('report')->documents();
+                foreach ($reportSnapshot as $doc) { $processReportDoc($doc); }
+            } catch (\Throwable $e) {}
+
+            if ($totalLaporan === 0) {
+                foreach ($kategoriMap as $kategoriKey) {
+                    try {
+                        $kategoriDocRef = $this->firestore->collection('report')->document($kategoriKey);
+                        foreach ($kategoriDocRef->collections() as $userCollection) {
+                            foreach ($userCollection->documents() as $doc) { $processReportDoc($doc); }
+                        }
+                    } catch (\Throwable $e) { continue; }
+                }
             }
-            if ($dateObj !== null) {
-                $trenPerBulan[$dateObj->format('Y-m')] = ($trenPerBulan[$dateObj->format('Y-m')] ?? 0) + 1;
-                $trenPerHari[$dateObj->format('Y-m-d')] = ($trenPerHari[$dateObj->format('Y-m-d')] ?? 0) + 1;
-            }
-            $dateSort = $dateObj ? $dateObj->format('Y-m-d H:i:s') : '';
-            $laporanTerbaruCollect[] = [
-                'id' => $doc->id(),
-                'create_at' => $dateObj,
-                'sort_at' => $dateSort,
-                'kategori' => $kategoriDisplay,
-                'daerah' => $daerah,
-                'status' => $status,
+
+            return [
+                'totalUsers' => $totalUsers,
+                'totalArticles' => $totalArticles,
+                'totalLaporan' => $totalLaporan,
+                'laporanSelesai' => $laporanSelesai,
+                'laporanDiproses' => $laporanDiproses,
+                'laporanBaru' => $laporanBaru,
+                'laporanDitolak' => $laporanDitolak,
+                'kategoriCount' => $kategoriCount,
+                'daerahCount' => $daerahCount,
+                'kategoriPerDaerah' => $kategoriPerDaerah,
+                'trenPerBulan' => $trenPerBulan,
+                'trenPerHari' => $trenPerHari,
+                'usiaCount' => $usiaCount,
+                'laporanTerbaruCollect' => $laporanTerbaruCollect,
             ];
+        });
 
-            // Kategorikan usia anak
-            $childAge = $data['child_age'] ?? null;
-            if ($childAge !== null && $childAge !== '') {
-                $ageStr = strtolower(trim((string) $childAge));
-                // Coba parse angka dari string
-                preg_match('/(\d+)/', $ageStr, $matches);
-                $ageNum = isset($matches[1]) ? (int) $matches[1] : null;
-
-                if ($ageNum !== null) {
-                    // Deteksi apakah satuan bulan
-                    $isBulan = (str_contains($ageStr, 'bulan') || str_contains($ageStr, 'bln') || str_contains($ageStr, 'month'));
-
-                    if ($isBulan) {
-                        // Jika dalam bulan, 0-11 = bayi
-                        if ($ageNum >= 0 && $ageNum <= 11) {
-                            $usiaCount['Bayi (0-11 bulan)']++;
-                        } elseif ($ageNum >= 12 && $ageNum <= 60) {
-                            $usiaCount['Balita (1-5 tahun)']++;
-                        } elseif ($ageNum > 60 && $ageNum <= 72) {
-                            $usiaCount['Prasekolah (5-6 tahun)']++;
-                        } elseif ($ageNum > 72 && $ageNum <= 132) {
-                            $usiaCount['Anak-anak (5-11 tahun)']++;
-                        } elseif ($ageNum > 132 && $ageNum <= 216) {
-                            $usiaCount['Remaja (10-18 tahun)']++;
-                        }
-                    } else {
-                        // Asumsi tahun (atau angka saja = tahun)
-                        if ($ageNum == 0) {
-                            $usiaCount['Bayi (0-11 bulan)']++;
-                        } elseif ($ageNum >= 1 && $ageNum <= 4) {
-                            $usiaCount['Balita (1-5 tahun)']++;
-                        } elseif ($ageNum >= 5 && $ageNum <= 6) {
-                            $usiaCount['Prasekolah (5-6 tahun)']++;
-                        } elseif ($ageNum >= 7 && $ageNum <= 11) {
-                            $usiaCount['Anak-anak (5-11 tahun)']++;
-                        } elseif ($ageNum >= 12 && $ageNum <= 18) {
-                            $usiaCount['Remaja (10-18 tahun)']++;
-                        }
-                    }
-                }
-            }
-        };
-
-        // Coba struktur flat: report/{reportId}
-        try {
-            $reportSnapshot = $this->firestore->collection('report')->documents();
-            foreach ($reportSnapshot as $doc) {
-                $processReportDoc($doc);
-            }
-        } catch (\Throwable $e) {}
-
-        // Jika flat tidak ada data, coba nested: report/{kategoriDoc}/{userId}/{reportId}
-        if ($totalLaporan === 0) {
-            foreach ($kategoriMap as $kategoriKey) {
-                try {
-                    $kategoriDocRef = $this->firestore->collection('report')->document($kategoriKey);
-                    foreach ($kategoriDocRef->collections() as $userCollection) {
-                        foreach ($userCollection->documents() as $doc) {
-                            $processReportDoc($doc);
-                        }
-                    }
-                } catch (\Throwable $e) {
-                    continue;
-                }
-            }
-        }
+        // Ekstrak data dari cache
+        $totalUsers = $cachedData['totalUsers'];
+        $totalArticles = $cachedData['totalArticles'];
+        $totalLaporan = $cachedData['totalLaporan'];
+        $laporanSelesai = $cachedData['laporanSelesai'];
+        $laporanDiproses = $cachedData['laporanDiproses'];
+        $laporanBaru = $cachedData['laporanBaru'];
+        $laporanDitolak = $cachedData['laporanDitolak'];
+        $kategoriCount = $cachedData['kategoriCount'];
+        $daerahCount = $cachedData['daerahCount'];
+        $kategoriPerDaerah = $cachedData['kategoriPerDaerah'];
+        $trenPerBulan = $cachedData['trenPerBulan'];
+        $trenPerHari = $cachedData['trenPerHari'];
+        $usiaCount = $cachedData['usiaCount'];
+        $laporanTerbaruCollect = $cachedData['laporanTerbaruCollect'];
 
         // Urutkan laporan terbaru (tanggal terbaru dulu), ambil 10
         usort($laporanTerbaruCollect, function ($a, $b) {
@@ -303,7 +314,7 @@ class DashboardController extends Controller
             }
         }
 
-        // Daftar tahun untuk dropdown (3 tahun lalu s/d tahun ini)
+        // Daftar tahun untuk dropdown
         $tahunList = range(now()->year - 3, now()->year);
         $tahunList = array_reverse($tahunList);
 
@@ -311,23 +322,21 @@ class DashboardController extends Controller
         arsort($kategoriCount);
         $topKategori = array_slice($kategoriCount, 0, 4, true);
 
-        // Ambil 4 daerah dengan jumlah laporan terbanyak (ringkasan)
+        // Ambil 4 daerah terbanyak
         arsort($daerahCount);
         $topDaerah = array_slice($daerahCount, 0, 4, true);
 
-        // Bar chart: seluruh kab/kota Kalimantan Barat (nilai 0 jika belum ada laporan terpetakan)
+        // Bar chart Kalbar
         $kalbarList = self::kalbarDaerahList();
         $kalbarBarCounts = array_fill_keys($kalbarList, 0);
         foreach ($daerahCount as $raw => $count) {
             $canonical = $this->normalizeToKalbarDaerah((string) $raw);
-            if ($canonical !== null) {
-                $kalbarBarCounts[$canonical] += $count;
-            }
+            if ($canonical !== null) { $kalbarBarCounts[$canonical] += $count; }
         }
         $daerahBarLabels = $kalbarList;
         $daerahBarData = array_values($kalbarBarCounts);
 
-        // Data chart usia anak
+        // Data chart usia
         $usiaBarLabels = array_keys($usiaCount);
         $usiaBarData = array_values($usiaCount);
 
@@ -336,10 +345,9 @@ class DashboardController extends Controller
         foreach ($topDaerah as $daerah => $jumlah) {
             if (isset($kategoriPerDaerah[$daerah])) {
                 arsort($kategoriPerDaerah[$daerah]);
-                $kategoriTerbanyak = array_key_first($kategoriPerDaerah[$daerah]);
                 $topDaerahKategori[$daerah] = [
                     'total' => $jumlah,
-                    'kategori_terbanyak' => $kategoriTerbanyak,
+                    'kategori_terbanyak' => array_key_first($kategoriPerDaerah[$daerah]),
                 ];
             }
         }
@@ -367,5 +375,11 @@ class DashboardController extends Controller
             'usiaBarLabels'      => $usiaBarLabels,
             'usiaBarData'        => $usiaBarData,
         ]);
+    }
+
+    public function refresh()
+    {
+        Cache::forget('dashboard_base_data');
+        return redirect()->route('admin.dashboard')->with('success', 'Data dashboard berhasil diperbarui.');
     }
 }

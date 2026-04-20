@@ -94,6 +94,9 @@
                         <button type="submit" class="btn btn-sm btn-primary">Terapkan</button>
                     </form>
                     <span class="badge bg-primary">{{ $trenPeriodLabel ?? '12 bulan terakhir' }}</span>
+                    <a href="{{ route('admin.dashboard.refresh') }}" class="btn btn-sm btn-outline-secondary" title="Refresh Data">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </a>
                 </div>
             </div>
             <div style="height: 280px;">

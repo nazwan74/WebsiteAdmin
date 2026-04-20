@@ -268,9 +268,14 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h2>Daftar Laporan</h2>
-            <a href="{{ route('admin.laporan.downloadList') }}" id="downloadListBtn" class="btn btn-success">
-                <i class="bi bi-download me-2"></i>Download List
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.laporan.refresh') }}" class="btn btn-outline-secondary" title="Refresh Data">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </a>
+                <a href="{{ route('admin.laporan.downloadList') }}" id="downloadListBtn" class="btn btn-success">
+                    <i class="bi bi-download me-2"></i>Download List
+                </a>
+            </div>
         </div>
         <div class="container mt-4">
             <!-- Filter dan Pencarian -->

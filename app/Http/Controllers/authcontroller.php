@@ -2,7 +2,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Kreait\Firebase\Factory;
 use Illuminate\Support\Facades\Session;
 
 class AuthController extends Controller
@@ -12,9 +11,9 @@ class AuthController extends Controller
 
     public function __construct()
     {
-        $factory = (new Factory)->withServiceAccount(config('firebase.credentials'));
-        $this->auth = $factory->createAuth();
-        $this->firestore = $factory->createFirestore()->database();
+        // Menggunakan singleton dari FirebaseServiceProvider
+        $this->auth = app('firebase.auth');
+        $this->firestore = app('firebase.firestore');
     }
 
     public function showLogin()
@@ -51,6 +50,7 @@ class AuthController extends Controller
 
             return redirect()->route('admin.dashboard');
         } catch (\Exception $e) {
+            \Log::error('Login error: ' . $e);
             return back()->withErrors(['error' => 'Login gagal. Periksa email dan password.']);
         }
     }

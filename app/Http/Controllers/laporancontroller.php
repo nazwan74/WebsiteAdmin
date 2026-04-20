@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cache;
-use Kreait\Firebase\Factory;
 use Illuminate\Support\Facades\Redirect;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
@@ -55,13 +54,9 @@ class laporancontroller extends Controller
             redirect()->route('admin.login')->send();
         }
 
-        // Setup koneksi Firebase
-        $factory = (new Factory)
-            ->withServiceAccount(config('firebase.credentials'))
-            ->withDefaultStorageBucket(config('firebase.storage_bucket'));
-
-        $this->firestore = $factory->createFirestore()->database();
-        $this->storage = $factory->createStorage();
+        // Menggunakan singleton dari FirebaseServiceProvider
+        $this->firestore = app('firebase.firestore');
+        $this->storage = app('firebase.storage');
     }
 
     /**
@@ -70,65 +65,68 @@ class laporancontroller extends Controller
      */
     private function getLaporanList()
     {
-        $laporan = [];
+        return Cache::remember('laporan_list_data', 300, function () {
+            $laporan = [];
 
-        // Coba struktur flat dulu: semua dokumen langsung di koleksi report
-        try {
-            $snapshot = $this->firestore->collection('report')->documents();
-            foreach ($snapshot as $doc) {
-                if (!$doc->exists()) {
-                    continue;
-                }
-                $data = $doc->data();
-                if (isset($data['report_status']) || isset($data['case_type']) || isset($data['user_name'])) {
-                    $data['id'] = $doc->id();
-                    $data['kategori'] = $data['case_type'] ?? '-';
-                    $data['daerah'] = $data['incident_city'] ?? ($data['incident_location'] ?? '-');
-                    $data['created_date'] = $this->createdDateToLocal($data['created_date'] ?? null);
-                    $data['create_at'] = $data['created_date'];
-                    $data['status'] = $data['report_status'] ?? 'baru';
-                    $data['judul'] = $data['report_number'] ?? ($data['case_type'] ?? 'Laporan');
-                    $data['adminLastReadAt'] = $data['adminLastReadAt'] ?? 0;
-                    $laporan[] = $data;
-                }
-            }
-        } catch (\Throwable $e) {
-            //
-        }
-
-        if (empty($laporan)) {
-            foreach ($this->kategoriMap as $kategoriKey => $kategoriDisplay) {
-                try {
-                    $kategoriDocRef = $this->firestore->collection('report')->document($kategoriKey);
-                    foreach ($kategoriDocRef->collections() as $userCollection) {
-                        foreach ($userCollection->documents() as $doc) {
-                            if (!$doc->exists()) continue;
-                            $data = $doc->data();
-                            $data['id'] = $doc->id();
-                            $data['kategori'] = $data['case_type'] ?? $kategoriDisplay;
-                            $data['daerah'] = $data['incident_city'] ?? ($data['incident_location'] ?? '-');
-                            $data['created_date'] = $this->createdDateToLocal($data['created_date'] ?? null);
-                            $data['create_at'] = $data['created_date'];
-                            $data['status'] = $data['report_status'] ?? 'baru';
-                            $data['judul'] = $data['report_number'] ?? ($data['case_type'] ?? 'Laporan');
-                            $data['adminLastReadAt'] = $data['adminLastReadAt'] ?? 0;
-                            $laporan[] = $data;
-                        }
+            // Coba struktur flat dulu: semua dokumen langsung di koleksi report
+            try {
+                $snapshot = $this->firestore->collection('report')->documents();
+                foreach ($snapshot as $doc) {
+                    if (!$doc->exists()) {
+                        continue;
                     }
-                } catch (\Throwable $e) {
-                    continue;
+                    $data = $doc->data();
+                    if (isset($data['report_status']) || isset($data['case_type']) || isset($data['user_name'])) {
+                        $data['id'] = $doc->id();
+                        $data['kategori'] = $data['case_type'] ?? '-';
+                        $data['daerah'] = $data['incident_city'] ?? ($data['incident_location'] ?? '-');
+                        $data['created_date'] = $this->createdDateToLocal($data['created_date'] ?? null);
+                        $data['create_at'] = $data['created_date'];
+                        $data['status'] = $data['report_status'] ?? 'baru';
+                        $data['judul'] = $data['report_number'] ?? ($data['case_type'] ?? 'Laporan');
+                        $data['adminLastReadAt'] = $data['adminLastReadAt'] ?? 0;
+                        $laporan[] = $data;
+                    }
+                }
+            } catch (\Throwable $e) {
+                //
+            }
+
+            if (empty($laporan)) {
+                foreach ($this->kategoriMap as $kategoriKey => $kategoriDisplay) {
+                    try {
+                        $kategoriDocRef = $this->firestore->collection('report')->document($kategoriKey);
+                        foreach ($kategoriDocRef->collections() as $userCollection) {
+                            foreach ($userCollection->documents() as $doc) {
+                                if (!$doc->exists()) continue;
+                                $data = $doc->data();
+                                $data['id'] = $doc->id();
+                                $data['kategori'] = $data['case_type'] ?? ($kategoriDisplay ?? '-');
+                                $data['daerah'] = $data['incident_city'] ?? ($data['incident_location'] ?? '-');
+                                $data['created_date'] = $this->createdDateToLocal($data['created_date'] ?? null);
+                                $data['create_at'] = $data['created_date'];
+                                $data['status'] = $data['report_status'] ?? 'baru';
+                                $data['judul'] = $data['report_number'] ?? ($data['case_type'] ?? 'Laporan');
+                                $data['adminLastReadAt'] = $data['adminLastReadAt'] ?? 0;
+                                $laporan[] = $data;
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        continue;
+                    }
                 }
             }
-        }
 
-        usort($laporan, function ($a, $b) {
-            $ta = $a['created_date'] ?? ($a['create_at'] ?? '');
-            $tb = $b['created_date'] ?? ($b['create_at'] ?? '');
-            if ($ta === $tb) return 0;
-            return $ta < $tb ? 1 : -1;
+            // Urutkan default (terbaru di atas)
+            usort($laporan, function ($a, $b) {
+                $ta = $a['created_date'] ?? ($a['create_at'] ?? '');
+                $tb = $b['created_date'] ?? ($b['create_at'] ?? '');
+                if ($ta === $tb) return 0;
+                return $ta < $tb ? 1 : -1;
+            });
+
+            return $laporan;
         });
-
-        return $laporan;
     }
 
     public function index()
@@ -354,6 +352,10 @@ class laporancontroller extends Controller
             ['path' => 'report_status', 'value' => $status]
         ]);
 
+        // Invalidate dashboard cache
+        Cache::forget('dashboard_base_data');
+        Cache::forget('laporan_list_data');
+
         // If it's an AJAX request, return updated counts
         if ($request->ajax()) {
             // Hitung ulang total dari struktur baru
@@ -430,6 +432,10 @@ class laporancontroller extends Controller
         // Hapus laporan dari Firestore
         $docRef->delete();
 
+        // Invalidate dashboard cache
+        Cache::forget('dashboard_base_data');
+        Cache::forget('laporan_list_data');
+
         if (request()->ajax()) {
             return response()->json([
                 'status' => 'success',
@@ -463,6 +469,12 @@ class laporancontroller extends Controller
 
         $pdf = Pdf::loadView('admin.laporan-pdf', compact('laporan'));
         return $pdf->download('laporan-'.$id.'.pdf');
+    }
+
+    public function refresh()
+    {
+        Cache::forget('laporan_list_data');
+        return redirect()->route('admin.laporan')->with('success', 'Data laporan berhasil diperbarui.');
     }
 
     private function findReportRefById(string $laporanId)

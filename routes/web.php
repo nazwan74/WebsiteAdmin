@@ -27,9 +27,11 @@ Route::post('/admin/reset-password', [AuthController::class, 'resetPassword'])->
 
 // Admin dashboard
 Route::get('/admin/dashboard', [dashboardcontroller::class, 'index'])->name('admin.dashboard');
+Route::get('/admin/dashboard/refresh', [dashboardcontroller::class, 'refresh'])->name('admin.dashboard.refresh');
 
 // Admin Articles
 Route::get('/admin/articel', [ArticleController::class, 'index'])->name('admin.articel.index');
+Route::get('/admin/articel/refresh', [ArticleController::class, 'refresh'])->name('admin.articel.refresh');
 Route::get('/admin/articel/export/csv', [ArticleController::class, 'downloadList'])->name('admin.articel.downloadList');
 Route::get('/admin/articel/create', [ArticleController::class, 'create'])->name('admin.articel.create');
 Route::post('/admin/articel/store', [ArticleController::class, 'store'])->name('admin.articel.store');
@@ -39,6 +41,7 @@ Route::put('/admin/articel/{id}', [ArticleController::class, 'update'])->name('a
 
 // Laporan
 Route::get('/admin/laporan', [LaporanController::class, 'index'])->name('admin.laporan');
+Route::get('/admin/laporan/refresh', [laporancontroller::class, 'refresh'])->name('admin.laporan.refresh');
 Route::get('/admin/laporan/export/csv', [laporancontroller::class, 'downloadList'])->name('admin.laporan.downloadList');
 Route::get('/admin/laporan/{id}', [laporancontroller::class, 'detail'])->name('admin.laporan.detail');
 Route::post('/admin/laporan/{id}/set-status', [laporancontroller::class, 'setStatus'])->name('admin.laporan.setStatus');

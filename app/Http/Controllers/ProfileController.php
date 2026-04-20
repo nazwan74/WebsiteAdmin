@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Kreait\Firebase\Factory;
 use Illuminate\Support\Facades\Session;
 
 class ProfileController extends Controller
@@ -16,9 +15,10 @@ class ProfileController extends Controller
         if (!Session::has('admin')) {
             redirect()->route('admin.login')->send();
         }
-        $factory = (new Factory)->withServiceAccount(config('firebase.credentials'));
-        $this->auth = $factory->createAuth();
-        $this->firestore = $factory->createFirestore()->database();
+        
+        // Menggunakan singleton dari FirebaseServiceProvider
+        $this->auth = app('firebase.auth');
+        $this->firestore = app('firebase.firestore');
     }
 
     public function index()

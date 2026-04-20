@@ -102,6 +102,9 @@
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h2>Daftar Artikel</h2>
         <div class="d-flex gap-2">
+            <a href="{{ route('admin.articel.refresh') }}" class="btn btn-outline-secondary" title="Refresh Data">
+                <i class="bi bi-arrow-clockwise"></i>
+            </a>
             <a href="{{ route('admin.articel.downloadList') }}" id="downloadListBtn" class="btn btn-success">
                 <i class="bi bi-download me-1"></i>Download List
             </a>
