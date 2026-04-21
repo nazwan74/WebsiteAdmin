@@ -210,19 +210,23 @@
         /* Lightbox Modal */
         .lightbox-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center;
-            cursor: pointer;
+            background: rgba(0, 0, 0, 0.9); z-index: 9999; justify-content: center; align-items: center;
+            cursor: zoom-out; transition: all 0.3s ease; backdrop-filter: blur(5px);
         }
-        .lightbox-overlay.active { display: flex; }
+        .lightbox-overlay.active { display: flex; animation: fadeIn 0.3s; }
         .lightbox-overlay img {
-            max-width: 90%; max-height: 90%; border-radius: 8px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4); cursor: default;
+            max-width: 90%; max-height: 85%; border-radius: 16px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5); cursor: default;
+            transform: scale(0.9); transition: transform 0.3s ease;
         }
+        .lightbox-overlay.active img { transform: scale(1); }
         .lightbox-close {
-            position: absolute; top: 20px; right: 30px; color: #fff; font-size: 2rem;
-            cursor: pointer; background: none; border: none; line-height: 1;
+            position: absolute; top: 30px; right: 40px; color: #FFCB05; font-size: 1.5rem;
+            cursor: pointer; background: rgba(255,255,255,0.1); border: none;
+            width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; z-index: 10000; padding: 0;
         }
-        .lightbox-close:hover { color: #ccc; }
+        .lightbox-close:hover { background: #FFCB05; color: #333; transform: rotate(90deg); }
 
         /* User message status */
         .msg.user .status { font-size: 0.7rem; color: #adb5bd; margin-top: 2px; }
@@ -324,9 +328,14 @@
         </div>
     </div>
 
+@endsection
+
+@section('modals')
     <!-- Lightbox -->
     <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox(event)">
-        <button class="lightbox-close" onclick="closeLightbox(event)">&times;</button>
+        <button class="lightbox-close" onclick="closeLightbox(event)">
+            <i class="bi bi-x-lg"></i>
+        </button>
         <img id="lightboxImg" src="" alt="Enlarged">
     </div>
 @endsection
