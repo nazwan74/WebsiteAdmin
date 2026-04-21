@@ -137,7 +137,7 @@
     <!-- Update Status & Actions -->
     <div class="glass-card p-4 bg-primary bg-opacity-10 border-primary border-opacity-10 rounded-4">
         <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
-            <i class="bi bi-arrow-repeat text-primary"></i> Tindak Lanjut Laporan
+            <i class="bi bi-arrow-repeat" style="color: #FFCB05;"></i> Tindak Lanjut Laporan
         </h6>
         
         <form id="statusForm" action="{{ route('admin.laporan.setStatus', $laporan['id']) }}" data-chat-url="{{ route('admin.laporan.chat', $laporan['id']) }}" method="POST">
@@ -154,11 +154,11 @@
                     </select>
                 </div>
                 <div class="col-md-5 d-flex gap-2">
-                    <button class="btn btn-primary flex-grow-1 shadow-sm px-3" style="border-radius: 10px;">
+                    <button class="btn btn-primary flex-grow-1 shadow-sm px-3 border-0" style="background: linear-gradient(135deg, #FFCB05 0%, #E6B800 100%); border-radius: 10px; color: #333;">
                         Update Status
                     </button>
                     <a href="{{ route('admin.laporan.chat', $laporan['id']) }}" class="btn btn-white border shadow-sm px-3" style="border-radius: 10px;" title="Buka Chat">
-                        <i class="bi bi-chat-dots-fill text-primary"></i>
+                        <i class="bi bi-chat-dots-fill" style="color: #FFCB05;"></i>
                     </a>
                 </div>
             </div>
@@ -188,6 +188,6 @@
         color: #333;
     }
     .hover-primary:hover {
-        color: #3b6efb !important;
+        color: #FFCB05 !important;
     }
 </style>

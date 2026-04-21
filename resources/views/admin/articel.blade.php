@@ -64,11 +64,11 @@
     .theme-kekerasan { border-top: 4px solid #f87171; }
     .theme-kekerasan .category-icon-wrapper { background: #fef2f2; color: #dc2626; }
     
-    .theme-bullying { border-top: 4px solid #fbbf24; }
-    .theme-bullying .category-icon-wrapper { background: #fffbeb; color: #d97706; }
+    .theme-bullying { border-top: 4px solid #FFCB05; }
+    .theme-bullying .category-icon-wrapper { background: #FFFAE6; color: #E6B800; }
     
-    .theme-stunting { border-top: 4px solid #4ade80; }
-    .theme-stunting .category-icon-wrapper { background: #f0fdf4; color: #16a34a; }
+    .theme-stunting { border-top: 4px solid #10b981; }
+    .theme-stunting .category-icon-wrapper { background: #ecfdf5; color: #059669; }
 </style>
 @endsection
 
@@ -158,15 +158,15 @@
         </div>
         <div class="d-flex flex-wrap gap-2">
             <a href="{{ route('admin.articel.refresh') }}" class="btn btn-light shadow-sm" style="border-radius: 10px;" title="Refresh Data">
-                <i class="bi bi-arrow-clockwise text-primary"></i>
+                <i class="bi bi-arrow-clockwise" style="color: #FFCB05;"></i>
             </a>
-            <a href="{{ route('admin.articel.downloadList') }}" id="downloadListBtn" class="btn btn-light shadow-sm text-success" style="border-radius: 10px; border: 1px solid rgba(40, 167, 69, 0.1);">
+            <a href="{{ route('admin.articel.downloadList') }}" id="downloadListBtn" class="btn btn-light shadow-sm" style="border-radius: 10px; border: 1px solid rgba(255, 203, 5, 0.2); color: #B45309;">
                 <i class="bi bi-download me-1"></i>Ekspor CSV
             </a>
             <button type="button" id="bulkDeleteBtn" class="btn btn-danger shadow-sm d-none" style="border-radius: 10px;">
                 <i class="bi bi-trash me-1"></i>Hapus (<span id="selectedCount">0</span>)
             </button>
-            <a href="{{ route('admin.articel.create') }}" class="btn btn-primary shadow-sm px-4" style="border-radius: 10px;">
+            <a href="{{ route('admin.articel.create') }}" class="btn btn-primary shadow-sm px-4 border-0" style="border-radius: 10px; background: linear-gradient(135deg, #FFCB05 0%, #E6B800 100%); color: #333;">
                 <i class="bi bi-plus-lg me-1"></i>Tambah Artikel
             </a>
         </div>
@@ -428,15 +428,15 @@
                     text: `Apakah Anda yakin ingin menghapus artikel "${articleTitle}"?`,
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#6c757d',
-                    cancelButtonColor: '#28a745',
+                    confirmButtonColor: '#FFCB05',
+                    cancelButtonColor: '#f3f4f6',
                     confirmButtonText: 'Hapus',
                     cancelButtonText: 'Batal',
                     reverseButtons: true,
                     focusCancel: true,
                     customClass: {
-                        confirmButton: 'btn btn-secondary',
-                        cancelButton: 'btn btn-success'
+                        confirmButton: 'btn btn-dark text-white',
+                        cancelButton: 'btn btn-light border'
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {

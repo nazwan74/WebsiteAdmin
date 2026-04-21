@@ -62,7 +62,7 @@
                         <p class="text-muted small mb-0">Perbarui konten untuk menjaga akurasi informasi</p>
                     </div>
                     <a href="{{ route('admin.articel.index') }}" class="btn btn-light btn-sm px-3 shadow-sm border" style="border-radius: 8px;">
-                        <i class="bi bi-arrow-left me-1 text-primary"></i> Kembali
+                        <i class="bi bi-arrow-left me-1" style="color: #FFCB05;"></i> Kembali
                     </a>
                 </div>
                 
@@ -130,7 +130,7 @@
 
                                     <hr class="my-4 opacity-10">
 
-                                    <button type="submit" class="btn btn-primary w-100 py-3 shadow-sm d-flex align-items-center justify-content-center gap-2" style="border-radius: 14px;">
+                                    <button type="submit" class="btn btn-primary w-100 py-3 shadow-sm d-flex align-items-center justify-content-center gap-2 border-0" style="background: linear-gradient(135deg, #FFCB05 0%, #E6B800 100%); border-radius: 14px; color: #333;">
                                         <i class="bi bi-arrow-repeat fs-5"></i>
                                         <span class="fw-bold">Perbaharui Artikel</span>
                                     </button>

@@ -14,11 +14,11 @@
 @section('styles')
 <style>
     :root {
-        --primary-gradient: linear-gradient(135deg, #4361ee 0%, #304ffe 100%);
-        --success-gradient: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-        --warning-gradient: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-        --info-gradient: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-        --purple-gradient: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%);
+        --primary-gradient: linear-gradient(135deg, #FFCB05 0%, #E6B800 100%);
+        --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --info-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        --amber-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     }
 
     body {
@@ -123,7 +123,7 @@
         <h4 class="fw-bold mb-0">Overview Real-time</h4>
         <p class="text-muted small mb-0">Pantau statistik dan laporan terbaru hari ini</p>
     </div>
-    <a href="{{ route('admin.dashboard.refresh') }}" class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm" style="border-radius: 12px; transition: all 0.3s ease;">
+    <a href="{{ route('admin.dashboard.refresh') }}" class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm border-0" style="background: var(--primary-gradient); border-radius: 12px; transition: all 0.3s ease; color: #333;">
         <i class="bi bi-arrow-clockwise fs-5"></i>
         <span class="fw-semibold">Perbarui Data</span>
     </a>
@@ -133,7 +133,7 @@
 <div class="row g-4">
     <div class="col-md-3">
         <div class="stat-card glass-card p-4 h-100">
-            <div class="icon-box bg-primary text-white" style="background: var(--primary-gradient) !important;">
+            <div class="icon-box text-dark" style="background: var(--primary-gradient) !important;">
                 <i class="bi bi-people-fill" style="font-size: 1.5rem;"></i>
             </div>
             <h6 class="text-muted small fw-medium mb-1">Pengguna Aplikasi</h6>
@@ -169,7 +169,7 @@
     </div>
     <div class="col-md-3">
         <div class="stat-card glass-card p-4 h-100">
-            <div class="icon-box text-white" style="background: var(--purple-gradient) !important;">
+            <div class="icon-box text-dark" style="background: var(--amber-gradient) !important;">
                 <i class="bi bi-book-fill" style="font-size: 1.5rem;"></i>
             </div>
             <h6 class="text-muted small fw-medium mb-1">Artikel Edukasi</h6>
@@ -254,7 +254,7 @@
                     <h5 class="fw-bold mb-0">Laporan Terbaru</h5>
                     <p class="text-muted small mb-0">Daftar kasus yang masuk sistem</p>
                 </div>
-                <a href="{{ route('admin.laporan') }}" class="btn btn-sm btn-primary px-3" style="border-radius: 8px;">Lihat Semua</a>
+                <a href="{{ route('admin.laporan') }}" class="btn btn-sm px-3 border-0 fw-bold" style="border-radius: 8px; background: var(--primary-gradient); color: #333;">Lihat Semua</a>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -272,10 +272,10 @@
                             @php
                                 $status = strtolower($item['status'] ?? 'baru');
                                 $pillStyle = match($status) {
-                                    'selesai' => 'background: #eafaf2; color: #27ae60; border: 1px solid #c3f3db;',
-                                    'diproses' => 'background: #fff9e6; color: #d68910; border: 1px solid #fdebd0;',
-                                    'ditolak' => 'background: #fff0f0; color: #e74c3c; border: 1px solid #fadbd8;',
-                                    default => 'background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;',
+                                    'selesai' => 'background: #eafaf2; color: #059669; border: 1px solid #d1fae5;',
+                                    'diproses' => 'background: #fff9e6; color: #d97706; border: 1px solid #fef3c7;',
+                                    'ditolak' => 'background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2;',
+                                    default => 'background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;',
                                 };
 
                                 $kategori = strtolower($item['kategori'] ?? '');
@@ -423,14 +423,14 @@
                 datasets: [{
                     label: 'Jumlah Laporan',
                     data: data,
-                    borderColor: '#4361ee',
+                    borderColor: '#FFCB05',
                     backgroundColor: function(context) {
                         const chart = context.chart;
                         const {ctx, chartArea} = chart;
                         if (!chartArea) return null;
                         const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                        gradient.addColorStop(0, 'rgba(67, 97, 238, 0)');
-                        gradient.addColorStop(1, 'rgba(67, 97, 238, 0.1)');
+                        gradient.addColorStop(0, 'rgba(255, 203, 5, 0)');
+                        gradient.addColorStop(1, 'rgba(255, 203, 5, 0.1)');
                         return gradient;
                     },
                     fill: true,
@@ -441,7 +441,7 @@
                     pointBorderWidth: 2,
                     pointRadius: 5,
                     pointHoverRadius: 7,
-                    pointHoverBackgroundColor: '#4361ee',
+                    pointHoverBackgroundColor: '#FFCB05',
                     pointHoverBorderColor: '#fff',
                 }]
             },
@@ -489,8 +489,8 @@
                 datasets: [{
                     label: 'Jumlah Laporan',
                     data: data,
-                    backgroundColor: '#4361ee',
-                    hoverBackgroundColor: '#304ffe',
+                    backgroundColor: '#FFCB05',
+                    hoverBackgroundColor: '#E6B800',
                     borderRadius: 6,
                     barThickness: 15,
                 }]
@@ -533,7 +533,7 @@
                     label: 'Jumlah Laporan',
                     data: usiaData,
                     backgroundColor: [
-                        '#4361ee', '#3f37c9', '#4895ef', '#4cc9f0', '#b517ad'
+                        '#FFCB05', '#F59E0B', '#D97706', '#B45309', '#78350F'
                     ],
                     borderRadius: 6,
                     barThickness: 20,

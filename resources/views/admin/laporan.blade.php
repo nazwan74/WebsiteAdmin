@@ -21,10 +21,10 @@
             letter-spacing: 0.03em;
         }
         
-        .status-baru { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
-        .status-diproses { background: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
-        .status-selesai { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
-        .status-ditolak { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+        .status-baru { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+        .status-diproses { background: #FFFAE6; color: #B45309; border: 1px solid rgba(255, 203, 5, 0.3); }
+        .status-selesai { background: #ecfdf5; color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .status-ditolak { background: #fef2f2; color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.1); }
 
         .badge-category {
             padding: 6px 12px;
@@ -44,8 +44,8 @@
 
         .theme-pernikahan { background: #fff1f2; color: #e11d48; border-color: rgba(225, 29, 72, 0.2) !important; }
         .theme-kekerasan { background: #fef2f2; color: #dc2626; border-color: rgba(220, 38, 38, 0.2) !important; }
-        .theme-bullying { background: #fffbeb; color: #d97706; border-color: rgba(217, 119, 6, 0.2) !important; }
-        .theme-stunting { background: #f0fdf4; color: #16a34a; border-color: rgba(22, 163, 74, 0.2) !important; }
+        .theme-bullying { background: #FFFAE6; color: #E6B800; border-color: rgba(255, 203, 5, 0.3) !important; }
+        .theme-stunting { background: #ecfdf5; color: #059669; border-color: rgba(16, 185, 129, 0.2) !important; }
         .theme-default { background: #f8fafc; color: #64748b; border-color: rgba(100, 116, 139, 0.2) !important; }
 
         .filter-badge {
@@ -72,8 +72,8 @@
         .filter-badge i:hover { transform: scale(1.2); }
         
         #filterModal .modal-header {
-            background: #0f172a;
-            color: white;
+            background: #FFCB05;
+            color: #333;
             border-bottom: none;
         }
 
@@ -83,7 +83,7 @@
         }
 
         #filterModal .btn-close {
-            filter: brightness(0) invert(1);
+            filter: none;
         }
 
         #filterModal .modal-content {
@@ -118,9 +118,9 @@
         }
 
         .quick-date-btn.active {
-            background: #4361ee;
-            color: #ffffff;
-            border-color: #4361ee;
+            background: #FFCB05;
+            color: #333;
+            border-color: #FFCB05;
         }
 
         .date-range-divider {
@@ -173,8 +173,8 @@
         /* Specific Theme Colors for Filter */
         .filter-pernikahan:checked + .form-check-label { background: #fff1f2 !important; color: #e11d48 !important; border-color: #fda4af !important; }
         .filter-kekerasan:checked + .form-check-label { background: #fef2f2 !important; color: #dc2626 !important; border-color: #fecaca !important; }
-        .filter-bullying:checked + .form-check-label { background: #fffbeb !important; color: #d97706 !important; border-color: #fde68a !important; }
-        .filter-stunting:checked + .form-check-label { background: #f0fdf4 !important; color: #16a34a !important; border-color: #bbf7d0 !important; }
+        .filter-bullying:checked + .form-check-label { background: #FFFAE6 !important; color: #B45309 !important; border-color: #FFCB05 !important; }
+        .filter-stunting:checked + .form-check-label { background: #ecfdf5 !important; color: #059669 !important; border-color: #10b981 !important; }
         .filter-default:checked + .form-check-label { background: #f8fafc !important; color: #475569 !important; border-color: #e2e8f0 !important; }
 
         /* Status Filter Colors */
@@ -200,13 +200,13 @@
         }
 
         #filterModal .btn-primary {
-            background: linear-gradient(to right, #3b6efb, #5a8dfb);
+            background: linear-gradient(135deg, #FFCB05 0%, #E6B800 100%);
             border: none;
-            color: white;
+            color: #333;
         }
 
         #filterModal .btn-primary:hover {
-            background: linear-gradient(to right, #2c5be2, #467ef6);
+            opacity: 0.9;
         }
 
         #filterModal .btn-secondary {
@@ -251,9 +251,9 @@
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <a href="{{ route('admin.laporan.refresh') }}" class="btn btn-light shadow-sm" style="border-radius: 10px;" title="Refresh Data">
-                    <i class="bi bi-arrow-clockwise text-primary"></i>
+                    <i class="bi bi-arrow-clockwise" style="color: #FFCB05;"></i>
                 </a>
-                <a href="{{ route('admin.laporan.downloadList') }}" id="downloadListBtn" class="btn btn-light shadow-sm text-success" style="border-radius: 10px; border: 1px solid rgba(40, 167, 69, 0.1);">
+                <a href="{{ route('admin.laporan.downloadList') }}" id="downloadListBtn" class="btn btn-light shadow-sm" style="border-radius: 10px; border: 1px solid rgba(255, 203, 5, 0.2); color: #B45309;">
                     <i class="bi bi-download me-2"></i>Ekspor CSV
                 </a>
             </div>
@@ -265,8 +265,8 @@
                     <div class="input-group shadow-sm" style="border-radius: 12px; overflow: hidden;">
                         <span class="input-group-text border-0 bg-white ps-3"><i class="bi bi-search text-muted"></i></span>
                         <input type="text" class="form-control border-0 py-2" placeholder="Cari nama pelapor atau detail kejadian..." id="search-input">
-                        <button class="btn btn-light border-start px-4 fw-bold text-primary" type="button" data-bs-toggle="modal" data-bs-target="#filterModal" style="background: #f8faff;">
-                            <i class="bi bi-funnel me-2"></i>Filter <span class="badge bg-primary ms-1" id="filterCount" style="display:none;">0</span>
+                        <button class="btn btn-light border-start px-4 fw-bold" type="button" data-bs-toggle="modal" data-bs-target="#filterModal" style="background: #f8faff; color: #FFCB05;">
+                            <i class="bi bi-funnel me-2"></i>Filter <span class="badge ms-1" id="filterCount" style="display:none; background: #FFCB05; color: #333;">0</span>
                         </button>
                     </div>
                 </div>
@@ -395,7 +395,7 @@
                                     </div>
                                 </td>
                                 <td class="pe-3 text-end">
-                                    <button class="btn btn-primary btn-sm px-3 shadow-sm" style="border-radius: 8px;" onclick="openDetailLaporan('{{ $item['id'] }}')">
+                                    <button class="btn btn-primary btn-sm px-3 shadow-sm border-0" style="border-radius: 8px; background: linear-gradient(135deg, #FFCB05 0%, #E6B800 100%); color: #333;" onclick="openDetailLaporan('{{ $item['id'] }}')">
                                         Detail
                                     </button>
                                 </td>

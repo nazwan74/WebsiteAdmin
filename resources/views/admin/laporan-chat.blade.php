@@ -80,9 +80,9 @@
         .msg.admin .header { flex-direction: row-reverse; }
         .msg.admin .content { align-items: flex-end; }
         .msg.admin .bubble { 
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            color: #fff; border-top-right-radius: 4px;
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.15);
+            background: linear-gradient(135deg, #FFCB05 0%, #E6B800 100%);
+            color: #333; border-top-right-radius: 4px;
+            box-shadow: 0 10px 20px rgba(255, 203, 5, 0.15);
         }
         .msg .status { font-size: 0.7rem; color: #adb5bd; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
         .msg.admin .status { justify-content: flex-end; }
@@ -112,13 +112,13 @@
             resize: none; border-radius: 20px; padding: 10px 16px; min-height: 44px; max-height: 120px;
             border: 1px solid #ced4da; background-color: #f8f9fa;
         }
-        .composer textarea:focus { background-color: #fff; box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15); border-color: #4361ee; }
+        .composer textarea:focus { background-color: #fff; box-shadow: 0 0 0 3px rgba(255, 203, 5, 0.15); border-color: #FFCB05; }
         
         .btn-send {
             width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            background: #4361ee; color: white; border: none; transition: all 0.2s; box-shadow: 0 2px 6px rgba(67, 97, 238, 0.3);
+            background: #FFCB05; color: #333; border: none; transition: all 0.2s; box-shadow: 0 2px 6px rgba(255, 203, 5, 0.3);
         }
-        .btn-send:hover { background: #304ffe; transform: scale(1.05); }
+        .btn-send:hover { transform: scale(1.05); opacity: 0.9; }
         .btn-send:disabled { background: #e9ecef; color: #adb5bd; cursor: not-allowed; transform: none; box-shadow: none; }
         
         /* Edit Mode Bar */
@@ -164,13 +164,13 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
         .edit-textarea {
-            width: 100%; resize: none; border: 2px solid #4361ee; border-radius: 10px; padding: 10px;
+            width: 100%; resize: none; border: 2px solid #FFCB05; border-radius: 10px; padding: 10px;
             font-size: 0.95rem; font-family: inherit; margin-bottom: 8px; outline: none;
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.1);
+            box-shadow: 0 4px 12px rgba(255, 203, 5, 0.1);
         }
         .msg.admin .edit-textarea { background: #fff; color: #212529; }
         .edit-buttons { display: flex; gap: 8px; justify-content: flex-end; }
-        .btn-edit-save { background: #4361ee; color: white; border: none; padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
+        .btn-edit-save { background: #FFCB05; color: #333; border: none; padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; }
         .btn-edit-cancel { background: #f1f3f5; color: #495057; border: none; padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; }
 
         /* Chat Images */
@@ -185,7 +185,7 @@
             width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
             background: transparent; color: #6c757d; border: 1px solid #ced4da; transition: all 0.2s; cursor: pointer;
         }
-        .btn-attach:hover { background: #f8f9fa; color: #4361ee; border-color: #4361ee; }
+        .btn-attach:hover { background: #f8f9fa; color: #FFCB05; border-color: #FFCB05; }
 
         /* Image Preview */
         .image-preview-bar {
@@ -195,7 +195,7 @@
         .image-preview-bar.active { display: flex; }
         .image-preview-bar img {
             width: 60px; height: 60px; object-fit: cover; border-radius: 8px;
-            border: 2px solid #4361ee;
+            border: 2px solid #FFCB05;
         }
         .image-preview-bar .preview-name {
             font-size: 0.85rem; color: #495057; flex: 1; overflow: hidden;
@@ -469,7 +469,8 @@
             
             const btnSend = document.querySelector('.btn-send');
             btnSend.innerHTML = '<i class="bi bi-send-fill" style="margin-left: 2px;"></i>';
-            btnSend.style.background = '#4361ee';
+            btnSend.style.background = '#FFCB05';
+            btnSend.style.color = '#333';
             
             messageInput.style.height = 'auto';
             messageInput.focus();
