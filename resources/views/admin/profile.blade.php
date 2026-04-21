@@ -20,7 +20,7 @@
     
     .profile-banner {
         height: 120px;
-        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        background: linear-gradient(135deg, #FFCB05 0%, #E6B800 100%);
     }
     
     .avatar-wrapper {
@@ -45,13 +45,13 @@
     .avatar-icon-box {
         width: 100%;
         height: 100%;
-        background: #f1f5f9;
+        background: #FFFAE6;
         border-radius: 24px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 3rem;
-        color: #6366f1;
+        color: #FFCB05;
     }
     
     .info-label {
@@ -84,8 +84,8 @@
     }
     
     .form-control:focus {
-        border-color: #6366f1;
-        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        border-color: #FFCB05;
+        box-shadow: 0 0 0 4px rgba(255, 203, 5, 0.1);
     }
 </style>
 @endsection
@@ -105,7 +105,7 @@
                             </div>
                         </div>
                         <h4 class="fw-bold text-dark mt-3 mb-1">{{ Session::get('admin.nama', 'Administrator') }}</h4>
-                        <span class="badge rounded-pill px-3 py-2 bg-primary bg-opacity-10 text-primary fw-bold" style="font-size: 0.75rem;">
+                        <span class="badge rounded-pill px-3 py-2 fw-bold" style="font-size: 0.75rem; background: #FFFAE6; color: #B45309;">
                             {{ strtoupper(str_replace('_', ' ', $admin['role'] ?? 'admin')) }}
                         </span>
                     </div>
@@ -123,7 +123,7 @@
 
                     <div class="password-section">
                         <h6 class="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
-                            <i class="bi bi-shield-lock text-primary"></i> Keamanan Akun
+                            <i class="bi bi-shield-lock" style="color: #FFCB05;"></i> Keamanan Akun
                         </h6>
                         
                         <form action="{{ route('admin.profile.update-password') }}" method="POST">
@@ -142,7 +142,7 @@
                                     <input type="password" class="form-control" name="new_password_confirmation" placeholder="Ulangi password baru" required>
                                 </div>
                                 <div class="col-12 mt-4 text-end">
-                                    <button type="submit" class="btn btn-primary px-4 py-2 shadow-sm" style="border-radius: 12px;">
+                                    <button type="submit" class="btn btn-primary px-4 py-2 shadow-sm border-0" style="border-radius: 12px; background: linear-gradient(135deg, #FFCB05 0%, #E6B800 100%); color: #333;">
                                         <i class="bi bi-key-fill me-2"></i>Perbarui Kata Sandi
                                     </button>
                                 </div>
