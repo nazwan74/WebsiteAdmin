@@ -5,10 +5,10 @@
 
 <div class="sidebar" id="sidebar">
     <div class="sidebar-logo mb-4">
-        <img src="{{ URL::to('Images/Gesa_Logo.png')}}" alt="Logo GESA" style="height: 60px; filter: brightness(0) invert(1);">
+        <img src="{{ URL::to('Images/Gesa_Logo.png')}}" alt="Logo GESA" style="height: 60px;">
     </div>
     
-    <div class="sidebar-label text-uppercase small fw-bold mb-2 px-3" style="color: #475569; letter-spacing: 0.05em; font-size: 0.7rem;">Main Menu</div>
+    <div class="sidebar-label text-uppercase small fw-bold mb-2 px-3" style="color: #94a3b8; letter-spacing: 0.05em; font-size: 0.7rem;">Main Menu</div>
     
     <ul class="sidebar-menu">
         <li>
@@ -31,7 +31,7 @@
         </li>
 
         @if(Session::get('admin.role') === 'super_admin')
-        <div class="sidebar-label text-uppercase small fw-bold mt-4 mb-2 px-3" style="color: #475569; letter-spacing: 0.05em; font-size: 0.7rem;">System</div>
+        <div class="sidebar-label text-uppercase small fw-bold mt-4 mb-2 px-3" style="color: #94a3b8; letter-spacing: 0.05em; font-size: 0.7rem;">System</div>
         <li>
             <a href="/admin/pengaturan" class="{{ ($activePage ?? '') === 'pengaturan' ? 'active' : '' }}">
                 <i class="bi bi-sliders"></i>
@@ -40,7 +40,7 @@
         </li>
         @endif
         
-        <div class="sidebar-label text-uppercase small fw-bold mt-4 mb-2 px-3" style="color: #475569; letter-spacing: 0.05em; font-size: 0.7rem;">Account</div>
+        <div class="sidebar-label text-uppercase small fw-bold mt-4 mb-2 px-3" style="color: #94a3b8; letter-spacing: 0.05em; font-size: 0.7rem;">Account</div>
         <li>
             <a href="/admin/profile" class="{{ ($activePage ?? '') === 'profile' ? 'active' : '' }}">
                 <i class="bi bi-person-badge-fill"></i>
@@ -50,14 +50,14 @@
     </ul>
 
     <!-- Admin Footer Info -->
-    <div class="mt-auto pt-4 px-3 border-top" style="border-color: rgba(255,255,255,0.1) !important;">
+    <div class="mt-auto pt-4 px-3 border-top" style="border-color: rgba(0,0,0,0.05) !important;">
         <div class="d-flex align-items-center gap-3">
-            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 38px; height: 38px; font-size: 0.8rem; background: var(--primary-gradient) !important;">
+            <div class="rounded-circle d-flex align-items-center justify-content-center text-dark fw-bold shadow-sm" style="width: 38px; height: 38px; font-size: 0.85rem; background: #FFCB05 !important; border: 2px solid white;">
                 {{ substr(Session::get('admin.nama', 'A'), 0, 1) }}
             </div>
             <div class="overflow-hidden">
-                <div class="text-white small fw-bold text-truncate">{{ Session::get('admin.nama', 'Administrator') }}</div>
-                <div class="text-muted" style="font-size: 0.7rem;">{{ ucfirst(Session::get('admin.role', 'Admin')) }}</div>
+                <div class="text-dark small fw-bold text-truncate">{{ Session::get('admin.nama', 'Administrator') }}</div>
+                <div class="text-muted" style="font-size: 0.7rem; color: #616161 !important;">{{ ucfirst(Session::get('admin.role', 'Admin')) }}</div>
             </div>
         </div>
     </div>

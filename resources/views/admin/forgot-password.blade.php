@@ -12,14 +12,15 @@
     
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #64748b;
+            --primary: #FFCB05;
+            --primary-dark: #E6B800;
+            --secondary: #FFFAE6;
         }
 
         body {
             font-family: 'Outfit', sans-serif;
-            background: #0f172a;
+            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -47,19 +48,19 @@
         }
 
         .blob-1 {
-            width: 400px;
-            height: 400px;
-            background: #6366f1;
-            top: -100px;
-            left: -100px;
+            width: 500px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.4);
+            top: -150px;
+            left: -150px;
         }
 
         .blob-2 {
-            width: 350px;
-            height: 350px;
-            background: #ec4899;
-            bottom: -50px;
-            right: -50px;
+            width: 400px;
+            height: 400px;
+            background: rgba(230, 184, 0, 0.3);
+            bottom: -100px;
+            right: -100px;
             animation-delay: -5s;
         }
 
@@ -69,16 +70,18 @@
         }
 
         .login-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 30px;
-            padding: 3rem;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 40px;
+            padding: 3.5rem;
             width: 100%;
-            max-width: 420px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 450px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
             animation: fadeIn 0.8s ease-out;
+            position: relative;
+            z-index: 10;
         }
 
         @keyframes fadeIn {
@@ -100,21 +103,23 @@
         }
 
         .login-title {
-            color: #fff;
+            color: #333;
             font-weight: 700;
             text-align: center;
             margin-bottom: 0.5rem;
+            font-size: 1.8rem;
         }
 
         .login-subtitle {
-            color: #94a3b8;
+            color: #616161;
             text-align: center;
             margin-bottom: 2.5rem;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            font-weight: 500;
         }
 
         .form-label {
-            color: #e2e8f0;
+            color: #333;
             font-weight: 600;
             font-size: 0.85rem;
             margin-bottom: 0.6rem;
@@ -130,7 +135,7 @@
             left: 1.1rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #94a3b8;
+            color: #616161;
             font-size: 1.1rem;
             display: flex;
             align-items: center;
@@ -140,54 +145,55 @@
         }
 
         .form-control {
-            background: rgba(255, 255, 255, 0.05) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            color: #fff !important;
-            padding: 0.8rem 1rem 0.8rem 3.2rem !important;
-            border-radius: 14px !important;
-            font-size: 1rem;
+            background: #fff !important;
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+            color: #333 !important;
+            padding: 0.85rem 1rem 0.85rem 3.2rem !important;
+            border-radius: 16px !important;
+            font-size: 0.95rem;
             transition: all 0.3s;
             position: relative;
             z-index: 5;
         }
 
         .form-control:focus {
-            background: rgba(255, 255, 255, 0.08) !important;
+            background: #fff !important;
             border-color: var(--primary) !important;
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
+            box-shadow: 0 0 0 4px rgba(255, 203, 5, 0.2) !important;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            background: linear-gradient(135deg, #FFCB05 0%, #E6B800 100%);
             border: none;
-            color: white;
+            color: #333;
             padding: 0.9rem;
             border-radius: 14px;
             font-weight: 700;
             width: 100%;
             margin-top: 1rem;
             transition: all 0.3s;
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 10px 20px rgba(255, 203, 5, 0.2);
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 25px rgba(79, 70, 229, 0.4);
-            filter: brightness(1.1);
+            transform: translateY(-3px);
+            box-shadow: 0 20px 30px rgba(255, 203, 5, 0.4);
+            filter: brightness(1.05);
         }
 
         .back-link {
-            color: #94a3b8;
+            color: #616161;
             text-decoration: none;
             font-size: 0.85rem;
             transition: color 0.2s;
             display: block;
             text-align: center;
             margin-top: 1.5rem;
+            font-weight: 500;
         }
 
         .back-link:hover {
-            color: #fff;
+            color: var(--primary-dark);
         }
     </style>
 </head>
@@ -234,9 +240,9 @@
                     icon: 'error',
                     title: 'Oops...',
                     text: '{{ $errors->first() }}',
-                    background: '#1e293b',
-                    color: '#fff',
-                    confirmButtonColor: '#6366f1',
+                    background: '#fff',
+                    color: '#333',
+                    confirmButtonColor: '#FFCB05',
                     customClass: { popup: 'rounded-4' }
                 });
             @endif
@@ -246,9 +252,9 @@
                     icon: 'success',
                     title: 'Berhasil',
                     text: '{{ session('success') }}',
-                    background: '#1e293b',
-                    color: '#fff',
-                    confirmButtonColor: '#6366f1',
+                    background: '#fff',
+                    color: '#333',
+                    confirmButtonColor: '#FFCB05',
                     customClass: { popup: 'rounded-4' }
                 });
             @endif

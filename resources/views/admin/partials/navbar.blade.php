@@ -14,9 +14,9 @@
             
             {{-- Notification Bell --}}
             <div class="notif-bell-wrapper" id="notifBellWrapper">
-                <button class="notif-bell-btn position-relative d-flex align-items-center justify-content-center" id="notifBellBtn" title="Notifikasi" style="width: 42px; height: 42px; background: #f1f5f9; border-radius: 10px; border: none; color: #64748b;">
+                <button class="notif-bell-btn position-relative d-flex align-items-center justify-content-center" id="notifBellBtn" title="Notifikasi" style="width: 42px; height: 42px; background: #FFFAE6; border-radius: 12px; border: none; color: #FFCB05; transition: all 0.3s ease;">
                     <i class="bi bi-bell-fill" style="font-size: 1.1rem;"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notifBellBadge" style="font-size: 0.6rem;">
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifBellBadge" style="font-size: 0.6rem; padding: 4px 6px; border: 2px solid white; display: none;">
                         0
                     </span>
                 </button>
@@ -38,8 +38,8 @@
             {{-- Logout Button --}}
             <form method="POST" action="{{ route('admin.logout') }}" id="logoutForm">
                 @csrf
-                <button type="button" class="btn btn-light text-danger fw-bold shadow-sm d-flex align-items-center gap-2 px-3" style="border-radius: 10px; border: 1px solid rgba(220, 53, 69, 0.1); background: #fff5f5;" onclick="confirmLogout()">
-                    <i class="bi bi-power" style="font-size: 1.1rem;"></i>
+                <button type="button" class="btn btn-light fw-bold shadow-sm d-flex align-items-center gap-2 px-3 py-2" style="border-radius: 12px; border: 1px solid rgba(255, 203, 5, 0.2); background: #fff; color: #333; transition: all 0.3s ease;" onclick="confirmLogout()">
+                    <i class="bi bi-power text-danger" style="font-size: 1.1rem;"></i>
                     <span class="d-none d-md-inline">Keluar</span>
                 </button>
             </form>
