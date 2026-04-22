@@ -25,8 +25,8 @@
     .notif-badge {
         position: absolute;
         top: 2px; right: 2px;
-        background: #dc3545;
-        color: white;
+        background: #FFCB05;
+        color: #333;
         font-size: 0.65rem;
         font-weight: 700;
         min-width: 18px;
@@ -135,8 +135,8 @@
 
     /* Sidebar Badge */
     .sidebar-notif-badge {
-        background: #dc3545;
-        color: white;
+        background: #FFCB05;
+        color: #333;
         font-size: 0.65rem;
         font-weight: 700;
         min-width: 18px;
@@ -185,8 +185,8 @@
         });
     }
 
-    // Polling untuk unread chats (30 detik) 
-    const NOTIF_POLL_INTERVAL = 30000; // 30 detik (sesuai cache TTL) 
+    // Polling untuk unread chats (5 detik) 
+    const NOTIF_POLL_INTERVAL = 5000; 
     let notifPoller = null;
     // Fetch unread chats 
     function fetchUnreadChats() {
@@ -208,8 +208,10 @@
         if (bellBadge) {
             if (totalUnread > 0) {
                 bellBadge.textContent = totalUnread > 99 ? '99+' : totalUnread;
+                bellBadge.style.display = 'block';
                 bellBadge.classList.remove('d-none');
             } else {
+                bellBadge.style.display = 'none';
                 bellBadge.classList.add('d-none');
             }
         }
@@ -231,9 +233,9 @@
 
         if (unreadList.length === 0) {
             notifList.innerHTML = `
-                <div class="notif-empty">
-                    <i class="bi bi-chat-dots"></i>
-                    Tidak ada pesan baru
+                <div class="notif-empty p-4 text-center">
+                    <i class="bi bi-chat-left-dots fs-1 text-muted opacity-25 d-block mb-2"></i>
+                    <span class="text-muted small">Semua pesan sudah dibaca</span>
                 </div>
             `;
             return;
@@ -241,14 +243,14 @@
         
         notifList.innerHTML = unreadList.map(item => `
             <a class="notif-item" href="/admin/laporan/${item.reportId}/chat">
-                <div class="notif-item-avatar">
-                    <i class="bi bi-person-fill"></i>
+                <div class="notif-item-avatar" style="background: #FFFAE6; color: #FFCB05;">
+                    <i class="bi bi-chat-fill"></i>
                 </div>
                 <div class="notif-item-body">
-                    <div class="notif-item-title">${escapeNotifHtml(item.userName)} — ${escapeNotifHtml(item.reportTitle)}</div>
-                    <div class="notif-item-msg">${escapeNotifHtml(item.lastMessage || 'Pesan baru')}</div>
+                    <div class="notif-item-title fw-bold" style="color: #333;">${escapeNotifHtml(item.userName)}</div>
+                    <div class="notif-item-msg text-muted small">${escapeNotifHtml(item.reportTitle)}: ${escapeNotifHtml(item.lastMessage || 'Pesan baru')}</div>
                 </div>
-                <span class="notif-item-badge">${item.unreadCount}</span>
+                <span class="notif-item-badge" style="background: #FFCB05; color: #333; border: none;">${item.unreadCount}</span>
             </a>
         `).join('');
     }

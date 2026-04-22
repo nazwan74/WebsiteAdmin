@@ -356,15 +356,20 @@
         const ACTIVE_INTERVAL = 1000;   // 1 detik saat tab aktif
         const HIDDEN_INTERVAL = 10000;  // 10 detik saat tab tidak aktif
 
-        // Mark chat as read
-        fetch(`/admin/laporan/${laporanId}/chat/mark-read`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        }).catch(e => console.error('Mark read error:', e));
+        // Mark chat as read function
+        function markRead() {
+            fetch(`/admin/laporan/${laporanId}/chat/mark-read`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).catch(e => console.error('Mark read error:', e));
+        }
+
+        // Initial mark read
+        markRead();
 
         // Notification sound
         function playNotifSound() {
@@ -694,6 +699,7 @@
 
                 if ((m.chatType || '').toUpperCase() !== 'ADMIN') {
                     playNotifSound();
+                    markRead();
                     Toast.fire({
                         icon: 'info',
                         title: `${m.sender_name || 'User'}: ${(m.textMessage || (m.imageMessage ? '📷 Gambar' : 'Pesan baru')).substring(0, 50)}`
@@ -712,6 +718,22 @@
             .then(r => r.json())
             .then(data => {
                 if (data && data.status === 'success') {
+                    // 1. Sync Hard Deletes (Hapus yang sudah tidak ada di server)
+                    if (data.validIds && data.validIds.length > 0) {
+                        const localMessages = document.querySelectorAll('.msg[id^="msg-"]');
+                        localMessages.forEach(el => {
+                            const msgId = el.id.replace('msg-', '');
+                            // Hanya cek sinkronisasi untuk 200 pesan terakhir agar tidak salah hapus history lama
+                            if (!data.validIds.includes(msgId)) {
+                                // Jika kita baru saja memuat history (lastMessageTime > 0), 
+                                // maka aman untuk menghapus yang tidak ada di list valid terbaru
+                                if (lastMessageTime > 0) {
+                                    el.remove();
+                                }
+                            }
+                        });
+                    }
+
                     const msgs = data.messages || [];
                     if (msgs.length === 0) return;
 

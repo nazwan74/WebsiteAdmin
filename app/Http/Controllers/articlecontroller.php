@@ -34,6 +34,13 @@ class articlecontroller extends Controller
         if (!$value) return '-';
 
         try {
+            // Handle primitive integer (milliseconds)
+            if (is_numeric($value) && !($value instanceof Timestamp)) {
+                return \Carbon\Carbon::createFromTimestampMs($value)
+                    ->setTimezone(config('app.timezone', 'Asia/Jakarta'))
+                    ->format('Y-m-d H:i');
+            }
+
             // Handle Firestore Timestamp
             if ($value instanceof Timestamp) {
                 $value = $value->get();
@@ -196,7 +203,7 @@ class articlecontroller extends Controller
             'title' => $request->title,
             'articleType' => $request->articleType,
             'description' => $request->description,
-            'updateDate' => new Timestamp(new \DateTime()),
+            'updateDate' => round(microtime(true) * 1000),
         ];
 
         $bucket = $this->storage->getBucket();
@@ -354,7 +361,7 @@ class articlecontroller extends Controller
                 'description' => $request->description,
                 'photoUrl' => $signedUrl,
                 'gsUrl' => $gsUrl,
-                'releasedDate' => new Timestamp(new \DateTime()),
+                'releasedDate' => round(microtime(true) * 1000),
             ]);
 
             Cache::forget('articles_list_data');

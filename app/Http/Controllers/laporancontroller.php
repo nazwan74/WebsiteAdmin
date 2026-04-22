@@ -568,9 +568,17 @@ class laporancontroller extends Controller
             return $ta <=> $tb;
         });
 
+        // Sync Deletions: Ambil daftar ID dari 200 pesan terbaru untuk sinkronisasi penghapusan permanen
+        $allRecentDocs = $collection->orderBy('createdAt', 'DESC')->limit(200)->documents();
+        $validIds = [];
+        foreach ($allRecentDocs as $rd) {
+            if ($rd->exists()) $validIds[] = $rd->id();
+        }
+
         return response()->json([
             'status' => 'success',
             'messages' => $messages,
+            'validIds' => $validIds, // Untuk deteksi Hard Delete
         ]);
     }
 
@@ -636,6 +644,7 @@ class laporancontroller extends Controller
             'lastActionAt' => $nowMillis,
             'dayMessage' => Carbon::now()->format('Y-m-d'),
             'imageMessage' => $imageUrl,
+            'imagePath' => $filename ?? null, // Simpan path untuk penghapusan nantinya
             'messageStatus' => 'terkirim',
             'reportId' => $id,
             'chatType' => $chatType,
@@ -674,12 +683,28 @@ class laporancontroller extends Controller
             return response()->json(['status' => 'error', 'message' => 'Pesan tidak ditemukan'], 404);
         }
 
-        // Soft delete
-        $nowMillis = round(microtime(true) * 1000);
-        $messageRef->update([
-            ['path' => 'isDeleted', 'value' => true],
-            ['path' => 'lastActionAt', 'value' => $nowMillis]
-        ]);
+        $chatData = $snap->data();
+        $imagePath = $chatData['imagePath'] ?? null;
+
+        if ($imagePath) {
+            try {
+                $bucket = $this->storage->getBucket();
+                $object = $bucket->object($imagePath);
+                if ($object->exists()) {
+                    $object->delete();
+                }
+            } catch (\Exception $e) {
+                \Log::error('Delete chat storage error: ' . $e->getMessage());
+            }
+        }
+
+        // Hard delete (Hapus permanen dari Firestore)
+        $messageRef->delete();
+        
+        // Invalidate cache
+        $adminEmail = Session::get('admin.email', 'default');
+        Cache::forget('unread_chats_' . md5($adminEmail));
+        
         return response()->json(['status' => 'success']);
     }
 
@@ -724,39 +749,39 @@ class laporancontroller extends Controller
             $adminEmail = Session::get('admin.email', 'default');
             $cacheKey = 'unread_chats_' . md5($adminEmail);
 
-            // Cache selama 30 detik per admin
-            $result = Cache::remember($cacheKey, 30, function () {
+            $result = Cache::remember($cacheKey, 5, function () {
                 $unread = [];
+                $reports = $this->firestore->collection('report')
+                    ->orderBy('created_date', 'DESC')
+                    ->limit(40)
+                    ->documents();
 
-                // O(Limit) Strategy: Ambil 100 laporan terbaru berdasarkan tanggal pembuatan
-                try {
-                    $snapshot = $this->firestore->collection('report')
-                        ->orderBy('created_date', 'DESC')
-                        ->limit(100)
+                foreach ($reports as $doc) {
+                    if (!$doc->exists()) continue;
+                    $reportData = $doc->data();
+                    $adminLastReadAt = $reportData['adminLastReadAt'] ?? 0;
+
+                    $lastChatSnap = $doc->reference()->collection('chat')
+                        ->orderBy('createdAt', 'DESC')
+                        ->limit(1)
                         ->documents();
 
-                    foreach ($snapshot as $doc) {
-                        if (!$doc->exists()) continue;
-                        $item = $doc->data();
-                        $reportId = $doc->id();
+                    if (!$lastChatSnap->isEmpty()) {
+                        $lastChat = $lastChatSnap->rows()[0]->data();
+                        $lastMessageAt = $lastChat['createdAt'] ?? 0;
+                        $chatType = strtoupper($lastChat['chatType'] ?? '');
 
-                        $lastMessageAt = $item['lastMessageAt'] ?? 0;
-                        $adminLastReadAt = $item['adminLastReadAt'] ?? 0;
-
-                        if ($lastMessageAt > $adminLastReadAt) {
+                        if ($chatType !== 'ADMIN' && $lastMessageAt > $adminLastReadAt) {
                             $unread[] = [
-                                'reportId' => $reportId,
-                                'reportTitle' => $item['report_number'] ?? ($item['case_type'] ?? 'Laporan'),
-                                'userName' => $item['user_name'] ?? '-',
-                                'lastMessage' => $item['lastMessageText'] ?? 'Ada pesan baru...',
-                                'unreadCount' => 1, 
+                                'reportId' => $doc->id(),
+                                'reportTitle' => $reportData['report_number'] ?? ($reportData['case_type'] ?? 'Laporan'),
+                                'userName' => $reportData['user_name'] ?? ($reportData['nama'] ?? '-'),
+                                'lastMessage' => Str::limit($lastChat['textMessage'] ?? ($lastChat['message'] ?? 'Pesan baru...'), 50),
+                                'unreadCount' => 1,
                             ];
                         }
                     }
-                } catch (\Throwable $e) {
-                    \Log::error('unreadChats Firestore Query Error: ' . $e->getMessage());
                 }
-
                 return [
                     'status' => 'success',
                     'unread' => $unread,
@@ -767,11 +792,7 @@ class laporancontroller extends Controller
             return response()->json($result);
         } catch (\Throwable $e) {
             \Log::error('unreadChats error: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'success',
-                'unread' => [],
-                'totalUnread' => 0,
-            ]);
+            return response()->json(['status' => 'error', 'unread' => [], 'totalUnread' => 0]);
         }
     }
 

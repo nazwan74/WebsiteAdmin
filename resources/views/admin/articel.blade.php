@@ -243,6 +243,8 @@
                                         $val = $article['releasedDate'];
                                         if ($val instanceof \Google\Cloud\Core\Timestamp) {
                                             $relDate = \Carbon\Carbon::instance($val->get());
+                                        } elseif (is_numeric($val)) {
+                                            $relDate = \Carbon\Carbon::createFromTimestampMs($val);
                                         } elseif (is_string($val)) {
                                             $relDate = \Carbon\Carbon::parse($val);
                                         } else {
@@ -259,6 +261,8 @@
                                         $valUpd = $article['updateDate'];
                                         if ($valUpd instanceof \Google\Cloud\Core\Timestamp) {
                                             $updDate = \Carbon\Carbon::instance($valUpd->get());
+                                        } elseif (is_numeric($valUpd)) {
+                                            $updDate = \Carbon\Carbon::createFromTimestampMs($valUpd);
                                         } elseif (is_string($valUpd)) {
                                             $updDate = \Carbon\Carbon::parse($valUpd);
                                         } else {
