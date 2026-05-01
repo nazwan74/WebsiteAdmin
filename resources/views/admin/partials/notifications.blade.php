@@ -157,10 +157,10 @@
 
 
 
-    // Inject badge into sidebar Laporan link
+    // Inject badge into sidebar Pengaduan link
     const sidebarLinks = document.querySelectorAll('.sidebar-menu li a');
     sidebarLinks.forEach(link => {
-        if (link.textContent.trim().includes('Laporan')) {
+        if (link.textContent.trim().includes('Pengaduan')) {
             // Avoid duplicating
             if (!link.querySelector('.sidebar-notif-badge')) {
                 link.style.display = 'flex';

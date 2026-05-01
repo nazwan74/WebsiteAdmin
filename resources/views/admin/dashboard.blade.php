@@ -121,7 +121,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 class="fw-bold mb-0">Overview Real-time</h4>
-        <p class="text-muted small mb-0">Pantau statistik dan laporan terbaru hari ini</p>
+        <p class="text-muted small mb-0">Pantau statistik dan pengaduan terbaru hari ini</p>
     </div>
     <a href="{{ route('admin.dashboard.refresh') }}" class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm border-0" style="background: var(--primary-gradient); border-radius: 12px; transition: all 0.3s ease; color: #333;">
         <i class="bi bi-arrow-clockwise fs-5"></i>
@@ -148,7 +148,7 @@
             <div class="icon-box bg-warning text-white" style="background: var(--warning-gradient) !important;">
                 <i class="bi bi-file-earmark-text-fill" style="font-size: 1.5rem;"></i>
             </div>
-            <h6 class="text-muted small fw-medium mb-1">Laporan Masuk</h6>
+            <h6 class="text-muted small fw-medium mb-1">Pengaduan Masuk</h6>
             <h2 class="fw-bold mb-0" id="totalLaporan">{{ $totalLaporan }}</h2>
             <div class="mt-2">
                 <span class="text-warning small fw-semibold"><i class="bi bi-clock-history"></i> Butuh Respon</span>
@@ -187,7 +187,7 @@
         <div class="glass-card p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h5 class="fw-bold mb-0">Laporan per Kota/Daerah</h5>
+                    <h5 class="fw-bold mb-0">Pengaduan per Kota/Daerah</h5>
                     <p class="text-muted small mb-0">Sebaran data di 14 Kabupaten/Kota Kalimantan Barat</p>
                 </div>
                 <div class="icon-box bg-light text-primary mb-0">
@@ -207,8 +207,8 @@
         <div class="glass-card p-4 h-100">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <div>
-                    <h5 class="fw-bold mb-0">Tren Laporan per Periode</h5>
-                    <p class="text-muted small mb-0">Fluktuasi jumlah laporan masuk</p>
+                    <h5 class="fw-bold mb-0">Tren Pengaduan per Periode</h5>
+                    <p class="text-muted small mb-0">Fluktuasi jumlah pengaduan masuk</p>
                 </div>
                 <div class="d-flex flex-wrap align-items-center gap-2">
                     <form method="GET" action="{{ route('admin.dashboard') }}" id="filterTrenForm" class="d-flex flex-wrap align-items-center gap-2">
@@ -251,7 +251,7 @@
         <div class="glass-card p-0 overflow-hidden">
             <div class="p-4 d-flex justify-content-between align-items-center border-bottom">
                 <div>
-                    <h5 class="fw-bold mb-0">Laporan Terbaru</h5>
+                    <h5 class="fw-bold mb-0">Pengaduan Terbaru</h5>
                     <p class="text-muted small mb-0">Daftar kasus yang masuk sistem</p>
                 </div>
                 <a href="{{ route('admin.laporan') }}" class="btn btn-sm px-3 border-0 fw-bold" style="border-radius: 8px; background: var(--primary-gradient); color: #333;">Lihat Semua</a>
@@ -341,7 +341,7 @@
                             <tr>
                                 <td colspan="5" class="text-center text-muted py-5">
                                     <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
-                                    Belum ada laporan masuk.
+                                    Belum ada pengaduan masuk.
                                 </td>
                             </tr>
                         @endforelse
@@ -355,15 +355,15 @@
 @endsection
 
 @section('modals')
-<!-- Modal Detail Laporan -->
-<div class="modal fade" id="detailLaporanModal" tabindex="-1">
+<!-- Modal Detail Pengaduan -->
+<div class="modal fade" id="detailPengaduanModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Detail Laporan</h5>
+                <h5 class="modal-title">Detail Pengaduan</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="detailLaporanContent">
+            <div class="modal-body" id="detailPengaduanContent">
                 <div class="text-center py-5">
                     <div class="spinner-border"></div>
                 </div>
@@ -421,7 +421,7 @@
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Jumlah Laporan',
+                    label: 'Jumlah Pengaduan',
                     data: data,
                     borderColor: '#FFCB05',
                     backgroundColor: function(context) {
@@ -487,7 +487,7 @@
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Jumlah Laporan',
+                    label: 'Jumlah Pengaduan',
                     data: data,
                     backgroundColor: '#FFCB05',
                     hoverBackgroundColor: '#E6B800',
@@ -530,7 +530,7 @@
             data: {
                 labels: usiaLabels,
                 datasets: [{
-                    label: 'Jumlah Laporan',
+                    label: 'Jumlah Pengaduan',
                     data: usiaData,
                     backgroundColor: [
                         '#FFCB05', '#F59E0B', '#D97706', '#B45309', '#78350F'
@@ -630,15 +630,15 @@
         }
     });
 
-    /* DELETE LAPORAN */
+    /* DELETE PENGADUAN */
     document.addEventListener('click', function(e) {
-        const deleteBtn = e.target.closest('#delete-laporan');
+        const deleteBtn = e.target.closest('#delete-pengaduan');
         if (deleteBtn) {
             const url = deleteBtn.dataset.url;
 
             Swal.fire({
                 title: 'Yakin?',
-                text: 'Laporan akan dihapus permanen',
+                text: 'Pengaduan akan dihapus permanen',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Hapus',
@@ -672,13 +672,13 @@
 
     let detailModal = null;
     function openDetailLaporan(id) {
-        const modalEl = document.getElementById('detailLaporanModal');
+        const modalEl = document.getElementById('detailPengaduanModal');
         if (!detailModal) {
             detailModal = new bootstrap.Modal(modalEl);
         }
         
         // Reset content to spinner
-        document.getElementById('detailLaporanContent').innerHTML = `
+        document.getElementById('detailPengaduanContent').innerHTML = `
             <div class="text-center py-5">
                 <div class="spinner-border text-primary"></div>
                 <div class="mt-2">Memuat data...</div>
@@ -692,12 +692,12 @@
         })
         .then(res => res.text())
         .then(html => {
-            document.getElementById('detailLaporanContent').innerHTML = html;
+            document.getElementById('detailPengaduanContent').innerHTML = html;
         })
         .catch(err => {
             console.error(err);
-            document.getElementById('detailLaporanContent').innerHTML = `
-                <div class="alert alert-danger">Gagal memuat data laporan.</div>
+            document.getElementById('detailPengaduanContent').innerHTML = `
+                <div class="alert alert-danger">Gagal memuat data pengaduan.</div>
             `;
         });
     }

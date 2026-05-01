@@ -1,10 +1,10 @@
 @extends('admin.layouts.app', [
     'activePage' => 'laporan',
-    'navbarTitle' => 'Chat Laporan',
+    'navbarTitle' => 'Chat Pengaduan',
     'navbarSubtitle' => 'ID: #' . $laporan['id']
 ])
 
-@section('title', 'Chat Laporan #' . $laporan['id'])
+@section('title', 'Chat Pengaduan #' . $laporan['id'])
 
 @section('head-scripts')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -276,7 +276,7 @@
                     <i class="bi {{ $categoryIcon }}" style="font-size: 1.3rem;"></i>
                 </div>
                 <div>
-                    <h6 class="mb-0 fw-bold text-dark">{{ $laporan['judul'] ?? 'Laporan' }}</h6>
+                    <h6 class="mb-0 fw-bold text-dark">{{ $laporan['judul'] ?? 'Pengaduan' }}</h6>
                     <div class="text-muted small" style="font-size: 0.75rem;">
                         <span class="fw-semibold">{{ $laporan['user_name'] ?? ($laporan['nama'] ?? 'User') }}</span> 
                         <span class="mx-1">•</span> 
@@ -286,7 +286,7 @@
             </div>
             <div class="d-flex gap-2">
                 <a href="{{ route('admin.laporan') }}" id="backToLaporan" class="btn btn-light shadow-sm text-muted px-3" style="border-radius: 12px; font-size: 0.85rem; border: 1px solid rgba(0,0,0,0.05);">
-                    <i class="bi bi-arrow-left me-2"></i>Kembali
+                    <i class="bi bi-arrow-left me-2"></i>Kembali ke Daftar Pengaduan
                 </a>
             </div>
         </div>
@@ -758,9 +758,9 @@
         let reasonMessageSent = false;
 
         if (fromParam === 'reject') {
-            messageInput.value = "Halo, terima kasih sudah melaporkan melalui aplikasi GESA.\n\nSetelah kami melakukan penelaahan, laporan ini kami tandai sebagai DITOLAK dengan alasan:\n- (isi alasan penolakan di sini)\n\nJika ada informasi tambahan atau koreksi, silakan sampaikan kembali melalui aplikasi ini.";
+            messageInput.value = "Halo, terima kasih sudah menyampaikan pengaduan melalui aplikasi GESA.\n\nSetelah kami melakukan penelaahan, pengaduan ini kami tandai sebagai DITOLAK dengan alasan:\n- (isi alasan penolakan di sini)\n\nJika ada informasi tambahan atau koreksi, silakan sampaikan kembali melalui aplikasi ini.";
         } else if (fromParam === 'done') {
-            messageInput.value = "Halo, terima kasih sudah melaporkan melalui aplikasi GESA.\n\nKami informasikan bahwa proses penanganan laporan ini telah SELESAI dengan ringkasan sebagai berikut:\n- (isi ringkasan tindak lanjut / hasil penyelesaian di sini)\n\nJika masih ada hal yang ingin ditanyakan atau ditambahkan, silakan balas pesan ini.";
+            messageInput.value = "Halo, terima kasih sudah menyampaikan pengaduan melalui aplikasi GESA.\n\nKami informasikan bahwa proses penanganan pengaduan ini telah SELESAI dengan ringkasan sebagai berikut:\n- (isi ringkasan tindak lanjut / hasil penyelesaian di sini)\n\nJika masih ada hal yang ingin ditanyakan atau ditambahkan, silakan balas pesan ini.";
         }
 
         if (requireReasonMessage) {

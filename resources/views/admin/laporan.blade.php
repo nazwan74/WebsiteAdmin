@@ -1,10 +1,10 @@
 @extends('admin.layouts.app', [
     'activePage' => 'laporan',
-    'navbarTitle' => 'Manajemen Laporan',
+    'navbarTitle' => 'Manajemen Pengaduan',
     'navbarSubtitle' => 'Admin'
 ])
 
-@section('title', 'Laporan')
+@section('title', 'Pengaduan')
 
 @section('head-scripts')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -246,8 +246,8 @@
     <div class="glass-card overflow-hidden mb-5">
         <div class="p-4 bg-white bg-opacity-50 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h4 class="fw-bold mb-0 text-dark">Daftar Laporan</h4>
-                <p class="text-muted small mb-0">Kelola dan tindak lanjuti laporan dari masyarakat</p>
+                <h4 class="fw-bold mb-0 text-dark">Daftar Pengaduan</h4>
+                <p class="text-muted small mb-0">Kelola dan tindak lanjuti pengaduan dari masyarakat</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <a href="{{ route('admin.laporan.refresh') }}" class="btn btn-light shadow-sm" style="border-radius: 10px;" title="Refresh Data">
@@ -275,7 +275,7 @@
             <!-- Area Filter Aktif -->
             <div class="active-filters d-flex flex-wrap gap-2 mb-3" id="activeFilters"></div>
 
-            <!-- Tabel Laporan -->
+            <!-- Tabel Pengaduan -->
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead>
@@ -407,7 +407,7 @@
             <!-- Pagination -->
             <div id="paginationWrapper" class="pagination-wrapper d-none">
                 <div class="pagination-info" id="paginationInfo"></div>
-                <nav aria-label="Navigasi halaman laporan">
+                <nav aria-label="Navigasi halaman pengaduan">
                     <ul class="pagination mb-0" id="paginationNav"></ul>
                 </nav>
             </div>
@@ -423,7 +423,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="filterModalLabel">Pilih Filter Laporan</h5>
+                    <h5 class="modal-title" id="filterModalLabel">Pilih Filter Pengaduan</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -537,15 +537,15 @@
         </div>
     </div>
 
-    <!-- Modal Detail Laporan -->
-    <div class="modal fade" id="detailLaporanModal" tabindex="-1">
+    <!-- Modal Detail Pengaduan -->
+    <div class="modal fade" id="detailPengaduanModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Detail Laporan</h5>
+                    <h5 class="modal-title">Detail Pengaduan</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="detailLaporanContent">
+                <div class="modal-body" id="detailPengaduanContent">
                     <div class="text-center py-5">
                         <div class="spinner-border"></div>
                     </div>
@@ -837,7 +837,7 @@
 
                 const start = (currentPage - 1) * perPage + 1;
                 const end = Math.min(currentPage * perPage, totalVisible);
-                infoEl.textContent = `Menampilkan ${start}–${end} dari ${totalVisible} laporan`;
+                infoEl.textContent = `Menampilkan ${start}–${end} dari ${totalVisible} pengaduan`;
 
                 navEl.innerHTML = '';
                 const addPageItem = (label, pageNum, disabled, active) => {
@@ -917,13 +917,13 @@
 
         let detailModal = null;
         function openDetailLaporan(id) {
-            const modalEl = document.getElementById('detailLaporanModal');
+            const modalEl = document.getElementById('detailPengaduanModal');
             if (!detailModal) {
                 detailModal = new bootstrap.Modal(modalEl);
             }
             
             // Reset content to spinner
-            document.getElementById('detailLaporanContent').innerHTML = `
+            document.getElementById('detailPengaduanContent').innerHTML = `
                 <div class="text-center py-5">
                     <div class="spinner-border text-primary"></div>
                     <div class="mt-2">Memuat data...</div>
@@ -937,12 +937,12 @@
             })
             .then(res => res.text())
             .then(html => {
-                document.getElementById('detailLaporanContent').innerHTML = html;
+                document.getElementById('detailPengaduanContent').innerHTML = html;
             })
             .catch(err => {
                 console.error(err);
-                document.getElementById('detailLaporanContent').innerHTML = `
-                    <div class="alert alert-danger">Gagal memuat data laporan.</div>
+                document.getElementById('detailPengaduanContent').innerHTML = `
+                    <div class="alert alert-danger">Gagal memuat data pengaduan.</div>
                 `;
             });
         }
@@ -992,15 +992,15 @@
             }
         });
 
-        /* DELETE LAPORAN */
+        /* DELETE PENGADUAN */
         document.addEventListener('click', function(e) {
-            const deleteBtn = e.target.closest('#delete-laporan');
+            const deleteBtn = e.target.closest('#delete-pengaduan');
             if (deleteBtn) {
                 const url = deleteBtn.dataset.url;
 
                 Swal.fire({
                     title: 'Yakin?',
-                    text: 'Laporan akan dihapus permanen',
+                    text: 'Pengaduan akan dihapus permanen',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Hapus'

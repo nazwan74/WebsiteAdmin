@@ -26,7 +26,7 @@
         <li>
             <a href="/admin/laporan" class="{{ ($activePage ?? '') === 'laporan' ? 'active' : '' }}">
                 <i class="bi bi-chat-left-text-fill"></i>
-                <span>Laporan</span>
+                <span>Pengaduan</span>
             </a>
         </li>
 

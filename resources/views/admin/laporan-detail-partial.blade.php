@@ -27,7 +27,7 @@
                 <i class="bi {{ $categoryIcon }}"></i>
                 {{ $laporan['kategori'] ?? ($laporan['case_type'] ?? '-') }}
             </span>
-            <h5 class="fw-bold text-dark mb-0">ID Laporan: #{{ $laporan['id'] }}</h5>
+            <h5 class="fw-bold text-dark mb-0">ID Pengaduan: #{{ $laporan['id'] }}</h5>
         </div>
         <span class="status-pill {{ $statusPillClass }}">{{ $statusDisplay }}</span>
     </div>
@@ -105,7 +105,7 @@
                 <hr class="my-3 opacity-10">
                 
                 <div>
-                    <small class="text-muted d-block mb-1">Deskripsi Laporan</small>
+                    <small class="text-muted d-block mb-1">Deskripsi Pengaduan</small>
                     <div class="p-3 bg-light rounded-3 small" style="line-height: 1.6;">
                         {{ $laporan['detail_description'] ?? ($laporan['deskripsi_lengkap'] ?? '-') }}
                     </div>
@@ -137,7 +137,7 @@
     <!-- Update Status & Actions -->
     <div class="glass-card p-4 bg-primary bg-opacity-10 border-primary border-opacity-10 rounded-4">
         <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
-            <i class="bi bi-arrow-repeat" style="color: #FFCB05;"></i> Tindak Lanjut Laporan
+            <i class="bi bi-arrow-repeat" style="color: #FFCB05;"></i> Tindak Lanjut Pengaduan
         </h6>
         
         <form id="statusForm" action="{{ route('admin.laporan.setStatus', $laporan['id']) }}" data-chat-url="{{ route('admin.laporan.chat', $laporan['id']) }}" method="POST">
@@ -149,7 +149,7 @@
                         <option value="">-- Pilih Status Baru --</option>
                         <option value="baru" @selected($statusKey=='baru')>Belum Ditangani</option>
                         <option value="diproses" @selected($statusKey=='diproses')>Diproses</option>
-                        <option value="selesai" @selected($statusKey=='selesai')>Selesai (Tutup Laporan)</option>
+                        <option value="selesai" @selected($statusKey=='selesai')>Selesai (Tutup Pengaduan)</option>
                         <option value="ditolak" @selected($statusKey=='ditolak')>Ditolak</option>
                     </select>
                 </div>
@@ -166,10 +166,10 @@
 
         <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
             <a href="{{ route('admin.laporan.download', $laporan['id']) }}" class="text-decoration-none text-muted small hover-primary">
-                <i class="bi bi-file-earmark-pdf me-1"></i> Unduh PDF Laporan
+                <i class="bi bi-file-earmark-pdf me-1"></i> Unduh PDF Pengaduan
             </a>
-            <button id="delete-laporan" data-url="{{ route('admin.laporan.delete', $laporan['id']) }}" class="btn btn-link text-danger text-decoration-none p-0 small">
-                <i class="bi bi-trash me-1"></i> Hapus Laporan
+            <button id="delete-pengaduan" data-url="{{ route('admin.laporan.delete', $laporan['id']) }}" class="btn btn-link text-danger text-decoration-none p-0 small">
+                <i class="bi bi-trash me-1"></i> Hapus Pengaduan
             </button>
         </div>
     </div>

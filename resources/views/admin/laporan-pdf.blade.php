@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>Laporan PDF - GESA</title>
+    <title>Pengaduan PDF - GESA</title>
     
     <!-- Gaya Kustom untuk PDF -->
     <style>
@@ -37,7 +37,7 @@
             margin-top: 5px;
         }
         
-        /* Gaya Informasi Laporan */
+        /* Gaya Informasi Pengaduan */
         .laporan-info {
             margin-bottom: 25px;
         }
@@ -132,7 +132,7 @@
             color: #2e7d32;
         }
         
-        /* Gaya Isi Laporan */
+        /* Gaya Isi Pengaduan */
         .isi-laporan {
             background-color: #f8f9fa;
             padding: 15px;
@@ -183,18 +183,18 @@
 <body>
     <!-- Header Dokumen -->
     <div class="header">
-        <h1>DETAIL LAPORAN GESA</h1>
-        <div class="subtitle">Sistem Pelaporan GESA (Gerakan Sayang Anak)</div>
+        <h1>DETAIL PENGADUAN GESA</h1>
+        <div class="subtitle">Sistem Pengaduan GESA (Gerakan Sayang Anak)</div>
     </div>
 
-    <!-- Informasi Laporan -->
+    <!-- Informasi Pengaduan -->
     <div class="laporan-info">
         <!-- Informasi Umum -->
         <div class="info-section">
             <h3>Informasi Umum</h3>
             <table class="info-table">
                 <tr>
-                    <td class="label">ID Laporan:</td>
+                    <td class="label">ID Pengaduan:</td>
                     <td class="value">#{{ $laporan['id'] ?? '-' }}</td>
                 </tr>
                 <tr>
@@ -239,7 +239,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="label">Tanggal Laporan:</td>
+                    <td class="label">Tanggal Pengaduan:</td>
                     <td class="value">
                         {{ \Carbon\Carbon::parse($laporan['create_at'] ?? now())->translatedFormat('d F Y, H:i') }}
                     </td>
@@ -270,9 +270,9 @@
             </table>
         </div>
 
-        <!-- Isi Laporan -->
+        <!-- Isi Pengaduan -->
         <div class="info-section">
-            <h3>Isi Laporan</h3>
+            <h3>Isi Pengaduan</h3>
             <div class="isi-laporan">
                 {!! nl2br(e($laporan['deskripsi_lengkap'] ?? ($laporan['isi laporan'] ?? 'Tidak ada isi laporan'))) !!}
             </div>
