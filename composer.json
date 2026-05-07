@@ -9,7 +9,7 @@
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
         "bensontrent/firestore-php": "^3.1",
-        "google/cloud-firestore": "^1.49",
+        "google/cloud-firestore": "^2.1",
         "kreait/laravel-firebase": "^6.0",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1"
