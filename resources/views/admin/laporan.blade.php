@@ -25,6 +25,7 @@
         .status-diproses { background: #FFFAE6; color: #B45309; border: 1px solid rgba(255, 203, 5, 0.3); }
         .status-selesai { background: #ecfdf5; color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); }
         .status-ditolak { background: #fef2f2; color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.1); }
+        .status-dibatalkan { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
 
         .badge-category {
             padding: 6px 12px;
@@ -310,6 +311,7 @@
                                     'selesai' => 'success',
                                     'diproses' => 'warning',
                                     'ditolak' => 'danger',
+                                    'dibatalkan' => 'secondary',
                                     default => 'secondary',
                                 };
                                 $tanggalKejadian = $item['incident_date'] ?? null;
@@ -382,7 +384,11 @@
                                     {{ $parsedKejadian ? $parsedKejadian->locale('id')->translatedFormat('d M Y') : ($tanggalKejadian ?: '-') }}
                                 </td>
                                 @php
-                                    $displayStatus = $status === 'baru' ? 'Belum Ditangani' : ucfirst($status);
+                                    $displayStatus = match($status) {
+                                        'baru' => 'Belum Ditangani',
+                                        'dibatalkan' => 'Dibatalkan User',
+                                        default => ucfirst($status)
+                                    };
                                     $statusPillClass = 'status-' . $status;
                                 @endphp
                                 <td><span class="status-pill {{ $statusPillClass }}">{{ $displayStatus }}</span></td>

@@ -494,27 +494,35 @@
             if (!editingMessageId) return;
             
             const newText = messageInput.value.trim();
-            if (!newText) return;
-            
             const btn = document.querySelector('.btn-send');
             const originalContent = btn.innerHTML;
+            
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
+            // Gunakan FormData untuk mendukung pengiriman file
+            const formData = new FormData();
+            formData.append('textMessage', newText);
+            formData.append('_method', 'PUT'); // Spoofing PUT method untuk Laravel
+            
+            if (selectedFile) {
+                formData.append('imageFile', selectedFile);
+            }
+
             fetch(`${baseUrl}/${editingMessageId}`, {
-                method: 'PUT',
+                method: 'POST', // Tetap POST karena FormData + PUT sering bermasalah di PHP
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({ textMessage: newText })
+                body: formData
             })
             .then(r => r.json())
             .then(data => {
                 if (data.status === 'success') {
                     Toast.fire({ icon: 'success', title: 'Pesan berhasil diubah' });
+                    clearImagePreview();
                     cancelEditMode();
                     fetchMessages();
                 } else {
@@ -523,7 +531,8 @@
                     btn.innerHTML = originalContent;
                 }
             })
-            .catch(() => {
+            .catch((e) => {
+                console.error(e);
                 Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
                 btn.disabled = false;
                 btn.innerHTML = originalContent;

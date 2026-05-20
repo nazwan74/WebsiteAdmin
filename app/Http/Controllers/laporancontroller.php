@@ -711,7 +711,8 @@ class laporancontroller extends Controller
     public function updateChat(Request $request, $id, $messageId)
     {
         $request->validate([
-            'textMessage' => 'required|string'
+            'textMessage' => 'nullable|string',
+            'imageFile'   => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
         ]);
 
         $found = $this->findReportRefById($id);
@@ -726,12 +727,53 @@ class laporancontroller extends Controller
             return response()->json(['status' => 'error', 'message' => 'Pesan tidak ditemukan'], 404);
         }
 
+        $chatData = $snap->data();
         $nowMillis = round(microtime(true) * 1000);
-        $messageRef->update([
-            ['path' => 'textMessage', 'value' => $request->input('textMessage')],
+        
+        $updates = [
+            ['path' => 'textMessage', 'value' => $request->input('textMessage') ?? ''],
             ['path' => 'messageStatus', 'value' => 'teredit'],
             ['path' => 'lastActionAt', 'value' => $nowMillis]
-        ]);
+        ];
+
+        // Jika ada unggahan gambar baru
+        if ($request->hasFile('imageFile')) {
+            try {
+                // 1. Hapus gambar lama jika ada
+                $oldImagePath = $chatData['imagePath'] ?? null;
+                if ($oldImagePath) {
+                    $bucket = $this->storage->getBucket();
+                    $oldObject = $bucket->object($oldImagePath);
+                    if ($oldObject->exists()) {
+                        $oldObject->delete();
+                    }
+                }
+
+                // 2. Upload gambar baru
+                $image = $request->file('imageFile');
+                $folder = 'images/chats/' . $id . '/' . now()->format('Ymd');
+                $filename = $folder . '/' . Str::random(20) . '.' . $image->getClientOriginalExtension();
+
+                $bucket = $this->storage->getBucket();
+                $object = $bucket->upload(
+                    fopen($image->getRealPath(), 'r'),
+                    ['name' => $filename]
+                );
+
+                $expiresAt = new \DateTime('now + 1 year');
+                $imageUrl = $object->signedUrl($expiresAt);
+
+                // 3. Tambahkan ke data update
+                $updates[] = ['path' => 'imageMessage', 'value' => $imageUrl];
+                $updates[] = ['path' => 'imagePath', 'value' => $filename];
+
+            } catch (\Exception $e) {
+                \Log::error('Update chat image error: ' . $e->getMessage());
+                return response()->json(['status' => 'error', 'message' => 'Gagal mengupdate gambar'], 500);
+            }
+        }
+
+        $messageRef->update($updates);
 
         return response()->json(['status' => 'success']);
     }

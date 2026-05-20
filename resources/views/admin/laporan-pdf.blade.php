@@ -277,6 +277,16 @@
                 {!! nl2br(e($laporan['deskripsi_lengkap'] ?? ($laporan['isi laporan'] ?? 'Tidak ada isi laporan'))) !!}
             </div>
         </div>
+
+        <!-- Alasan Penolakan/Pembatalan (Jika Ada) -->
+        @if(!empty($laporan['cancel_reason']))
+        <div class="info-section">
+            <h3 style="color: #c0392b; border-left: 4px solid #c0392b;">Alasan Penolakan / Pembatalan</h3>
+            <div class="isi-laporan" style="border-left: 4px solid #c0392b; background-color: #fff0f0; color: #721c24;">
+                {!! nl2br(e($laporan['cancel_reason'])) !!}
+            </div>
+        </div>
+        @endif
     </div>
 
     <!-- Footer -->

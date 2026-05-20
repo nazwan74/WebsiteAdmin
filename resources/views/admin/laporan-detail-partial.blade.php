@@ -18,7 +18,11 @@
         $statusVal = $laporan['report_status'] ?? ($laporan['status'] ?? 'baru');
         $statusKey = strtolower($statusVal);
         $statusPillClass = 'status-' . $statusKey;
-        $statusDisplay = $statusKey === 'baru' ? 'Belum Ditangani' : ucfirst($statusVal);
+        $statusDisplay = match($statusKey) {
+            'baru' => 'Belum Ditangani',
+            'dibatalkan' => 'Dibatalkan User',
+            default => ucfirst($statusVal)
+        };
     @endphp
 
     <div class="d-flex justify-content-between align-items-start mb-4">
@@ -110,6 +114,15 @@
                         {{ $laporan['detail_description'] ?? ($laporan['deskripsi_lengkap'] ?? '-') }}
                     </div>
                 </div>
+
+                @if(!empty($laporan['cancel_reason']))
+                <div class="mt-3">
+                    <small class="text-danger d-block mb-1 fw-bold">Alasan Penolakan/Pembatalan</small>
+                    <div class="p-3 bg-danger bg-opacity-10 border border-danger border-opacity-10 rounded-3 small" style="line-height: 1.6;">
+                        {{ $laporan['cancel_reason'] }}
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
 
@@ -136,33 +149,41 @@
 
     <!-- Update Status & Actions -->
     <div class="glass-card p-4 bg-primary bg-opacity-10 border-primary border-opacity-10 rounded-4">
-        <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
-            <i class="bi bi-arrow-repeat" style="color: #FFCB05;"></i> Tindak Lanjut Pengaduan
-        </h6>
-        
-        <form id="statusForm" action="{{ route('admin.laporan.setStatus', $laporan['id']) }}" data-chat-url="{{ route('admin.laporan.chat', $laporan['id']) }}" method="POST">
-            @csrf
-            <input type="hidden" name="source" value="{{ $source ?? 'laporan' }}">
-            <div class="row g-2 align-items-center">
-                <div class="col-md-7">
-                    <select name="status" class="form-select border-0 shadow-sm" style="border-radius: 10px;" required>
-                        <option value="">-- Pilih Status Baru --</option>
-                        <option value="baru" @selected($statusKey=='baru')>Belum Ditangani</option>
-                        <option value="diproses" @selected($statusKey=='diproses')>Diproses</option>
-                        <option value="selesai" @selected($statusKey=='selesai')>Selesai (Tutup Pengaduan)</option>
-                        <option value="ditolak" @selected($statusKey=='ditolak')>Ditolak</option>
-                    </select>
-                </div>
-                <div class="col-md-5 d-flex gap-2">
-                    <button class="btn btn-primary flex-grow-1 shadow-sm px-3 border-0" style="background: linear-gradient(135deg, #FFCB05 0%, #E6B800 100%); border-radius: 10px; color: #333;">
-                        Update Status
-                    </button>
-                    <a href="{{ route('admin.laporan.chat', $laporan['id']) }}" class="btn btn-white border shadow-sm px-3" style="border-radius: 10px;" title="Buka Chat">
-                        <i class="bi bi-chat-dots-fill" style="color: #FFCB05;"></i>
-                    </a>
-                </div>
+        @if($statusKey === 'dibatalkan')
+            <div class="text-center py-2">
+                <i class="bi bi-info-circle-fill text-secondary mb-2" style="font-size: 2rem;"></i>
+                <h6 class="fw-bold mb-1">Pengaduan Dibatalkan</h6>
+                <p class="small text-muted mb-0">Laporan ini telah dibatalkan oleh pelapor. Interaksi dan perubahan status telah dinonaktifkan.</p>
             </div>
-        </form>
+        @else
+            <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-arrow-repeat" style="color: #FFCB05;"></i> Tindak Lanjut Pengaduan
+            </h6>
+            
+            <form id="statusForm" action="{{ route('admin.laporan.setStatus', $laporan['id']) }}" data-chat-url="{{ route('admin.laporan.chat', $laporan['id']) }}" method="POST">
+                @csrf
+                <input type="hidden" name="source" value="{{ $source ?? 'laporan' }}">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-7">
+                        <select name="status" class="form-select border-0 shadow-sm" style="border-radius: 10px;" required>
+                            <option value="">-- Pilih Status Baru --</option>
+                            <option value="baru" @selected($statusKey=='baru')>Belum Ditangani</option>
+                            <option value="diproses" @selected($statusKey=='diproses')>Diproses</option>
+                            <option value="selesai" @selected($statusKey=='selesai')>Selesai (Tutup Pengaduan)</option>
+                            <option value="ditolak" @selected($statusKey=='ditolak')>Ditolak</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1 shadow-sm px-3 border-0" style="background: linear-gradient(135deg, #FFCB05 0%, #E6B800 100%); border-radius: 10px; color: #333;">
+                            Update Status
+                        </button>
+                        <a href="{{ route('admin.laporan.chat', $laporan['id']) }}" class="btn btn-white border shadow-sm px-3" style="border-radius: 10px;" title="Buka Chat">
+                            <i class="bi bi-chat-dots-fill" style="color: #FFCB05;"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        @endif
 
         <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
             <a href="{{ route('admin.laporan.download', $laporan['id']) }}" class="text-decoration-none text-muted small hover-primary">
