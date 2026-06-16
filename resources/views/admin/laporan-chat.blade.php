@@ -284,7 +284,17 @@
                     </div>
                 </div>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex align-items-center gap-2">
+                @if($chatClosed ?? false)
+                    @php
+                        $chatBadgeClass = str_contains($chatClosedMessage ?? '', 'ditolak') || str_contains($chatClosedMessage ?? '', 'dibatalkan')
+                            ? 'bg-danger-subtle text-danger border-danger-subtle'
+                            : 'bg-success-subtle text-success border-success-subtle';
+                    @endphp
+                    <span class="badge {{ $chatBadgeClass }} border px-3 py-2" style="border-radius: 10px; font-size: 0.75rem;">
+                        <i class="bi bi-lock-fill me-1"></i> Chat Ditutup
+                    </span>
+                @endif
                 <a href="{{ route('admin.laporan') }}" id="backToLaporan" class="btn btn-light shadow-sm text-muted px-3" style="border-radius: 12px; font-size: 0.85rem; border: 1px solid rgba(0,0,0,0.05);">
                     <i class="bi bi-arrow-left me-2"></i>Kembali ke Daftar Pengaduan
                 </a>
@@ -294,6 +304,7 @@
         <!-- Chat Box (Messages) -->
         <div id="chatBox" class="chat-box"></div>
 
+        @if(!($chatClosed ?? false))
         <!-- Edit Mode Bar -->
         <div class="edit-mode-bar" id="editModeBar">
             <div class="edit-info">
@@ -312,19 +323,33 @@
                 <i class="bi bi-x-circle-fill"></i>
             </button>
         </div>
+        @endif
 
         <!-- Chat Footer (Input) -->
         <div class="chat-footer">
-            <form id="sendForm" class="composer" action="javascript:void(0)" method="post" onsubmit="return false;">
-                <input type="file" id="imageFileInput" accept="image/*" style="display:none">
-                <button type="button" class="btn-attach" onclick="document.getElementById('imageFileInput').click()" title="Lampirkan gambar">
-                    <i class="bi bi-paperclip" style="font-size: 1.2rem;"></i>
-                </button>
-                <textarea id="messageInput" class="form-control" placeholder="Tulis pesan..." rows="1"></textarea>
-                <button type="submit" class="btn-send">
-                    <i class="bi bi-send-fill" style="margin-left: 2px;"></i>
-                </button>
-            </form>
+            @if(Session::get('admin.role') === 'super_admin')
+                <div class="p-3 bg-light rounded-4 text-center border">
+                    <span class="text-muted small fw-semibold"><i class="bi bi-eye-fill text-primary me-2"></i> Mode Pantau (Read-Only) - Super Admin tidak dapat mengirim pesan chat.</span>
+                </div>
+            @elseif($chatClosed ?? false)
+                <div class="p-3 bg-light rounded-4 text-center border">
+                    <span class="text-muted small fw-semibold">
+                        <i class="bi bi-lock-fill {{ str_contains($chatClosedMessage ?? '', 'ditolak') || str_contains($chatClosedMessage ?? '', 'dibatalkan') ? 'text-danger' : 'text-success' }} me-2"></i>
+                        Chat Ditutup — {{ $chatClosedMessage ?? 'Pengaduan telah diselesaikan.' }} Riwayat percakapan dapat dilihat, namun pengiriman pesan baru tidak tersedia.
+                    </span>
+                </div>
+            @else
+                <form id="sendForm" class="composer" action="javascript:void(0)" method="post" onsubmit="return false;">
+                    <input type="file" id="imageFileInput" accept="image/*" style="display:none">
+                    <button type="button" class="btn-attach" onclick="document.getElementById('imageFileInput').click()" title="Lampirkan gambar">
+                        <i class="bi bi-paperclip" style="font-size: 1.2rem;"></i>
+                    </button>
+                    <textarea id="messageInput" class="form-control" placeholder="Tulis pesan..." rows="1"></textarea>
+                    <button type="submit" class="btn-send">
+                        <i class="bi bi-send-fill" style="margin-left: 2px;"></i>
+                    </button>
+                </form>
+            @endif
         </div>
     </div>
 
@@ -341,11 +366,20 @@
 @endsection
 
 @section('scripts')
+    @php
+        $chatSendFrom = request()->query('from');
+        $chatSendUrl = route('admin.laporan.chat.send', $laporan['id']);
+        if (in_array($chatSendFrom, ['done', 'reject'], true)) {
+            $chatSendUrl .= '?' . http_build_query(['from' => $chatSendFrom]);
+        }
+    @endphp
     <script>
+        const isSuperAdmin = @json(Session::get('admin.role') === 'super_admin');
+        const isChatClosed = @json($chatClosed ?? false);
         // --- CHAT LOGIC SCRIPTS ---
         const laporanId = @json($laporan['id']);
         const messagesUrl = @json(route('admin.laporan.chat.messages', $laporan['id']));
-        const sendUrl = @json(route('admin.laporan.chat.send', $laporan['id']));
+        const sendUrl = @json($chatSendUrl);
         const baseUrl = @json(url('/admin/laporan/' . $laporan['id'] . '/chat'));
         
         let lastMessageTime = 0; 
@@ -603,7 +637,7 @@
             if (!bubbleContent) bubbleContent = '&nbsp;';
 
             let actionsHtml = '';
-            if (role === 'admin' && msgId) { 
+            if (role === 'admin' && msgId && !isSuperAdmin && !isChatClosed) { 
                 actionsHtml = `
                     <div class="actions">
                         <button class="action-btn" onclick="toggleMenu(this)">
@@ -763,27 +797,29 @@
 
         const messageInput = document.getElementById('messageInput');
         const fromParam = "{{ request()->query('from') }}";
-        let requireReasonMessage = (fromParam === 'reject' || fromParam === 'done');
+        let requireReasonMessage = (fromParam === 'reject' || fromParam === 'done') && messageInput;
         let reasonMessageSent = false;
 
-        if (fromParam === 'reject') {
-            messageInput.value = "Halo, terima kasih sudah menyampaikan pengaduan melalui aplikasi GESA.\n\nSetelah kami melakukan penelaahan, pengaduan ini kami tandai sebagai DITOLAK dengan alasan:\n- (isi alasan penolakan di sini)\n\nJika ada informasi tambahan atau koreksi, silakan sampaikan kembali melalui aplikasi ini.";
-        } else if (fromParam === 'done') {
-            messageInput.value = "Halo, terima kasih sudah menyampaikan pengaduan melalui aplikasi GESA.\n\nKami informasikan bahwa proses penanganan pengaduan ini telah SELESAI dengan ringkasan sebagai berikut:\n- (isi ringkasan tindak lanjut / hasil penyelesaian di sini)\n\nJika masih ada hal yang ingin ditanyakan atau ditambahkan, silakan balas pesan ini.";
-        }
+        if (messageInput) {
+            if (fromParam === 'reject') {
+                messageInput.value = "Halo, terima kasih sudah menyampaikan pengaduan melalui aplikasi GESA.\n\nSetelah kami melakukan penelaahan, pengaduan ini kami tandai sebagai DITOLAK dengan alasan:\n- (isi alasan penolakan di sini)\n\nJika ada informasi tambahan atau koreksi, silakan sampaikan kembali melalui aplikasi ini.";
+            } else if (fromParam === 'done') {
+                messageInput.value = "Halo, terima kasih sudah menyampaikan pengaduan melalui aplikasi GESA.\n\nKami informasikan bahwa proses penanganan pengaduan ini telah SELESAI dengan ringkasan sebagai berikut:\n- (isi ringkasan tindak lanjut / hasil penyelesaian di sini)\n\nJika masih ada hal yang ingin ditanyakan atau ditambahkan, silakan balas pesan ini.";
+            }
 
-        if (requireReasonMessage) {
-            messageInput.style.height = 'auto';
-            messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
-            messageInput.focus();
-            const len = messageInput.value.length;
-            messageInput.setSelectionRange(len, len);
-        }
+            if (requireReasonMessage) {
+                messageInput.style.height = 'auto';
+                messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+                messageInput.focus();
+                const len = messageInput.value.length;
+                messageInput.setSelectionRange(len, len);
+            }
 
-        messageInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-        });
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+        }
 
         let selectedFile = null;
         const imageFileInput = document.getElementById('imageFileInput');
@@ -791,24 +827,26 @@
         const previewImg = document.getElementById('previewImg');
         const previewName = document.getElementById('previewName');
 
-        imageFileInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (!file) return;
-            if (file.size > 5 * 1024 * 1024) {
-                Swal.fire('Error', 'Ukuran gambar maksimal 5MB', 'error');
-                this.value = '';
-                return;
-            }
-            selectedFile = file;
-            previewName.textContent = file.name;
-            const reader = new FileReader();
-            reader.onload = e => { previewImg.src = e.target.result; previewBar.classList.add('active'); };
-            reader.readAsDataURL(file);
-        });
+        if (imageFileInput) {
+            imageFileInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (!file) return;
+                if (file.size > 5 * 1024 * 1024) {
+                    Swal.fire('Error', 'Ukuran gambar maksimal 5MB', 'error');
+                    this.value = '';
+                    return;
+                }
+                selectedFile = file;
+                previewName.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = e => { previewImg.src = e.target.result; previewBar.classList.add('active'); };
+                reader.readAsDataURL(file);
+            });
+        }
 
         function clearImagePreview() {
             selectedFile = null;
-            imageFileInput.value = '';
+            if (imageFileInput) imageFileInput.value = '';
             previewImg.src = '';
             previewName.textContent = '';
             previewBar.classList.remove('active');
@@ -829,54 +867,65 @@
 
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(e); });
 
-        document.getElementById('sendForm').addEventListener('submit', function() {
-            const message = messageInput.value.trim();
-            if (!message && !selectedFile) return;
+        const sendForm = document.getElementById('sendForm');
+        if (sendForm) {
+            sendForm.addEventListener('submit', function() {
+                const message = messageInput ? messageInput.value.trim() : '';
+                if (!message && !selectedFile) return;
 
-            // Jika sedang dalam mode edit, panggil fungsi saveEdit
-            if (editingMessageId) {
-                saveEdit();
-                return;
-            }
+                // Jika sedang dalam mode edit, panggil fungsi saveEdit
+                if (editingMessageId) {
+                    saveEdit();
+                    return;
+                }
 
-            const btn = this.querySelector('button[type="submit"]');
-            const originalBtnContent = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                const btn = this.querySelector('button[type="submit"]');
+                const originalBtnContent = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
-            const formData = new FormData();
-            if (message) formData.append('textMessage', message);
-            if (selectedFile) formData.append('imageFile', selectedFile);
+                const formData = new FormData();
+                if (message) formData.append('textMessage', message);
+                if (selectedFile) formData.append('imageFile', selectedFile);
 
-            fetch(sendUrl, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: formData
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    messageInput.value = '';
-                    messageInput.style.height = 'auto';
-                    clearImagePreview();
-                    if (requireReasonMessage) reasonMessageSent = true;
-                    fetchMessages();
-                } else Swal.fire('Error', data.message || 'Gagal mengirim pesan', 'error');
-            })
-            .catch(() => Swal.fire('Error', 'Terjadi kesalahan sistem', 'error'))
-            .finally(() => { btn.disabled = false; btn.innerHTML = originalBtnContent; messageInput.focus(); });
-        });
+                fetch(sendUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        if (messageInput) {
+                            messageInput.value = '';
+                            messageInput.style.height = 'auto';
+                        }
+                        clearImagePreview();
+                        if (requireReasonMessage) reasonMessageSent = true;
+                        if (data.chatClosed || requireReasonMessage) {
+                            window.location.replace(baseUrl);
+                            return;
+                        }
+                        fetchMessages();
+                    } else Swal.fire('Error', data.message || 'Gagal mengirim pesan', 'error');
+                })
+                .catch(() => Swal.fire('Error', 'Terjadi kesalahan sistem', 'error'))
+                .finally(() => { btn.disabled = false; btn.innerHTML = originalBtnContent; if (messageInput) messageInput.focus(); });
+            });
+        }
 
-        messageInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                document.getElementById('sendForm').dispatchEvent(new Event('submit'));
-            }
-        });
+        if (messageInput && sendForm) {
+            messageInput.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendForm.dispatchEvent(new Event('submit'));
+                }
+            });
+        }
 
         document.addEventListener('click', e => {
             if (!requireReasonMessage || reasonMessageSent) return;

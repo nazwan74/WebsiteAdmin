@@ -11,24 +11,30 @@
     <div class="sidebar-label text-uppercase small fw-bold mb-2 px-3" style="color: #94a3b8; letter-spacing: 0.05em; font-size: 0.7rem;">Main Menu</div>
     
     <ul class="sidebar-menu">
+        @if(Session::get('admin.role') !== 'admin_artikel')
         <li>
             <a href="/admin/dashboard" class="{{ ($activePage ?? '') === 'dashboard' ? 'active' : '' }}">
                 <i class="bi bi-grid-fill"></i>
                 <span>Dashboard</span>
             </a>
         </li>
+        @endif
+        @if(Session::get('admin.role') !== 'admin_pengaduan')
         <li>
             <a href="/admin/articel" class="{{ ($activePage ?? '') === 'articel' ? 'active' : '' }}">
                 <i class="bi bi-journal-richtext"></i>
                 <span>Artikel</span>
             </a>
         </li>
+        @endif
+        @if(Session::get('admin.role') !== 'admin_artikel')
         <li>
             <a href="/admin/laporan" class="{{ ($activePage ?? '') === 'laporan' ? 'active' : '' }}">
                 <i class="bi bi-chat-left-text-fill"></i>
                 <span>Pengaduan</span>
             </a>
         </li>
+        @endif
 
         @if(Session::get('admin.role') === 'super_admin')
         <div class="sidebar-label text-uppercase small fw-bold mt-4 mb-2 px-3" style="color: #94a3b8; letter-spacing: 0.05em; font-size: 0.7rem;">System</div>
@@ -57,7 +63,7 @@
             </div>
             <div class="overflow-hidden">
                 <div class="text-dark small fw-bold text-truncate">{{ Session::get('admin.nama', 'Administrator') }}</div>
-                <div class="text-muted" style="font-size: 0.7rem; color: #616161 !important;">{{ ucfirst(Session::get('admin.role', 'Admin')) }}</div>
+                <div class="text-muted" style="font-size: 0.7rem; color: #616161 !important;">{{ ucwords(str_replace('_', ' ', Session::get('admin.role', 'Admin'))) }}</div>
             </div>
         </div>
     </div>

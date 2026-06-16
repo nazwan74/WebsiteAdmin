@@ -54,6 +54,10 @@ class laporancontroller extends Controller
             redirect()->route('admin.login')->send();
         }
 
+        if (Session::get('admin.role') === 'admin_artikel') {
+            redirect()->route('admin.dashboard')->with('error', 'Anda tidak memiliki akses ke fitur pengaduan.')->send();
+        }
+
         // Menggunakan singleton dari FirebaseServiceProvider
         $this->firestore = app('firebase.firestore');
         $this->storage = app('firebase.storage');
@@ -326,6 +330,13 @@ class laporancontroller extends Controller
     
     public function setStatus(Request $request, $id)
     {
+        if (Session::get('admin.role') === 'super_admin') {
+            if ($request->ajax()) {
+                return response()->json(['status' => 'error', 'message' => 'Super Admin hanya memiliki akses pantau (read-only).'], 403);
+            }
+            return redirect()->route('admin.laporan')->with('error', 'Super Admin hanya memiliki akses pantau (read-only).');
+        }
+
         $status = $request->input('status');
 
         $found = $this->findReportRefById($id);
@@ -404,6 +415,13 @@ class laporancontroller extends Controller
 
     public function destroy($id)
     {
+        if (Session::get('admin.role') === 'super_admin') {
+            if (request()->ajax()) {
+                return response()->json(['status' => 'error', 'message' => 'Super Admin hanya memiliki akses pantau (read-only).'], 403);
+            }
+            return redirect()->route('admin.laporan')->with('error', 'Super Admin hanya memiliki akses pantau (read-only).');
+        }
+
         $found = $this->findReportRefById($id);
         if (!$found) {
             return redirect()->route('admin.laporan')->with('error', 'Laporan tidak ditemukan.');
@@ -482,6 +500,117 @@ class laporancontroller extends Controller
         return null;
     }
 
+    /**
+     * Status mentah laporan (lowercase).
+     */
+    private function getReportStatusRaw(array $reportData): string
+    {
+        return strtolower(trim((string) ($reportData['report_status'] ?? ($reportData['status'] ?? ''))));
+    }
+
+    /**
+     * Pengaduan berstatus terminal: selesai, ditolak, atau dibatalkan.
+     */
+    private function isReportChatTerminal(array $reportData): bool
+    {
+        $statusRaw = $this->getReportStatusRaw($reportData);
+        $normalized = DashboardController::normalizeStatus($statusRaw);
+
+        return $normalized === 'selesai' || $normalized === 'dibatalkan' || $statusRaw === 'ditolak';
+    }
+
+    /**
+     * Parameter ?from= untuk jendela kirim pesan penutup sekali.
+     */
+    private function getChatClosureGraceFromParam(array $reportData): ?string
+    {
+        $statusRaw = $this->getReportStatusRaw($reportData);
+        $normalized = DashboardController::normalizeStatus($statusRaw);
+
+        if ($normalized === 'selesai') {
+            return 'done';
+        }
+        if ($statusRaw === 'ditolak' || $normalized === 'dibatalkan') {
+            return 'reject';
+        }
+
+        return null;
+    }
+
+    /**
+     * Pesan UI saat chat ditutup.
+     */
+    private function getChatClosedMessage(array $reportData): string
+    {
+        $statusRaw = $this->getReportStatusRaw($reportData);
+        if (DashboardController::normalizeStatus($statusRaw) === 'selesai') {
+            return 'Pengaduan telah selesai.';
+        }
+        if ($statusRaw === 'ditolak') {
+            return 'Pengaduan telah ditolak.';
+        }
+
+        return 'Pengaduan telah dibatalkan.';
+    }
+
+    /**
+     * Chat ditutup untuk admin pengaduan pada status terminal tanpa jendela pesan penutup.
+     */
+    private function isChatClosedForView(array $reportData, ?Request $request = null): bool
+    {
+        if (Session::get('admin.role') === 'super_admin') {
+            return false;
+        }
+        if (!$this->isReportChatTerminal($reportData)) {
+            return false;
+        }
+        if ($reportData['chatClosureNotified'] ?? false) {
+            return true;
+        }
+
+        $graceParam = $this->getChatClosureGraceFromParam($reportData);
+
+        return !($graceParam && $request && $request->query('from') === $graceParam);
+    }
+
+    /**
+     * Apakah admin pengaduan masih boleh mengirim pesan chat.
+     */
+    private function canAdminSendChat(array $reportData, ?Request $request = null): bool
+    {
+        if (Session::get('admin.role') === 'super_admin') {
+            return false;
+        }
+        if (!$this->isReportChatTerminal($reportData)) {
+            return true;
+        }
+        if ($reportData['chatClosureNotified'] ?? false) {
+            return false;
+        }
+
+        $graceParam = $this->getChatClosureGraceFromParam($reportData);
+
+        return $graceParam && $request && $request->query('from') === $graceParam;
+    }
+
+    /**
+     * Blokir edit/hapus pesan saat pengaduan berstatus terminal.
+     */
+    private function assertChatMutable(array $reportData): ?\Illuminate\Http\JsonResponse
+    {
+        if (Session::get('admin.role') === 'super_admin') {
+            return response()->json(['status' => 'error', 'message' => 'Super Admin tidak diizinkan mengubah pesan chat.'], 403);
+        }
+        if ($this->isReportChatTerminal($reportData)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Chat pengaduan ini telah ditutup. Riwayat chat hanya dapat dilihat.',
+            ], 403);
+        }
+
+        return null;
+    }
+
     public function chat($id)
     {
         $found = $this->findReportRefById($id);
@@ -494,8 +623,10 @@ class laporancontroller extends Controller
         $laporan = $doc->data();
         $laporan['id'] = $doc->id();
         $laporan['judul'] = $laporan['report_number'] ?? ($laporan['case_type'] ?? 'Laporan');
+        $chatClosed = $this->isChatClosedForView($laporan, request());
+        $chatClosedMessage = $this->getChatClosedMessage($laporan);
 
-        return view('admin.laporan-chat', compact('laporan'));
+        return view('admin.laporan-chat', compact('laporan', 'chatClosed', 'chatClosedMessage'));
     }
 
     public function chatMessages($id)
@@ -584,6 +715,10 @@ class laporancontroller extends Controller
 
     public function sendChat(Request $request, $id)
     {
+        if (Session::get('admin.role') === 'super_admin') {
+            return response()->json(['status' => 'error', 'message' => 'Super Admin tidak diizinkan mengirim pesan chat.'], 403);
+        }
+
         $request->validate([
             'textMessage' => 'nullable|string',
             'imageFile'   => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120', // max 5MB
@@ -605,6 +740,12 @@ class laporancontroller extends Controller
         // Ambil userId dari field user_id pada dokumen report (uid pelapor)
         $reportSnap = $docRef->snapshot();
         $reportData = $reportSnap->exists() ? $reportSnap->data() : [];
+        if (!$this->canAdminSendChat($reportData, $request)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Chat pengaduan ini telah ditutup (' . $this->getChatClosedMessage($reportData) . ') Riwayat chat tetap dapat dilihat.',
+            ], 403);
+        }
         $userId = $reportData['user_id'] ?? ($reportData['userId'] ?? 'unknown_user');
 
         $chatType = 'ADMIN';
@@ -654,29 +795,46 @@ class laporancontroller extends Controller
 
         // 4. Update Metadata Laporan (CONSISTENCY & O(1) PREP)
         // Kita juga menyimpan docPath untuk mempercepat lookup di masa depan
-        $docRef->update([
+        $reportUpdates = [
             ['path' => 'lastMessageAt', 'value' => $nowMillis],
             ['path' => 'lastMessageText', 'value' => $imageUrl ? '📷 Gambar' : Str::limit($text, 50)],
             ['path' => 'adminLastReadAt', 'value' => $nowMillis],
             ['path' => 'docPath', 'value' => $docRef->path()],
-        ]);
+        ];
+        $chatNowClosed = false;
+        if ($this->isReportChatTerminal($reportData)) {
+            $reportUpdates[] = ['path' => 'chatClosureNotified', 'value' => true];
+            $chatNowClosed = true;
+        }
+        $docRef->update($reportUpdates);
 
         // 5. Invalidate Caches
         $adminEmail = Session::get('admin.email', 'default');
         Cache::forget('unread_chats_' . md5($adminEmail));
         Cache::forget('laporan_list_data');
 
-        return response()->json(['status' => 'success']);
+        return response()->json([
+            'status' => 'success',
+            'chatClosed' => $chatNowClosed,
+        ]);
     }
 
     public function deleteChat($id, $messageId)
     {
+        if (Session::get('admin.role') === 'super_admin') {
+            return response()->json(['status' => 'error', 'message' => 'Super Admin tidak diizinkan menghapus pesan chat.'], 403);
+        }
+
         $found = $this->findReportRefById($id);
         if (!$found) {
             return response()->json(['status' => 'error', 'message' => 'Laporan tidak ditemukan'], 404);
         }
 
         [, , $docRef] = $found;
+        $reportData = $docRef->snapshot()->data();
+        if ($blocked = $this->assertChatMutable($reportData)) {
+            return $blocked;
+        }
         $messageRef = $docRef->collection('chat')->document($messageId);
         $snap = $messageRef->snapshot();
         if (!$snap->exists()) {
@@ -710,6 +868,10 @@ class laporancontroller extends Controller
 
     public function updateChat(Request $request, $id, $messageId)
     {
+        if (Session::get('admin.role') === 'super_admin') {
+            return response()->json(['status' => 'error', 'message' => 'Super Admin tidak diizinkan mengedit pesan chat.'], 403);
+        }
+
         $request->validate([
             'textMessage' => 'nullable|string',
             'imageFile'   => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
@@ -721,6 +883,11 @@ class laporancontroller extends Controller
         }
 
         [, , $docRef] = $found;
+        $reportData = $docRef->snapshot()->data();
+        if ($blocked = $this->assertChatMutable($reportData)) {
+            return $blocked;
+        }
+
         $messageRef = $docRef->collection('chat')->document($messageId);
         $snap = $messageRef->snapshot();
         if (!$snap->exists()) {

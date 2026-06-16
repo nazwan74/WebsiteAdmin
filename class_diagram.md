@@ -15,73 +15,82 @@ classDiagram
     }
 
     class AuthController {
-        #auth : FirebaseAuth
-        #firestore : FirestoreDatabase
+        #FirebaseAuth auth
+        #FirestoreDatabase firestore
         +showLogin() View
-        +login(Request request) Redirect
+        +login(request) Redirect
         +logout() Redirect
         +showForgotPassword() View
-        +sendPasswordResetEmail(Request request) Redirect
-        +showResetPassword(Request request) View
-        +resetPassword(Request request) Redirect
+        +sendPasswordResetEmail(request) Redirect
+        +showResetPassword(request) View
+        +resetPassword(request) Redirect
     }
 
     class DashboardController {
-        #firestore : FirestoreDatabase
-        #kalbarDaerahList()$ array
-        #normalizeToKalbarDaerah(string raw) string
-        +index(Request request) View
+        #FirestoreDatabase firestore
+        #kalbarDaerahList() array
+        #normalizeToKalbarDaerah(raw) string
+        +normalizeStatus(status) string
+        +index(request) View
+        +refresh() Redirect
+        +saveSettings(request) JsonResponse
+        +resetSettings() JsonResponse
     }
 
     class ArticleController {
-        #firestore : FirestoreDatabase
-        #storage : FirebaseStorage
+        #FirestoreDatabase firestore
+        #FirebaseStorage storage
+        #array allowedTypes
+        -parseArticleDate(value) string
         -getArticlesList() array
         +index() View
-        +downloadList(Request request) StreamedResponse
+        +refresh() Redirect
+        +downloadList(request) StreamedResponse
         +create() View
-        +store(Request request) Redirect
-        +edit(string id) View
-        +update(Request request, string id) Redirect
-        +destroy(string id) Redirect
+        +store(request) Redirect
+        +edit(id) View
+        +update(request, id) Redirect
+        +destroy(id) Redirect
+        +bulkDestroy(request) Redirect
     }
 
     class LaporanController {
-        #firestore : FirestoreDatabase
-        #storage : FirebaseStorage
-        #kategoriMap : array
-        -createdDateToLocal(mixed value) string
+        #FirestoreDatabase firestore
+        #FirebaseStorage storage
+        #array kategoriMap
+        -createdDateToLocal(value) string
         -getLaporanList() array
-        -findReportRefById(string id) array
+        -findReportRefById(id) array
         +index() View
-        +downloadList(Request request) StreamedResponse
-        +detail(string id) View
-        +setStatus(Request request, string id) Response
-        +destroy(string id) Redirect
-        +downloadPDF(string id) Response
-        +chat(string id) View
-        +chatMessages(string id) JsonResponse
-        +sendChat(Request request, string id) JsonResponse
-        +deleteChat(string id, string messageId) JsonResponse
-        +updateChat(Request request, string id, string messageId) JsonResponse
+        +refresh() Redirect
+        +downloadList(request) StreamedResponse
+        +detail(id) View
+        +setStatus(request, id) Response
+        +destroy(id) Response
+        +downloadPDF(id) Response
+        +chat(id) View
+        +chatMessages(id) JsonResponse
+        +sendChat(request, id) JsonResponse
+        +deleteChat(id, messageId) JsonResponse
+        +updateChat(request, messageId) JsonResponse
         +unreadChats() JsonResponse
-        +markChatRead(string id) JsonResponse
+        +markChatRead(id) JsonResponse
     }
 
     class PengaturanController {
-        #auth : FirebaseAuth
-        #firestore : FirestoreDatabase
+        #FirebaseAuth auth
+        #FirestoreDatabase firestore
         +index() View
         +formTambahAdmin() View
-        +tambahAdmin(Request request) Redirect
-        +hapusAdmin(string uid) Redirect
+        +tambahAdmin(request) Redirect
+        +hapusAdmin(uid) Redirect
     }
 
     class ProfileController {
-        #auth : FirebaseAuth
-        #firestore : FirestoreDatabase
+        #FirebaseAuth auth
+        #FirestoreDatabase firestore
         +index() View
-        +updatePassword(Request request) Redirect
+        +updatePassword(request) Redirect
     }
 
     Controller <|-- AuthController
@@ -94,71 +103,79 @@ classDiagram
 
 ---
 
-## 2. Class Diagram — Entitas Data (Firestore Collections)
+## 2. Class Diagram — Entitas Data (Firestore Collections & Subcollections)
 
 ```mermaid
 classDiagram
     direction TB
 
     class Admin {
-        +uid : string
-        +email : string
-        +role : string
-        +created_at : string
+        +string uid
+        +string email
+        +string role
+        +string created_at
+        +array dashboard_settings
     }
 
     class FirebaseUser {
-        +uid : string
-        +name : string
-        +email : string
+        +string uid
+        +string name
+        +string email
     }
 
     class Article {
-        +id : string
-        +title : string
-        +articleType : string
-        +description : string
-        +photoUrl : string
-        +gsUrl : string
-        +releasedDate : string
-        +updateDate : string
+        +string id
+        +string title
+        +string articleType
+        +string description
+        +string photoUrl
+        +string gsUrl
+        +number releasedDate
+        +number updateDate
     }
 
     class Report {
-        +id : string
-        +report_number : string
-        +case_type : string
-        +report_status : string
-        +user_name : string
-        +user_id : string
-        +phone_number : string
-        +child_age : string
-        +incident_city : string
-        +incident_location : string
-        +incident_date : string
-        +detail_description : string
-        +created_date : number
-        +adminLastReadAt : number
+        +string id
+        +string report_number
+        +string case_type
+        +string report_status
+        +string user_name
+        +string user_id
+        +string phone_number
+        +string child_age
+        +string incident_city
+        +string incident_location
+        +string incident_date
+        +string detail_description
+        +number created_date
+        +number adminLastReadAt
+        +number lastMessageAt
+        +string lastMessageText
+        +string docPath
     }
 
     class ChatMessage {
-        +chatId : string
-        +textMessage : string
-        +imageMessage : string
-        +userId : string
-        +chatType : string
-        +reportId : string
-        +messageStatus : string
-        +isDeleted : boolean
-        +createdAt : number
-        +lastActionAt : number
-        +dayMessage : string
+        +string chatId
+        +string textMessage
+        +string imageMessage
+        +string imagePath
+        +string userId
+        +string chatType
+        +string reportId
+        +string messageStatus
+        +boolean isDeleted
+        +number createdAt
+        +number lastActionAt
+        +string dayMessage
     }
 
     FirebaseUser "1" --> "0..*" Report : membuat
     Report "1" *-- "0..*" ChatMessage : memiliki
     Admin "1" --> "0..*" ChatMessage : mengirim pesan
     FirebaseUser "1" --> "0..*" ChatMessage : mengirim pesan
+    Admin "1" --> "0..*" Report : mengelola
+    Admin "1" --> "0..*" Article : mengelola
+    FirebaseUser "0..*" --> "0..*" Article : membaca
 ```
 
 ---
@@ -186,11 +203,12 @@ classDiagram
     DashboardController --> FirebaseUser : membaca jumlah
     DashboardController --> Article : membaca jumlah
     DashboardController --> Report : membaca & agregasi
+    DashboardController --> Admin : membaca & update dashboard_settings
     ArticleController --> Article : CRUD
     LaporanController --> Report : CRUD
     LaporanController --> ChatMessage : CRUD
     PengaturanController --> Admin : CRUD
-    ProfileController --> Admin : membaca & update password
+    ProfileController --> Admin : membaca
 ```
 
 ---
@@ -208,129 +226,143 @@ classDiagram
 
     %% ============ CONTROLLERS ============
     class AuthController {
-        #auth : FirebaseAuth
-        #firestore : FirestoreDatabase
+        #FirebaseAuth auth
+        #FirestoreDatabase firestore
         +showLogin() View
-        +login(Request) Redirect
+        +login(request) Redirect
         +logout() Redirect
         +showForgotPassword() View
-        +sendPasswordResetEmail(Request) Redirect
-        +showResetPassword(Request) View
-        +resetPassword(Request) Redirect
+        +sendPasswordResetEmail(request) Redirect
+        +showResetPassword(request) View
+        +resetPassword(request) Redirect
     }
 
     class DashboardController {
-        #firestore : FirestoreDatabase
-        #kalbarDaerahList()$ array
-        #normalizeToKalbarDaerah(string) string
-        +index(Request) View
+        #FirestoreDatabase firestore
+        #kalbarDaerahList() array
+        #normalizeToKalbarDaerah(raw) string
+        +normalizeStatus(status) string
+        +index(request) View
+        +refresh() Redirect
+        +saveSettings(request) JsonResponse
+        +resetSettings() JsonResponse
     }
 
     class ArticleController {
-        #firestore : FirestoreDatabase
-        #storage : FirebaseStorage
+        #FirestoreDatabase firestore
+        #FirebaseStorage storage
+        #array allowedTypes
+        -parseArticleDate(value) string
         -getArticlesList() array
         +index() View
-        +downloadList(Request) StreamedResponse
+        +refresh() Redirect
+        +downloadList(request) StreamedResponse
         +create() View
-        +store(Request) Redirect
-        +edit(string) View
-        +update(Request, string) Redirect
-        +destroy(string) Redirect
+        +store(request) Redirect
+        +edit(id) View
+        +update(request, id) Redirect
+        +destroy(id) Redirect
+        +bulkDestroy(request) Redirect
     }
 
     class LaporanController {
-        #firestore : FirestoreDatabase
-        #storage : FirebaseStorage
-        #kategoriMap : array
-        -createdDateToLocal(mixed) string
+        #FirestoreDatabase firestore
+        #FirebaseStorage storage
+        #array kategoriMap
+        -createdDateToLocal(value) string
         -getLaporanList() array
-        -findReportRefById(string) array
+        -findReportRefById(id) array
         +index() View
-        +downloadList(Request) StreamedResponse
-        +detail(string) View
-        +setStatus(Request, string) Response
-        +destroy(string) Redirect
-        +downloadPDF(string) Response
-        +chat(string) View
-        +chatMessages(string) JsonResponse
-        +sendChat(Request, string) JsonResponse
-        +deleteChat(string, string) JsonResponse
-        +updateChat(Request, string, string) JsonResponse
+        +refresh() Redirect
+        +downloadList(request) StreamedResponse
+        +detail(id) View
+        +setStatus(request, id) Response
+        +destroy(id) Response
+        +downloadPDF(id) Response
+        +chat(id) View
+        +chatMessages(id) JsonResponse
+        +sendChat(request, id) JsonResponse
+        +deleteChat(id, messageId) JsonResponse
+        +updateChat(request, messageId) JsonResponse
         +unreadChats() JsonResponse
-        +markChatRead(string) JsonResponse
+        +markChatRead(id) JsonResponse
     }
 
     class PengaturanController {
-        #auth : FirebaseAuth
-        #firestore : FirestoreDatabase
+        #FirebaseAuth auth
+        #FirestoreDatabase firestore
         +index() View
         +formTambahAdmin() View
-        +tambahAdmin(Request) Redirect
-        +hapusAdmin(string) Redirect
+        +tambahAdmin(request) Redirect
+        +hapusAdmin(uid) Redirect
     }
 
     class ProfileController {
-        #auth : FirebaseAuth
-        #firestore : FirestoreDatabase
+        #FirebaseAuth auth
+        #FirestoreDatabase firestore
         +index() View
-        +updatePassword(Request) Redirect
+        +updatePassword(request) Redirect
     }
 
     %% ============ DATA ENTITIES ============
     class Admin {
-        +uid : string
-        +email : string
-        +role : string
-        +created_at : string
+        +string uid
+        +string email
+        +string role
+        +string created_at
+        +array dashboard_settings
     }
 
     class FirebaseUser {
-        +uid : string
-        +name : string
-        +email : string
+        +string uid
+        +string name
+        +string email
     }
 
     class Article {
-        +id : string
-        +title : string
-        +articleType : string
-        +description : string
-        +photoUrl : string
-        +gsUrl : string
-        +releasedDate : string
-        +updateDate : string
+        +string id
+        +string title
+        +string articleType
+        +string description
+        +string photoUrl
+        +string gsUrl
+        +number releasedDate
+        +number updateDate
     }
 
     class Report {
-        +id : string
-        +report_number : string
-        +case_type : string
-        +report_status : string
-        +user_name : string
-        +user_id : string
-        +phone_number : string
-        +child_age : string
-        +incident_city : string
-        +incident_location : string
-        +incident_date : string
-        +detail_description : string
-        +created_date : number
-        +adminLastReadAt : number
+        +string id
+        +string report_number
+        +string case_type
+        +string report_status
+        +string user_name
+        +string user_id
+        +string phone_number
+        +string child_age
+        +string incident_city
+        +string incident_location
+        +string incident_date
+        +string detail_description
+        +number created_date
+        +number adminLastReadAt
+        +number lastMessageAt
+        +string lastMessageText
+        +string docPath
     }
 
     class ChatMessage {
-        +chatId : string
-        +textMessage : string
-        +imageMessage : string
-        +userId : string
-        +chatType : string
-        +reportId : string
-        +messageStatus : string
-        +isDeleted : boolean
-        +createdAt : number
-        +lastActionAt : number
-        +dayMessage : string
+        +string chatId
+        +string textMessage
+        +string imageMessage
+        +string imagePath
+        +string userId
+        +string chatType
+        +string reportId
+        +string messageStatus
+        +boolean isDeleted
+        +number createdAt
+        +number lastActionAt
+        +string dayMessage
     }
 
     %% ============ INHERITANCE ============
@@ -346,6 +378,7 @@ classDiagram
     DashboardController --> FirebaseUser : reads
     DashboardController --> Article : reads
     DashboardController --> Report : reads
+    DashboardController --> Admin : reads & updates
     ArticleController --> Article : CRUD
     LaporanController --> Report : CRUD
     LaporanController --> ChatMessage : CRUD
@@ -355,6 +388,11 @@ classDiagram
     %% ============ ENTITY RELATIONSHIPS ============
     FirebaseUser "1" --> "0..*" Report : membuat
     Report "1" *-- "0..*" ChatMessage : memiliki
+    Admin "1" --> "0..*" ChatMessage : mengirim pesan
+    FirebaseUser "1" --> "0..*" ChatMessage : mengirim pesan
+    Admin "1" --> "0..*" Report : mengelola
+    Admin "1" --> "0..*" Article : mengelola
+    FirebaseUser "0..*" --> "0..*" Article : membaca
 ```
 
 ---
@@ -367,7 +405,7 @@ classDiagram
 | `#` | protected |
 | `-` | private |
 | `$` | static |
-| `<\|--` | inheritance (pewarisan) |
+| `<|--` | inheritance (pewarisan) |
 | `-->` | dependency / association (menggunakan) |
 | `*--` | composition (bagian yang tidak bisa berdiri sendiri) |
 | `"1" → "0..*"` | multiplicity (1 ke banyak) |
@@ -379,14 +417,18 @@ classDiagram
 | FirebaseUser → Report | **One to Many** | 1 user bisa membuat banyak laporan |
 | Report → ChatMessage | **Composition** | 1 laporan memiliki banyak pesan chat (chat tidak ada tanpa report) |
 | Admin → ChatMessage | **One to Many** | Admin bisa mengirim pesan ke banyak chat |
+| FirebaseUser → ChatMessage | **One to Many** | User bisa mengirim pesan ke banyak chat |
+| Admin → Report | **One to Many (Logis)** | Admin mengelola banyak laporan kasus |
+| Admin → Article | **One to Many (Logis)** | Admin mengelola banyak artikel edukasi |
+| FirebaseUser → Article | **Many to Many (Logis)** | Banyak user membaca banyak artikel |
 
 ## Ringkasan Controller → Entitas
 
 | Controller | Entitas yang diakses | Operasi |
 |---|---|---|
 | **AuthController** | Admin | Read, Validate login |
-| **DashboardController** | FirebaseUser, Article, Report | Read, Agregasi statistik |
+| **DashboardController** | FirebaseUser, Article, Report, Admin | Read, Agregasi statistik, Update settings |
 | **ArticleController** | Article | Create, Read, Update, Delete |
 | **LaporanController** | Report, ChatMessage | Create, Read, Update, Delete |
 | **PengaturanController** | Admin | Create, Read, Delete |
-| **ProfileController** | Admin | Read, Update password |
+| **ProfileController** | Admin | Read |

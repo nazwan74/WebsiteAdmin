@@ -149,7 +149,18 @@
 
     <!-- Update Status & Actions -->
     <div class="glass-card p-4 bg-primary bg-opacity-10 border-primary border-opacity-10 rounded-4">
-        @if($statusKey === 'dibatalkan')
+        @if(Session::get('admin.role') === 'super_admin')
+            <div class="text-center py-3">
+                <i class="bi bi-eye-fill text-primary mb-2" style="font-size: 2rem;"></i>
+                <h6 class="fw-bold mb-1">Mode Pantau (Read-Only)</h6>
+                <p class="small text-muted mb-3">Super Admin hanya memiliki hak untuk memantau pengaduan dan obrolan.</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="{{ route('admin.laporan.chat', $laporan['id']) }}" class="btn btn-primary shadow-sm px-4 border-0" style="background: linear-gradient(135deg, #FFCB05 0%, #E6B800 100%); border-radius: 10px; color: #333; font-weight: 600;">
+                        <i class="bi bi-chat-dots-fill me-2"></i> Buka Pantauan Chat
+                    </a>
+                </div>
+            </div>
+        @elseif($statusKey === 'dibatalkan')
             <div class="text-center py-2">
                 <i class="bi bi-info-circle-fill text-secondary mb-2" style="font-size: 2rem;"></i>
                 <h6 class="fw-bold mb-1">Pengaduan Dibatalkan</h6>
@@ -189,9 +200,11 @@
             <a href="{{ route('admin.laporan.download', $laporan['id']) }}" class="text-decoration-none text-muted small hover-primary">
                 <i class="bi bi-file-earmark-pdf me-1"></i> Unduh PDF Pengaduan
             </a>
+            @if(Session::get('admin.role') !== 'super_admin')
             <button id="delete-pengaduan" data-url="{{ route('admin.laporan.delete', $laporan['id']) }}" class="btn btn-link text-danger text-decoration-none p-0 small">
                 <i class="bi bi-trash me-1"></i> Hapus Pengaduan
             </button>
+            @endif
         </div>
     </div>
 </div>

@@ -105,7 +105,7 @@ class PengaturanController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|min:6',
-            'role' => 'required|in:admin,super_admin',
+            'role' => 'required|in:super_admin,admin_artikel,admin_pengaduan',
         ]);
 
         try {

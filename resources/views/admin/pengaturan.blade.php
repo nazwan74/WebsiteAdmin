@@ -189,6 +189,14 @@
                                     <span class="admin-role-badge role-super-admin">
                                         <i class="bi bi-shield-check"></i> Super Administrator
                                     </span>
+                                @elseif(($admin['role'] ?? '') === 'admin_artikel')
+                                    <span class="admin-role-badge role-admin-artikel" style="background: #E0F2FE; color: #0369A1; border-color: rgba(3, 105, 161, 0.3);">
+                                        <i class="bi bi-journal-text"></i> Admin Artikel
+                                    </span>
+                                @elseif(($admin['role'] ?? '') === 'admin_pengaduan')
+                                    <span class="admin-role-badge role-admin-pengaduan" style="background: #FEE2E2; color: #991B1B; border-color: rgba(153, 27, 27, 0.3);">
+                                        <i class="bi bi-chat-left-text-fill"></i> Admin Pengaduan
+                                    </span>
                                 @else
                                     <span class="admin-role-badge role-admin">
                                         <i class="bi bi-person-gear"></i> Standard Admin
@@ -264,17 +272,24 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dark small ms-1">Level Otoritas</label>
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <input type="radio" class="btn-check" name="role" id="roleAdmin" value="admin" checked>
-                                <label class="btn btn-outline-warning w-100 py-3" for="roleAdmin" style="border-radius: 16px;">
-                                    <i class="bi bi-person mb-1 d-block fs-4"></i>
-                                    Standard Admin
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <input type="radio" class="btn-check" name="role" id="roleArtikel" value="admin_artikel" checked>
+                                <label class="btn btn-outline-warning w-100 py-3 px-1 text-center" for="roleArtikel" style="border-radius: 16px; font-size: 0.8rem;">
+                                    <i class="bi bi-journal-text mb-1 d-block fs-4"></i>
+                                    Admin Artikel
                                 </label>
                             </div>
-                            <div class="col-6">
+                            <div class="col-4">
+                                <input type="radio" class="btn-check" name="role" id="rolePengaduan" value="admin_pengaduan">
+                                <label class="btn btn-outline-warning w-100 py-3 px-1 text-center" for="rolePengaduan" style="border-radius: 16px; font-size: 0.8rem;">
+                                    <i class="bi bi-chat-left-text mb-1 d-block fs-4"></i>
+                                    Admin Pengaduan
+                                </label>
+                            </div>
+                            <div class="col-4">
                                 <input type="radio" class="btn-check" name="role" id="roleSuper" value="super_admin">
-                                <label class="btn btn-outline-warning w-100 py-3" for="roleSuper" style="border-radius: 16px;">
+                                <label class="btn btn-outline-warning w-100 py-3 px-1 text-center" for="roleSuper" style="border-radius: 16px; font-size: 0.8rem;">
                                     <i class="bi bi-shield-lock mb-1 d-block fs-4"></i>
                                     Super Admin
                                 </label>

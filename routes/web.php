@@ -32,11 +32,12 @@ Route::middleware(['admin.nocache'])->group(function () {
     // Admin dashboard
     Route::get('/admin/dashboard', [dashboardcontroller::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/dashboard/refresh', [dashboardcontroller::class, 'refresh'])->name('admin.dashboard.refresh');
+    Route::post('/admin/dashboard/settings', [dashboardcontroller::class, 'saveSettings'])->name('admin.dashboard.saveSettings');
+    Route::post('/admin/dashboard/settings/reset', [dashboardcontroller::class, 'resetSettings'])->name('admin.dashboard.resetSettings');
 
     // Admin Articles
     Route::get('/admin/articel', [ArticleController::class, 'index'])->name('admin.articel.index');
     Route::get('/admin/articel/refresh', [ArticleController::class, 'refresh'])->name('admin.articel.refresh');
-    Route::get('/admin/articel/export/csv', [ArticleController::class, 'downloadList'])->name('admin.articel.downloadList');
     Route::get('/admin/articel/create', [ArticleController::class, 'create'])->name('admin.articel.create');
     Route::post('/admin/articel/store', [ArticleController::class, 'store'])->name('admin.articel.store');
     Route::delete('/admin/articel/{id}', [ArticleController::class, 'destroy'])->name('admin.articel.destroy');

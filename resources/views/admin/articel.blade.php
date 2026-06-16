@@ -85,8 +85,10 @@
         <div class="col-md-3">
             <div class="category-card theme-pernikahan">
                 <div class="bg-decoration"></div>
-                <div class="category-icon-wrapper shadow-sm">
-                    <i class="bi bi-heart-fill"></i>
+                <div class="category-icon-wrapper shadow-sm d-flex align-items-center justify-content-center gap-0">
+                    <i class="bi bi-person-fill" style="font-size: 1.15rem; transform: translateX(3px);"></i>
+                    <i class="bi bi-heart-fill" style="font-size: 0.55rem; z-index: 2; transform: translateY(2px);"></i>
+                    <i class="bi bi-person-fill" style="font-size: 0.85rem; transform: translate(-3px, 1.5px);"></i>
                 </div>
                 <h6 class="text-muted small fw-bold text-uppercase mb-1">Pernikahan Anak</h6>
                 <div class="d-flex align-items-end gap-2">
@@ -102,7 +104,7 @@
             <div class="category-card theme-kekerasan">
                 <div class="bg-decoration"></div>
                 <div class="category-icon-wrapper shadow-sm">
-                    <i class="bi bi-shield-lock-fill"></i>
+                    <i class="bi bi-exclamation-triangle-fill"></i>
                 </div>
                 <h6 class="text-muted small fw-bold text-uppercase mb-1">Kekerasan Anak</h6>
                 <div class="d-flex align-items-end gap-2">
@@ -117,8 +119,13 @@
         <div class="col-md-3">
             <div class="category-card theme-bullying">
                 <div class="bg-decoration"></div>
-                <div class="category-icon-wrapper shadow-sm">
-                    <i class="bi bi-chat-heart-fill"></i>
+                <div class="category-icon-wrapper shadow-sm d-flex align-items-center justify-content-center" style="position: relative; gap: 0;">
+                    <!-- Bully (Taller) -->
+                    <i class="bi bi-person-fill" style="font-size: 1.25rem; transform: translate(2px, -1px);"></i>
+                    <!-- Verbal waves -->
+                    <span style="font-size: 0.7rem; font-weight: 800; font-family: monospace; z-index: 2; transform: translate(1px, -4px) rotate(-15deg); opacity: 0.9; letter-spacing: -2px;">))</span>
+                    <!-- Victim (Shorter/Lower) -->
+                    <i class="bi bi-person-fill" style="font-size: 0.95rem; transform: translate(2px, 3px); opacity: 0.85;"></i>
                 </div>
                 <h6 class="text-muted small fw-bold text-uppercase mb-1">Bullying</h6>
                 <div class="d-flex align-items-end gap-2">
@@ -133,8 +140,13 @@
         <div class="col-md-3">
             <div class="category-card theme-stunting">
                 <div class="bg-decoration"></div>
-                <div class="category-icon-wrapper shadow-sm">
-                    <i class="bi bi-graph-up-arrow"></i>
+                <div class="category-icon-wrapper shadow-sm d-flex align-items-end justify-content-center gap-0" style="position: relative; padding-bottom: 10px;">
+                    <!-- Taller Person -->
+                    <i class="bi bi-person-fill" style="font-size: 1.25rem; line-height: 1; transform: translateX(3px);"></i>
+                    <!-- Dashed Height Line -->
+                    <div style="width: 10px; border-top: 1.5px dashed currentColor; margin-bottom: 12px; opacity: 0.85; z-index: 2;"></div>
+                    <!-- Shorter Person -->
+                    <i class="bi bi-person-fill" style="font-size: 0.9rem; line-height: 1; transform: translateX(-3px);"></i>
                 </div>
                 <h6 class="text-muted small fw-bold text-uppercase mb-1">Stunting</h6>
                 <div class="d-flex align-items-end gap-2">
@@ -160,15 +172,14 @@
             <a href="{{ route('admin.articel.refresh') }}" class="btn btn-light shadow-sm" style="border-radius: 10px;" title="Refresh Data">
                 <i class="bi bi-arrow-clockwise" style="color: #FFCB05;"></i>
             </a>
-            <a href="{{ route('admin.articel.downloadList') }}" id="downloadListBtn" class="btn btn-light shadow-sm" style="border-radius: 10px; border: 1px solid rgba(255, 203, 5, 0.2); color: #B45309;">
-                <i class="bi bi-download me-1"></i>Ekspor CSV
-            </a>
+            @if(Session::get('admin.role') !== 'super_admin')
             <button type="button" id="bulkDeleteBtn" class="btn btn-danger shadow-sm d-none" style="border-radius: 10px;">
                 <i class="bi bi-trash me-1"></i>Hapus (<span id="selectedCount">0</span>)
             </button>
             <a href="{{ route('admin.articel.create') }}" class="btn btn-primary shadow-sm px-4 border-0" style="border-radius: 10px; background: linear-gradient(135deg, #FFCB05 0%, #E6B800 100%); color: #333;">
                 <i class="bi bi-plus-lg me-1"></i>Tambah Artikel
             </a>
+            @endif
         </div>
     </div>
     <div class="p-4">
@@ -195,9 +206,11 @@
             <table class="table table-hover align-middle" id="articles-table">
                 <thead>
                     <tr>
+                        @if(Session::get('admin.role') !== 'super_admin')
                         <th class="ps-4" style="width: 50px;">
                             <input type="checkbox" id="selectAll" class="form-check-input">
                         </th>
+                        @endif
                         <th>Judul Artikel</th>
                         <th>Kategori</th>
                         <th>Rilis</th>
@@ -210,9 +223,11 @@
                         <tr class="article-row"
                         data-kategori="{{ $article['articleType'] }}"
                         data-description="{{ strtolower($article['description'] ?? '') }}">
+                            @if(Session::get('admin.role') !== 'super_admin')
                             <td class="ps-4">
                                 <input type="checkbox" class="form-check-input article-checkbox" value="{{ $article['id'] }}">
                             </td>
+                            @endif
                             <td>
                                 <div class="fw-bold text-dark">{{ $article['title'] }}</div>
                                 <div class="text-muted small text-truncate" style="max-width: 250px;">{{ strip_tags($article['description']) }}</div>
@@ -278,16 +293,22 @@
                             </td>
                             <td class="pe-4 text-end">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="{{ route('admin.articel.edit', $article['id']) }}" class="btn btn-light btn-sm shadow-sm border" style="border-radius: 8px;" title="Edit">
-                                        <i class="bi bi-pencil-fill text-primary"></i>
-                                    </a>
-                                    <form action="{{ route('admin.articel.destroy', $article['id']) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="button" class="btn btn-light btn-sm shadow-sm border delete-article-btn" data-title="{{ $article['title'] }}" style="border-radius: 8px;" title="Hapus">
-                                            <i class="bi bi-trash-fill text-danger"></i>
+                                    @if(Session::get('admin.role') === 'super_admin')
+                                        <button type="button" class="btn btn-light btn-sm shadow-sm border px-3" style="border-radius: 8px;" onclick="openDetailArticle('{{ $article['id'] }}')">
+                                            <i class="bi bi-eye-fill text-primary"></i> Detail
                                         </button>
-                                    </form>
+                                    @else
+                                        <a href="{{ route('admin.articel.edit', $article['id']) }}" class="btn btn-light btn-sm shadow-sm border" style="border-radius: 8px;" title="Edit">
+                                            <i class="bi bi-pencil-fill text-primary"></i>
+                                        </a>
+                                        <form action="{{ route('admin.articel.destroy', $article['id']) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="button" class="btn btn-light btn-sm shadow-sm border delete-article-btn" data-title="{{ $article['title'] }}" style="border-radius: 8px;" title="Hapus">
+                                                <i class="bi bi-trash-fill text-danger"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -313,8 +334,82 @@
 </div>
 @endsection
 
+@section('modals')
+<!-- Modal Detail Artikel -->
+<div class="modal fade" id="detailArticleModal" tabindex="-1" aria-labelledby="detailArticleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="border-radius: 24px; border: none; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);">
+            <div class="modal-header border-0 pb-0" style="padding: 1.5rem 2rem;">
+                <div class="d-flex align-items-center gap-2">
+                    <span id="detailArticleCategoryBadge" class="badge-category">
+                        <span id="detailArticleCategory">Kategori</span>
+                    </span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-3" style="padding: 1.5rem 2rem;">
+                <!-- Article Title -->
+                <h3 id="detailArticleTitle" class="fw-bold text-dark mb-4">Judul Artikel</h3>
+                
+                <!-- Article Image Cover -->
+                <div class="text-center mb-4 rounded-4 overflow-hidden border shadow-sm" style="max-height: 400px; background: #f8fafc;">
+                    <img id="detailArticleImage" src="" alt="Cover Artikel" style="max-width: 100%; max-height: 400px; object-fit: contain;">
+                </div>
+                
+                <!-- Article Content -->
+                <div class="p-3 bg-light rounded-4 border" style="line-height: 1.8; font-size: 0.95rem; color: #334155; white-space: pre-wrap;" id="detailArticleDescription">
+                    Konten artikel...
+                </div>
+            </div>
+            <div class="modal-footer border-0" style="padding: 1rem 2rem;">
+                <button type="button" class="btn btn-light px-4 py-2" data-bs-dismiss="modal" style="border-radius: 12px; font-weight: 600;">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
 @section('scripts')
 <script>
+    const allArticles = @json($articles);
+    
+    function getCategoryName(type) {
+        switch(type) {
+            case 'pernikahan dini': return 'Pernikahan Anak';
+            case 'kekerasan anak': return 'Kekerasan Anak';
+            case 'bullying': return 'Bullying';
+            case 'stunting': return 'Stunting';
+            default: return type.charAt(0).toUpperCase() + type.slice(1);
+        }
+    }
+
+    function getCategoryThemeClass(type) {
+        switch(type) {
+            case 'pernikahan dini': return 'theme-pernikahan';
+            case 'kekerasan anak': return 'theme-kekerasan';
+            case 'bullying': return 'theme-bullying';
+            case 'stunting': return 'theme-stunting';
+            default: return 'theme-default';
+        }
+    }
+
+    window.openDetailArticle = function(id) {
+        const article = allArticles.find(a => a.id === id);
+        if (!article) return;
+        
+        document.getElementById('detailArticleTitle').textContent = article.title;
+        document.getElementById('detailArticleCategory').textContent = getCategoryName(article.articleType);
+        
+        const categoryBadge = document.getElementById('detailArticleCategoryBadge');
+        categoryBadge.className = 'badge-category ' + getCategoryThemeClass(article.articleType);
+        
+        document.getElementById('detailArticleImage').src = article.photoUrl || '';
+        document.getElementById('detailArticleDescription').innerHTML = article.description || '';
+        
+        const detailModal = new bootstrap.Modal(document.getElementById('detailArticleModal'));
+        detailModal.show();
+    };
+
     // Fungsi saat dokumen siap
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('search-input');
@@ -351,7 +446,6 @@
             });
 
             updatePaginationUI(totalVisible, totalPages);
-            updateDownloadLink();
         }
 
         function updatePaginationUI(totalVisible, totalPages) {
@@ -395,18 +489,6 @@
             addPageItem('Selanjutnya', currentPage + 1, currentPage >= totalPages, false);
         }
 
-        function updateDownloadLink() {
-            const baseUrl = '{{ route("admin.articel.downloadList") }}';
-            const params = [];
-            const cat = categoryFilter.value;
-            if (cat && cat !== 'all') params.push('kategori=' + encodeURIComponent(cat));
-            const searchVal = searchInput.value.trim();
-            if (searchVal) params.push('search=' + encodeURIComponent(searchVal));
-            const url = params.length ? baseUrl + '?' + params.join('&') : baseUrl;
-            const btn = document.getElementById('downloadListBtn');
-            if (btn) btn.setAttribute('href', url);
-        }
-
         searchInput.addEventListener('input', function() {
             currentPage = 1;
             applyFilters();
@@ -416,7 +498,6 @@
             applyFilters();
         });
 
-        updateDownloadLink();
         applyFilters();
 
         // Konfirmasi hapus dengan SweetAlert
@@ -465,61 +546,68 @@
                 bulkDeleteBtn.classList.add('d-none');
             }
             // Sync selectAll checkbox
-            selectAll.checked = (checkedCount === checkboxes.length && checkboxes.length > 0);
+            if (selectAll) {
+                selectAll.checked = (checkedCount === checkboxes.length && checkboxes.length > 0);
+            }
         }
 
-        selectAll.addEventListener('change', function() {
-            checkboxes.forEach(cb => {
-                // Hanya centang yang terlihat (kalau ada filter)
-                if (cb.closest('tr').style.display !== 'none') {
-                    cb.checked = selectAll.checked;
-                }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                checkboxes.forEach(cb => {
+                    // Hanya centang yang terlihat (kalau ada filter)
+                    if (cb.closest('tr').style.display !== 'none') {
+                        cb.checked = selectAll.checked;
+                    }
+                });
+                updateBulkDeleteUI();
             });
-            updateBulkDeleteUI();
-        });
+        }
 
         checkboxes.forEach(cb => {
             cb.addEventListener('change', updateBulkDeleteUI);
         });
 
-        bulkDeleteBtn.addEventListener('click', function() {
-            const selectedIds = Array.from(document.querySelectorAll('.article-checkbox:checked')).map(cb => cb.value);
-            
-            Swal.fire({
-                title: 'Hapus Massal?',
-                text: `Anda akan menghapus ${selectedIds.length} artikel sekaligus. Tindakan ini tidak bisa dibatalkan!`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, Hapus Semua!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Buat form dinamis untuk submit
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '{{ route("admin.articel.bulkDelete") }}';
-                    
-                    const csrfToken = document.createElement('input');
-                    csrfToken.type = 'hidden';
-                    csrfToken.name = '_token';
-                    csrfToken.value = '{{ csrf_token() }}';
-                    form.appendChild(csrfToken);
+        if (bulkDeleteBtn) {
+            bulkDeleteBtn.addEventListener('click', function() {
+                const selectedIds = Array.from(document.querySelectorAll('.article-checkbox:checked')).map(cb => cb.value);
+                
+                Swal.fire({
+                    title: 'Hapus Massal?',
+                    text: `Anda akan menghapus ${selectedIds.length} artikel sekaligus. Tindakan ini tidak bisa dibatalkan!`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, Hapus Semua!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Buat form dinamis untuk submit
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '{{ route("admin.articel.bulkDelete") }}';
+                        
+                        const csrfToken = document.createElement('input');
+                        csrfToken.type = 'hidden';
+                        csrfToken.name = '_token';
+                        csrfToken.value = '{{ csrf_token() }}';
+                        form.appendChild(csrfToken);
 
-                    selectedIds.forEach(id => {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = 'ids[]';
-                        input.value = id;
-                        form.appendChild(input);
-                    });
+                        selectedIds.forEach(id => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'ids[]';
+                            input.value = id;
+                            form.appendChild(input);
+                        });
 
-                    document.body.appendChild(form);
-                    form.submit();
-                }
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
             });
-        });
+        }
     });
 </script>
 @endsection

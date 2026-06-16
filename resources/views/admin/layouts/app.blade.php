@@ -96,8 +96,10 @@
         }
     </script>
 
+    @if(Session::get('admin.role') !== 'admin_artikel')
     <!-- Notifications -->
     @include('admin.partials.notifications')
+    @endif
 
     <!-- Page-specific scripts -->
     @yield('scripts')

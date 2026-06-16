@@ -12,6 +12,7 @@
         
         <div class="ms-auto d-flex align-items-center gap-3">
             
+            @if(Session::get('admin.role') !== 'admin_artikel')
             {{-- Notification Bell --}}
             <div class="notif-bell-wrapper" id="notifBellWrapper">
                 <button class="notif-bell-btn position-relative d-flex align-items-center justify-content-center" id="notifBellBtn" title="Notifikasi" style="width: 42px; height: 42px; background: #FFFAE6; border-radius: 12px; border: none; color: #FFCB05; transition: all 0.3s ease;">
@@ -32,6 +33,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             <div class="vr mx-2" style="height: 30px; color: #e2e8f0;"></div>
 

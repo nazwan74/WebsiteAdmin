@@ -20,6 +20,11 @@ class articlecontroller extends Controller
         if (!Session::has('admin')) {
             redirect()->route('admin.login')->send(); 
         }
+
+        // Cek apakah admin_pengaduan mencoba akses modul artikel
+        if (Session::get('admin.role') === 'admin_pengaduan') {
+            redirect()->route('admin.dashboard')->with('error', 'Anda tidak memiliki akses ke fitur artikel.')->send();
+        }
         
         // Menggunakan singleton dari FirebaseServiceProvider
         $this->firestore = app('firebase.firestore');
@@ -151,6 +156,10 @@ class articlecontroller extends Controller
 
     public function edit($id)
     {
+        if (Session::get('admin.role') === 'super_admin') {
+            return redirect()->route('admin.articel.index')->with('error', 'Super Admin hanya memiliki akses pantau (read-only) untuk artikel.');
+        }
+
         $snapshot = $this->firestore->collection('articles')->document($id)->snapshot();
         
         if (!$snapshot->exists()) {
@@ -184,6 +193,10 @@ class articlecontroller extends Controller
 
     public function update(Request $request, $id)
     {
+        if (Session::get('admin.role') === 'super_admin') {
+            return redirect()->route('admin.articel.index')->with('error', 'Super Admin hanya memiliki akses pantau (read-only) untuk artikel.');
+        }
+
         $request->validate([
             'title' => 'required|string',
             'articleType' => 'required|in:' . implode(',', $this->allowedTypes),
@@ -259,6 +272,10 @@ class articlecontroller extends Controller
 
     public function destroy($id)
     {
+        if (Session::get('admin.role') === 'super_admin') {
+            return redirect()->route('admin.articel.index')->with('error', 'Super Admin hanya memiliki akses pantau (read-only) untuk artikel.');
+        }
+
         try {
             $articleRef = $this->firestore->collection('articles')->document($id);
             $articleSnapshot = $articleRef->snapshot();
@@ -285,6 +302,10 @@ class articlecontroller extends Controller
     
     public function bulkDestroy(Request $request)
     {
+        if (Session::get('admin.role') === 'super_admin') {
+            return redirect()->route('admin.articel.index')->with('error', 'Super Admin hanya memiliki akses pantau (read-only) untuk artikel.');
+        }
+
         $ids = $request->input('ids');
         if (!$ids || !is_array($ids)) {
             return redirect()->back()->with('error', 'Tidak ada artikel yang dipilih.');
@@ -328,11 +349,19 @@ class articlecontroller extends Controller
 
     public function create()
     {
+        if (Session::get('admin.role') === 'super_admin') {
+            return redirect()->route('admin.articel.index')->with('error', 'Super Admin hanya memiliki akses pantau (read-only) untuk artikel.');
+        }
+
         return view('admin.create_article');
     }
 
     public function store(Request $request)
     {
+        if (Session::get('admin.role') === 'super_admin') {
+            return redirect()->route('admin.articel.index')->with('error', 'Super Admin hanya memiliki akses pantau (read-only) untuk artikel.');
+        }
+
         $request->validate([
             'title' => 'required|string',
             'articleType' => 'required|in:' . implode(',', $this->allowedTypes),
