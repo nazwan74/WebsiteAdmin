@@ -154,9 +154,9 @@
                 <div class="col-lg-4 col-md-6">
                     <label class="form-label small fw-bold text-muted mb-1">Periode Tanggal</label>
                     <div class="input-group input-group-sm">
-                        <input type="date" name="start_date" class="form-control border bg-light" style="border-radius: 8px 0 0 8px; font-size: 0.8rem;" value="{{ $globalStartDate ?? '' }}" onchange="this.form.submit()">
+                        <input type="date" name="start_date" class="form-control border bg-light" style="border-radius: 8px 0 0 8px; font-size: 0.8rem;" value="{{ $globalStartDate ?? '' }}" max="{{ \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d') }}" onchange="this.form.submit()">
                         <span class="input-group-text bg-light border-start-0 border-end-0 small text-muted">s/d</span>
-                        <input type="date" name="end_date" class="form-control border bg-light" style="border-radius: 0 8px 8px 0; font-size: 0.8rem;" value="{{ $globalEndDate ?? '' }}" onchange="this.form.submit()">
+                        <input type="date" name="end_date" class="form-control border bg-light" style="border-radius: 0 8px 8px 0; font-size: 0.8rem;" value="{{ $globalEndDate ?? '' }}" max="{{ \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d') }}" onchange="this.form.submit()">
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-6">

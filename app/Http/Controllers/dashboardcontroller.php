@@ -380,6 +380,15 @@ class DashboardController extends Controller
         // 1. FILTER GLOBAL
         $globalStartDate = $request->input('start_date');
         $globalEndDate = $request->input('end_date');
+
+        $todayStr = Carbon::now('Asia/Jakarta')->format('Y-m-d');
+        if ($globalStartDate && $globalStartDate > $todayStr) {
+            $globalStartDate = $todayStr;
+        }
+        if ($globalEndDate && $globalEndDate > $todayStr) {
+            $globalEndDate = $todayStr;
+        }
+
         $globalDaerah = $request->input('global_daerah');
         $globalTipe = $request->input('global_tipe');
         $globalStatus = $request->input('global_status');

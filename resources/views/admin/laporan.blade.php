@@ -528,9 +528,9 @@
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <input type="date" class="form-control form-control-sm border-light bg-light" id="startDate" style="border-radius: 10px;">
+                                <input type="date" class="form-control form-control-sm border-light bg-light" id="startDate" max="{{ \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d') }}" style="border-radius: 10px;">
                                 <span class="date-range-divider">-</span>
-                                <input type="date" class="form-control form-control-sm border-light bg-light" id="endDate" style="border-radius: 10px;">
+                                <input type="date" class="form-control form-control-sm border-light bg-light" id="endDate" max="{{ \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d') }}" style="border-radius: 10px;">
                             </div>
                         </div>
                     </form>
@@ -607,8 +607,22 @@
                 });
                 
                 // Ambil filter range tanggal
-                activeFilters.dateStart = document.getElementById('startDate').value;
-                activeFilters.dateEnd = document.getElementById('endDate').value;
+                let dateStart = document.getElementById('startDate').value;
+                let dateEnd = document.getElementById('endDate').value;
+                
+                const today = new Date();
+                const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                if (dateStart && dateStart > todayStr) {
+                    dateStart = todayStr;
+                    document.getElementById('startDate').value = todayStr;
+                }
+                if (dateEnd && dateEnd > todayStr) {
+                    dateEnd = todayStr;
+                    document.getElementById('endDate').value = todayStr;
+                }
+                
+                activeFilters.dateStart = dateStart;
+                activeFilters.dateEnd = dateEnd;
                 
                 // Ambil filter kategori (dinamis)
                 activeFilters.kategori = [];

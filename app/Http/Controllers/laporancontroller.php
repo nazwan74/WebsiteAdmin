@@ -162,6 +162,15 @@ class laporancontroller extends Controller
 
         $dateStart = $request->query('date_start');
         $dateEnd = $request->query('date_end');
+
+        $todayStr = Carbon::now('Asia/Jakarta')->format('Y-m-d');
+        if ($dateStart && $dateStart > $todayStr) {
+            $dateStart = $todayStr;
+        }
+        if ($dateEnd && $dateEnd > $todayStr) {
+            $dateEnd = $todayStr;
+        }
+
         if ($dateStart !== null && $dateStart !== '' && $dateEnd !== null && $dateEnd !== '') {
             $laporan = array_filter($laporan, function ($item) use ($dateStart, $dateEnd) {
                 $tanggalBuat = $item['created_date'] ?? ($item['create_at'] ?? null);
